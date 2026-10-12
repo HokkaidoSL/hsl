@@ -9,15 +9,15 @@ let PAL='a';
 try{const q=QS.get('p');if(q==='a'||q==='c')sessionStorage.setItem('hsl-pal',q);PAL=sessionStorage.getItem('hsl-pal')||'a'}catch(e){}
 document.documentElement.setAttribute('data-p',PAL);
 
-const LAYOUTS=[['hub.html','① シーズン一覧'],['calendar.html','② カレンダー'],['board.html','③ 大会ボード']];
+const PAGES=[['top.html','トップ'],['board.html','大会ボード']];
 function chrome(){
   const here=location.pathname.split('/').pop();
   document.body.insertAdjacentHTML('afterbegin',
-    '<header class="hd"><div class="wrap in"><a class="brand" href="./'+esc(here)+'"><span class="lg"><img src="../img/hsl-logo.svg" alt="" width="34" height="38"></span><span><b>北海道サッカーリーグ</b><small>Hokkaido Soccer League</small></span></a>'+
-    '<nav><a href="../results.html">日程・結果</a><a href="../results.html?tab=standings">順位</a><a href="../news.html">お知らせ</a><a href="../about.html">連盟について</a></nav></div><div class="tri"></div></header>');
+    '<header class="hd"><div class="wrap in"><a class="brand" href="./top.html"><span class="lg"><img src="../img/hsl-logo.svg" alt="" width="34" height="38"></span><span><b>北海道サッカーリーグ</b><small>Hokkaido Soccer League</small></span></a>'+
+    '<nav><a href="./top.html#calendar">カレンダー</a><a href="./board.html">大会記録</a><a href="../news.html">お知らせ</a><a href="../about.html">連盟について</a></nav></div><div class="tri"></div></header>');
   document.body.insertAdjacentHTML('beforeend',
-    '<footer class="ft"><div class="tri"></div><div class="wrap in"><div><b>北海道サッカーリーグ</b><p>レイアウトの試作です。データは公式記録から反映しています。</p></div><nav><a href="../">今のトップ</a><a href="../results.html">大会記録</a></nav></div></footer>'+
-    '<div class="proto"><span>レイアウト</span>'+LAYOUTS.map(([f,t])=>'<a class="'+(f===here?'on':'')+'" href="./'+f+'">'+t+'</a>').join('')+
+    '<footer class="ft"><div class="tri"></div><div class="wrap in"><div><b>北海道サッカーリーグ</b><p>新しいトップの試作です。データは公式記録から反映しています。</p></div><nav><a href="./top.html">トップ</a><a href="./board.html">大会記録</a><a href="../">今のトップ</a></nav></div></footer>'+
+    '<div class="proto"><span>試作</span>'+PAGES.map(([f,t])=>'<a class="'+(f===here?'on':'')+'" href="./'+f+'">'+t+'</a>').join('')+
     '<i></i><span>色</span><a class="'+(PAL==='a'?'on':'')+'" href="?p=a">A</a><a class="'+(PAL==='c'?'on':'')+'" href="?p=c">C</a></div>');
 }
 
