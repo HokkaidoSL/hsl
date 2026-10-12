@@ -23,7 +23,7 @@
 .rnav{margin-left:auto;display:flex;align-items:center;gap:6px}
 .rnav span{font-size:14px;font-weight:900;min-width:96px;text-align:center}
 .rnav button{width:32px;height:32px;border:1px solid var(--line);background:var(--card);font-size:14px;line-height:1}
-[data-p=a] .rnav button{border-radius:50%}
+.rnav button{border-radius:50%}
 .rnav button:disabled{opacity:.3;cursor:default}
 .trowx{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:16px;scrollbar-width:thin}
 .tcard{scroll-snap-align:start;flex:none;width:300px;border:1px solid var(--line);border-radius:4px;padding:14px 16px;background:var(--card);transition:.15s}
@@ -50,7 +50,6 @@
 .day small{font-size:10px;color:var(--muted)}
 .day .dots{display:flex;gap:2px;height:6px}
 .day .dots i{width:6px;height:6px;border-radius:50%;background:var(--k)}
-[data-p=c] .day .dots i{border-radius:0;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
 .day.sun small,.day.sun b{color:#c62828}.day.sat small,.day.sat b{color:#1565c0}
 .day[aria-selected=true]{background:var(--dark);border-color:var(--dark)}
 .day[aria-selected=true] small,.day[aria-selected=true] b{color:#fff}
@@ -104,9 +103,27 @@ tr[data-z=up]{--zc:#43A047}tr[data-z=po]{--zc:#F6B93B}tr[data-z=dn]{--zc:#E53935
 .zl{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);padding:8px 2px}
 .zl i{display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:-1px;background:var(--zc)}
 @media(max-width:820px){.lvl.l3{grid-template-columns:minmax(0,1fr)}.hide-sp{display:none}}
+
+/* トップの写真：数枚を切り替えて表示（写真がないときは出さない） */
+.photos{background:var(--dark);position:relative}
+.photos[hidden]{display:none}
+.ph-stage{position:relative;width:min(1200px,100%);margin:0 auto;aspect-ratio:16/7;max-height:520px;overflow:hidden}
+.ph{position:absolute;inset:0;margin:0;opacity:0;transition:opacity .8s;pointer-events:none}
+.ph.on{opacity:1;pointer-events:auto}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph figcaption{position:absolute;left:0;right:0;bottom:0;padding:40px 20px 14px;background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;font-size:14px;font-weight:700;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.ph figcaption small{font-size:11px;font-weight:500;opacity:.8}
+.ph-nav{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:0;background:#0007;color:#fff;font-size:22px;line-height:1;z-index:2}
+.ph-nav.p{left:12px}.ph-nav.n{right:12px}
+.ph-dots{position:absolute;right:14px;bottom:12px;display:flex;gap:4px;z-index:2}
+.ph-dots button{width:22px;height:22px;border:0;background:transparent;padding:0;display:grid;place-items:center}
+.ph-dots button:before{content:"";width:8px;height:8px;border-radius:50%;background:#ffffff80}
+.ph-dots button[aria-current=true]:before{background:var(--hl);width:18px;border-radius:4px}
+@media(max-width:680px){.ph-stage{aspect-ratio:4/3}.ph-nav{display:none}.ph figcaption{font-size:12.5px;padding:30px 14px 36px}}
 </style>
 </head>
 <body>
+<section class="photos" id="photos" hidden aria-roledescription="carousel" aria-label="トップ写真"><div class="ph-stage" id="phStage"></div><button class="ph-nav p" id="phPrev" aria-label="前の写真">‹</button><button class="ph-nav n" id="phNext" aria-label="次の写真">›</button><div class="ph-dots" id="phDots"></div></section>
 <section class="ticker"><div class="wrap">
   <div class="ctabs" id="ctabs" role="tablist"></div>
   <div class="thead"><h2><small>MATCHES</small><span id="tTitle">試合</span></h2><div class="rnav"><button id="prevR" aria-label="前の節">‹</button><span id="rLabel">–</span><button id="nextR" aria-label="次の節">›</button></div></div>
@@ -206,8 +223,25 @@ function renderPyramid(){
     '<div class="zl"><span style="--zc:#49ADE9"><i></i>優勝</span><span style="--zc:#43A047"><i></i>上の大会へ</span><span style="--zc:#F6B93B"><i></i>決勝大会へ</span><span style="--zc:#E53935"><i></i>降格</span></div>';
 }
 
+
+/* ---------- トップの写真 ---------- */
+async function renderPhotos(){
+  const ps=(await topPhotos()).slice(0,10);if(!ps.length)return;
+  $('phStage').innerHTML=ps.map((p,i)=>'<figure class="ph'+(i?'':' on')+'">'+(p.link?'<a href="'+esc(p.link)+'" target="_blank" rel="noopener">':'')+'<img src="'+esc(p.src)+'" alt="'+esc(p.caption)+'"'+(i?' loading="lazy"':'')+'>'+(p.link?'</a>':'')+
+    (p.caption||p.credit?'<figcaption>'+esc(p.caption)+(p.credit?'<small>撮影：'+esc(p.credit)+'</small>':'')+'</figcaption>':'')+'</figure>').join('');
+  $('phDots').innerHTML=ps.length>1?ps.map((_,i)=>'<button aria-label="'+(i+1)+'枚目" data-i="'+i+'" aria-current="'+(i===0)+'"></button>').join(''):'';
+  $('phPrev').hidden=$('phNext').hidden=ps.length<2;
+  $('photos').hidden=false;
+  let cur=0,timer=null;
+  const go=i=>{cur=(i+ps.length)%ps.length;$('phStage').querySelectorAll('.ph').forEach((f,k)=>f.classList.toggle('on',k===cur));$('phDots').querySelectorAll('button').forEach((b,k)=>b.setAttribute('aria-current',String(k===cur)))};
+  const auto=()=>{clearInterval(timer);if(ps.length>1&&!matchMedia('(prefers-reduced-motion: reduce)').matches)timer=setInterval(()=>go(cur+1),6000)};
+  $('phPrev').onclick=()=>{go(cur-1);auto()};$('phNext').onclick=()=>{go(cur+1);auto()};
+  $('phDots').onclick=e=>{const b=e.target.closest('[data-i]');if(b){go(+b.dataset.i);auto()}};
+  auto();
+}
 (async()=>{
   await embReady;
+  renderPhotos().catch(()=>{});
   C=await loadAll();
   ALL=C.flatMap(c=>c.data.matches.filter(m=>/^\d{4}-\d{2}-\d{2}$/.test(m.date||'')).map(m=>({...m,_c:c})));
   DATES=[...new Set(ALL.map(m=>m.date))].sort();

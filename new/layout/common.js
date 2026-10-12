@@ -1,13 +1,9 @@
-/* レイアウト案（試作）の共通部分：配色の切り替え・ヘッダー・フッター・データの読み込み・エンブレム */
+/* レイアウト案（試作）の共通部分：ヘッダー・フッター・データの読み込み・エンブレム */
 'use strict';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const QS=new URLSearchParams(location.search);
 
-/* 配色：?p=a（雪原）・?p=c（ヘキサ）。選んだものはタブを閉じるまで続く */
-let PAL='a';
-try{const q=QS.get('p');if(q==='a'||q==='c')sessionStorage.setItem('hsl-pal',q);PAL=sessionStorage.getItem('hsl-pal')||'a'}catch(e){}
-document.documentElement.setAttribute('data-p',PAL);
 
 const PAGES=[['top.html','トップ'],['board.html','大会ボード']];
 function chrome(){
@@ -17,8 +13,7 @@ function chrome(){
     '<nav><a href="./top.html#calendar">カレンダー</a><a href="./board.html">大会記録</a><a href="../news.html">お知らせ</a><a href="../about.html">連盟について</a></nav></div><div class="tri"></div></header>');
   document.body.insertAdjacentHTML('beforeend',
     '<footer class="ft"><div class="tri"></div><div class="wrap in"><div><b>北海道サッカーリーグ</b><p>新しいトップの試作です。データは公式記録から反映しています。</p></div><nav><a href="./top.html">トップ</a><a href="./board.html">大会記録</a><a href="../">今のトップ</a></nav></div></footer>'+
-    '<div class="proto"><span>試作</span>'+PAGES.map(([f,t])=>'<a class="'+(f===here?'on':'')+'" href="./'+f+'">'+t+'</a>').join('')+
-    '<i></i><span>色</span><a class="'+(PAL==='a'?'on':'')+'" href="?p=a">A</a><a class="'+(PAL==='c'?'on':'')+'" href="?p=c">C</a></div>');
+    '<div class="proto"><span>試作</span>'+PAGES.map(([f,t])=>'<a class="'+(f===here?'on':'')+'" href="./'+f+'">'+t+'</a>').join('')+'</div>');
 }
 
 /* データ */
@@ -26,6 +21,9 @@ async function json(f){const r=await fetch('../../results/data/'+f,{cache:'no-st
 async function loadAll(){
   const list=(await json('competitions.json')).competitions||[];
   const ds=await Promise.all(list.map(c=>json(encodeURIComponent(c.id)+'.json').catch(()=>null)));
+  /* チーム紹介（管理画面）のエンブレム・チーム写真：各大会の名簿（{id}-roster.json）の profile から */
+  const rs=await Promise.all(list.map(c=>json(encodeURIComponent(c.id)+'-roster.json').catch(()=>null)));
+  for(const r of rs)for(const t of (r&&r.teams)||[])if(t.profile&&t.team)for(const k of [t.team.id,t.team.name,t.team.univ])if(k&&!PROF.has(k))PROF.set(k,t.profile);
   return list.map((c,i)=>({...c,code:c.id.split('-').pop(),short:compShort(c),data:ds[i]})).filter(c=>c.data);
 }
 const SHORT={TOP:'北海道リーグ',SD:'札幌・道央ブロック',DN:'道南ブロック',DT:'道東・道北ブロック',BF:'ブロックリーグ決勝大会',SC:'全国社会人 北海道予選',CC:'全国クラブ 北海道予選',HC:'北海道選手権（天皇杯）'};
@@ -53,14 +51,45 @@ function winners(c){
   return {kind:'cup',list:fin.map(m=>m.winner===m.away.id?m.away:m.home),final:fin.length>0,label:c.code==='HC'?'優勝':'北海道代表'};
 }
 
-/* エンブレム（new/emblems/index.json があれば画像） */
-let EMB={};
-const embReady=fetch('../emblems/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{EMB=j||{}}).catch(()=>{});
+/* 画像の置き場所
+ *  ・管理画面（チーム紹介の「エンブレム」「チーム写真」、トップ写真）で入れたものを先に使う
+ *  ・なければ、GitHub に置いたファイル：new/emblems/（index.json に {"クラブの正式名":"ファイル名"}）
+ *    new/photos/（index.json に {"top":[{"file","caption","credit","link"}],"teams":{"クラブの正式名":"ファイル名"}}）
+ */
+const PROF=new Map();
+let EMB={},PH={};
+const embReady=Promise.all([
+  fetch('../emblems/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{EMB=j||{}}).catch(()=>{}),
+  fetch('../photos/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{PH=j||{}}).catch(()=>{})
+]);
+const FILE_RE=/^[^\/\\?#]+\.(png|jpe?g|webp|svg|gif)$/i;
+/* 画像のURL：https のURL・Googleドライブの共有リンク・dir に置いたファイル名 */
+function imgUrl(v,dir,w){
+  v=String(v||'').trim();if(!v)return '';
+  const d=v.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{20,})/);
+  if(d)return 'https://drive.google.com/thumbnail?id='+d[1]+'&sz=w'+(w||400);
+  if(/^https:\/\//i.test(v))return v;
+  if(FILE_RE.test(v))return '../'+dir+'/'+encodeURIComponent(v);
+  return '';
+}
+const profOf=t=>PROF.get(t.id)||PROF.get(t.name)||PROF.get(t.univ)||null;
+function emblemOf(t){const p=profOf(t);return imgUrl(p&&p.emblem,'emblems')||imgUrl(EMB[t.name]||EMB[t.univ]||EMB[t.short]||EMB[t.id],'emblems')}
+function teamPhotoOf(t,w){const p=profOf(t),m=PH.teams||{};return imgUrl(p&&p.teamPhoto,'photos',w)||imgUrl(m[t.name]||m[t.univ]||m[t.id],'photos',w)}
+/* トップの写真：管理画面のトップ写真（news.json の hero）＋ new/photos/index.json の top */
+async function topPhotos(){
+  let hero=[];try{hero=(await json('news.json')).hero||[]}catch(e){}
+  const a=hero.map(h=>({src:imgUrl(h.photo,'photos',1600),caption:h.caption||'',credit:h.credit||'',link:/^https:\/\//.test(h.url||'')?h.url:''}));
+  const b=(PH.top||[]).map(h=>({src:imgUrl(h.file||h.photo,'photos',1600),caption:h.caption||'',credit:h.credit||'',link:/^https:\/\//.test(h.link||'')?h.link:''}));
+  return a.concat(b).filter(x=>x.src);
+}
 const PALETTE=['#145ec9','#0f7a6b','#7b3fb5','#c0392b','#1d6fa5','#b35c00','#2e7d32','#ad1457','#37474f','#5d4dbf'];
 function crest(t,size){
   const n=t.short||t.name||'';let h=0;for(const ch of t.id||n)h=(h*31+ch.charCodeAt(0))>>>0;
-  const f=EMB[t.name]||EMB[t.univ]||EMB[t.short];
-  if(f&&/^[^\/\\?#]+\.(png|jpe?g|webp|svg|gif)$/i.test(f))return '<span class="crest img '+(size||'')+'"><img src="../emblems/'+encodeURIComponent(f)+'" alt=""></span>';
-  const s=n.replace(/^(北海道)/,'').replace(/(クラブ)$/,'')||n;
-  return '<span class="crest '+(size||'')+'" style="--c:'+PALETTE[h%PALETTE.length]+'">'+esc([...s].slice(0,2).join(''))+'</span>';
+  const u=emblemOf(t);
+  const s=n.replace(/^(北海道)/,'').replace(/(クラブ)$/,'')||n,ch=[...s].slice(0,2).join('');
+  const p=profOf(t),c=/^#[0-9a-f]{3,8}$/i.test((p&&p.color)||'')?p.color:PALETTE[h%PALETTE.length];
+  if(u)return '<span class="crest img '+(size||'')+'" style="--c:'+c+'" data-ch="'+esc(ch)+'"><img src="'+esc(u)+'" alt="" loading="lazy" onerror="crestFail(this)"></span>';
+  return '<span class="crest '+(size||'')+'" style="--c:'+c+'">'+esc(ch)+'</span>';
 }
+/* 画像が読めないときは文字のエンブレムにもどす */
+function crestFail(img){const s=img.parentNode;s.classList.remove('img');s.textContent=s.dataset.ch||''}

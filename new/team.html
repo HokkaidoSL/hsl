@@ -507,8 +507,13 @@ function teamPhotoUrl(p,w){
   const e=String(p?.teamPhoto||'').trim();if(!e)return '';
   const d=e.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{20,})/);
   if(d)return 'https://drive.google.com/thumbnail?id='+d[1]+'&sz=w'+w;
+  if(/^[^\/\\?#]+\.(png|jpe?g|webp)$/i.test(e))return './photos/'+encodeURIComponent(e);
   return /^https:\/\//i.test(e)?e:'';
 }
+/* 手で置いたチーム写真：new/photos/index.json の teams（{"クラブの正式名":"ファイル名"}）。チーム紹介の「チーム写真」が空のときに使う */
+let PHI={};
+const phReady=fetch('./photos/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{PHI=j&&typeof j==='object'?j:{}}).catch(()=>{});
+function manualTeamPhoto(t){const m=PHI.teams||{};if(typeof t!=='object')return '';for(const k of [t.name,t.univ,t.id]){const f=k&&m[k];if(f&&/^[^\/\\?#]+\.(png|jpe?g|webp)$/i.test(f))return './photos/'+encodeURIComponent(f)}return ''}
 /* クラブのエンブレム：new/emblems/index.json（{"クラブ名":"ファイル名"}）。チーム紹介の「エンブレム」が空のときに使う */
 let EMB={};
 const embReady=fetch('./emblems/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{EMB=j&&typeof j==='object'?j:{}}).catch(()=>{});
@@ -567,7 +572,7 @@ function renderHero(row,ms){
   document.title=fullName(t)+' | 北海道サッカーリーグ';
   $('crumbName').textContent=name(t);
   $('heroCrest').innerHTML=crest(t,'xl');
-  const hp=teamPhotoUrl(p,1600);
+  const hp=teamPhotoUrl(p,1600)||manualTeamPhoto(t);
   $('heroPh').innerHTML=hp?'<img src="'+esc(hp)+'" alt="" decoding="async" onerror="this.remove()">':'';
   $('teamTitle').textContent=(p&&has(p.displayName))?p.displayName:fullName(t);
   const univ=typeof t==='object'&&has(t.univ)?t.univ:'';
@@ -848,7 +853,7 @@ $('nav').addEventListener('click',e=>{if(e.target.closest('a')){$('nav').classLi
   }
   $('demo').hidden=!DEMO;
   PROFILES=((await loadProfiles()).teams||[]);
-  await embReady;
+  await embReady;await phReady;
   const cs=d.competitions||[];
   if(!cs.length){$('teamTitle').textContent='大会が登録されていません';return}
   COMPS=cs;

@@ -29,7 +29,6 @@
 
 .cover{background:var(--dark);color:#fff;padding:22px 24px;position:relative;overflow:hidden}
 .cover:after{content:"";position:absolute;right:-40px;bottom:-60px;width:220px;height:220px;border-radius:50%;border:36px solid #ffffff0d}
-[data-p=c] .cover:after{border:0;border-radius:0;background:#ffffff0a;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
 .cover small{font:700 12px/1 var(--num);letter-spacing:.16em;color:var(--hl)}
 .cover h1{margin:6px 0 10px;font-size:clamp(20px,3vw,28px);font-weight:900;line-height:1.35}
 .links{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1}
@@ -91,8 +90,6 @@ tr[data-z=up]{--zc:#43A047}tr[data-z=po]{--zc:#F6B93B}tr[data-z=dn]{--zc:#E53935
 .kids>*:first-child:before{top:50%;bottom:-7px}
 .kids>*:last-child:before{bottom:50%;top:-7px}
 .kids>*:only-child:before{display:none}
-.tree{--lc:#b9c4bd}
-[data-p=c] .tree{--lc:#b5c2cb}
 .mt{position:relative}
 .kids+.mt:before{content:"";position:absolute;left:-14px;top:50%;width:14px;border-top:2px solid var(--lc)}
 .mc{width:220px;background:var(--card);border:1px solid var(--line);display:block}
