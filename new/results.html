@@ -303,7 +303,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const has=v=>v!=null&&String(v).trim()!=='';
 const name=t=>typeof t==='string'?t:(t?.short||t?.name||'未定');
 const tkey=t=>typeof t==='string'?t:(t?.id||t?.name||t?.short||'');
-const shortComp=n=>String(n||'').replace(/^\d{4}年度\s*/,'').replace(/第\d+回\s*/g,'').replace(/^北海道サッカーリーグ$/,'北海道リーグ').replace(/^北海道サッカーリーグ\s*(?=\S)/,'').replace(/ブロックリーグ決勝大会/,'決勝大会').replace(/ブロックリーグ$/,'ブロック').replace(/^(全国社会人|全国クラブ).*$/,'$1').replace(/^北海道サッカー選手権.*$/,'北海道選手権').trim()||n;
+const shortComp=n=>String(n||'').replace(/^\d{4}年度\s*/,'').replace(/第\d+回\s*/g,'').replace(/^北海道サッカーリーグ$/,'北海道リーグ').replace(/^北海道サッカーリーグ\s*(?=\S)/,'').replace(/ブロックリーグ決勝大会/,'決勝大会').replace(/ブロックリーグ$/,'ブロック').replace(/^(全国社会人|全国クラブ).*$/,'$1予選').replace(/^北海道サッカー選手権.*$/,'北海道選手権').trim()||n;
 const W='日月火水木金土';
 const jd=ymd=>{const m=String(ymd||'').match(/(\d{4})-(\d{2})-(\d{2})/);if(!m)return ymd||'日程未定';const d=new Date(+m[1],+m[2]-1,+m[3]);return `${+m[2]}月${+m[3]}日（${W[d.getDay()]}）`;};
 const sd=ymd=>{const m=String(ymd||'').match(/(\d{4})-(\d{2})-(\d{2})/);if(!m)return '';const d=new Date(+m[1],+m[2]-1,+m[3]);return `${+m[2]}/${+m[3]}(${W[d.getDay()]})`;};

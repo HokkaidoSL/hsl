@@ -795,7 +795,7 @@ $('nav').addEventListener('click',e=>{if(e.target.closest('a')){$('nav').classLi
   await embReady;
   const cs=d.competitions||[];
   if(!cs.length){$('teamTitle').textContent='大会が登録されていません';return}
-  const short=n=>String(n||'').replace(/^\d{4}年度\s*/,'').replace(/第\d+回\s*/g,'').replace(/^北海道サッカーリーグ$/,'北海道リーグ').replace(/^北海道サッカーリーグ\s*(?=\S)/,'').replace(/ブロックリーグ決勝大会/,'決勝大会').replace(/ブロックリーグ$/,'ブロック').replace(/^(全国社会人|全国クラブ).*$/,'$1').replace(/^北海道サッカー選手権.*$/,'北海道選手権').trim()||n;
+  const short=n=>String(n||'').replace(/^\d{4}年度\s*/,'').replace(/第\d+回\s*/g,'').replace(/^北海道サッカーリーグ$/,'北海道リーグ').replace(/^北海道サッカーリーグ\s*(?=\S)/,'').replace(/ブロックリーグ決勝大会/,'決勝大会').replace(/ブロックリーグ$/,'ブロック').replace(/^(全国社会人|全国クラブ).*$/,'$1予選').replace(/^北海道サッカー選手権.*$/,'北海道選手権').trim()||n;
   $('comptabs').innerHTML=cs.map(c=>'<button role="tab" data-id="'+esc(c.id)+'" title="'+esc(c.name)+'">'+esc(short(c.name))+'</button>').join('');
   const comp=cs.some(c=>c.id===PARAMS.get('comp'))?PARAMS.get('comp'):cs[0].id;
   $('comptabs').addEventListener('click',e=>{

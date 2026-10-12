@@ -184,7 +184,7 @@ function fmtDate(s){const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');if(!m)return 
 const safeUrl=u=>/^https?:\/\//i.test(String(u||''))?String(u):'';
 /* 本文：改行を保ち、URLをリンクにする */
 function richText(t){return esc(t).replace(/(https?:\/\/[^\s<>"']+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/\n/g,'<br>')}
-const shortComp=n=>String(n||'').replace(/^\d{4}年度\s*/,'').replace(/第\d+回\s*/g,'').replace(/^北海道サッカーリーグ$/,'北海道リーグ').replace(/^北海道サッカーリーグ\s*(?=\S)/,'').replace(/ブロックリーグ決勝大会/,'決勝大会').replace(/ブロックリーグ$/,'ブロック').replace(/^(全国社会人|全国クラブ).*$/,'$1').replace(/^北海道サッカー選手権.*$/,'北海道選手権').trim()||n;
+const shortComp=n=>String(n||'').replace(/^\d{4}年度\s*/,'').replace(/第\d+回\s*/g,'').replace(/^北海道サッカーリーグ$/,'北海道リーグ').replace(/^北海道サッカーリーグ\s*(?=\S)/,'').replace(/ブロックリーグ決勝大会/,'決勝大会').replace(/ブロックリーグ$/,'ブロック').replace(/^(全国社会人|全国クラブ).*$/,'$1予選').replace(/^北海道サッカー選手権.*$/,'北海道選手権').trim()||n;
 async function getJSON(file){
   if(DEMO)return demoData(file);
   const r=await fetch('../results/data/'+file,{cache:'no-store'});
