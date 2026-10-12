@@ -42,8 +42,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 .crest.lg{width:56px;height:56px;font-size:18px}
 .crest.xl{width:84px;height:84px;font-size:26px}
 .crest.xs{width:22px;height:22px;font-size:8.5px}
-.crest.img{background:#fff;border:1px solid var(--line)}
-.crest.img img{width:78%;height:78%;object-fit:contain}
+.crest.img{background:transparent;border-radius:0;overflow:visible}
+.crest.img img{width:100%;height:100%;object-fit:contain}
+/* 暗い面の上（トーナメントの勝者など）では白い丸い台にのせる */
+.champ2 .crest.img,.cover .crest.img{background:#fff;border-radius:50%;overflow:hidden}
+.champ2 .crest.img img,.cover .crest.img img{width:74%;height:74%}
 
 /* フッター */
 .ft{background:var(--dark);color:#cfd8d3;margin-top:56px;font-size:12px}
