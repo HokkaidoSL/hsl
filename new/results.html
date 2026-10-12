@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="../results/favicon.png" sizes="32x32">
 <link rel="apple-touch-icon" href="../results/apple-touch-icon.png">
-<title>大会記録 | 北海道社会人サッカー連盟</title>
-<meta name="description" content="北海道社会人サッカー連盟の大会の日程・結果・順位表・星取表・トーナメント・得点ランキング・警告退場">
+<title>大会記録 | 北海道サッカーリーグ</title>
+<meta name="description" content="北海道サッカーリーグの大会の日程・結果・順位表・星取表・トーナメント・得点ランキング・警告退場">
 <!--
   new/results.html 大会記録（2026-10 旧「公式記録ページ」results/index.html から移した）
   データは全体システムが書き出す ../results/data/*.json（StaticSite.gs）
@@ -267,7 +267,7 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 <body>
 <header class="header">
   <div class="wrap head">
-    <a href="./" class="brand"><span class="logo logotext">HSL</span><span class="brandname">北海道社会人サッカー連盟<small>Hokkaido Football League</small></span></a>
+    <a href="./" class="brand"><span class="logo"><img src="./img/hsl-logo.svg" alt="北海道サッカーリーグ" width="34" height="38"></span><span class="brandname">北海道サッカーリーグ<small>Hokkaido Soccer League</small></span></a>
     <button class="menubtn" id="menu" aria-controls="nav" aria-expanded="false">☰ メニュー</button>
     <nav class="nav" id="nav">
       <a href="./">トップ</a>
@@ -291,7 +291,7 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 
 <footer class="footer">
   <div class="wrap">
-    <div><strong>北海道社会人サッカー連盟</strong><p>大会記録は、北海道サッカー協会の公式記録から反映しています。</p><p id="updated"></p></div>
+    <div><strong>北海道サッカーリーグ</strong><p>大会記録は、北海道サッカー協会の公式記録から反映しています。</p><p id="updated"></p></div>
     <nav><a href="./">トップ</a><a href="./news.html">お知らせ</a><a href="./about.html">連盟について</a><a href="#" onclick="scrollTo({top:0});return false">ページ上部へ ↑</a></nav>
   </div>
 </footer>
@@ -403,7 +403,7 @@ async function load(){
     const c=d.competition||{};
     $('compTitle').textContent=c.name||'大会記録';
     $('compSub').textContent='日程・結果・順位表・得点ランキング・警告・退場';
-    document.title=(c.name||'大会記録')+' | 北海道社会人サッカー連盟';
+    document.title=(c.name||'大会記録')+' | 北海道サッカーリーグ';
     $('updated').textContent=d.updatedAt?'更新：'+String(d.updatedAt).replace('T',' ').slice(0,16):'';
     const avail=TABS.filter(t=>t[2](d));
     if(!avail.some(t=>t[0]===S.tab))S.tab='schedule';

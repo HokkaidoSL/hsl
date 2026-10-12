@@ -1,4 +1,4 @@
-# 北海道社会人サッカー連盟 公式サイト（試験公開）
+# 北海道サッカーリーグ 公式サイト（試験公開）
 
 GitHub Pages：https://hokkaidosl.github.io/hsl/
 

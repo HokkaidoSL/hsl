@@ -89,5 +89,3 @@ tr.me td{background:#2a1416}
 /* 注目の試合の光（紺 → 赤み） */
 .hero:before{background:radial-gradient(600px 300px at 80% 0%,#5a0a12,transparent 70%)}
 
-/* ロゴの画像が決まるまでの文字のロゴ（社会人リーグ版） */
-.logo.logotext{font-weight:900;font-size:18px;letter-spacing:.06em;color:#0091DA;min-width:64px;justify-content:center}

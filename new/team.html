@@ -7,7 +7,7 @@
 <link rel="icon" href="../results/favicon.png" sizes="32x32">
 <link rel="apple-touch-icon" href="../results/apple-touch-icon.png">
 <meta name="robots" content="noindex,nofollow">
-<title>チーム紹介 | 北海道社会人サッカー連盟</title>
+<title>チーム紹介 | 北海道サッカーリーグ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -160,7 +160,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .mrow .d{font-family:var(--num);font-size:16px;font-weight:700;line-height:1.1}
 .mrow .d small{display:block;font-family:"Noto Sans JP";font-size:10px;color:var(--muted);font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ha{font-size:10px;font-weight:700;text-align:center;border:1px solid var(--line);border-radius:4px;padding:2px 0;color:var(--muted)}
-.ha.H{background:var(--ink);color:#fff;border-color:var(--ink)}
+.ha.H{background:var(--accent);color:#fff;border-color:var(--accent)}
 .opp{display:flex;align-items:center;gap:9px;min-width:0;font-size:14px;font-weight:700}
 .opp span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .opp small{display:block;font-size:10.5px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -339,7 +339,7 @@ dl.facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
 
 <header class="header">
   <div class="wrap head">
-    <a href="./" class="brand"><span class="logo logotext">HSL</span><span class="brandname">北海道社会人サッカー連盟<small>Hokkaido Football League</small></span></a>
+    <a href="./" class="brand"><span class="logo"><img src="./img/hsl-logo.svg" alt="北海道サッカーリーグ" width="34" height="38"></span><span class="brandname">北海道サッカーリーグ<small>Hokkaido Soccer League</small></span></a>
     <button class="menubtn" id="menu" aria-controls="nav" aria-expanded="false">☰ メニュー</button>
     <nav class="nav" id="nav">
       <a href="./">トップ</a>
@@ -425,7 +425,7 @@ dl.facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
 
 <footer class="footer">
   <div class="wrap">
-    <div><strong>北海道社会人サッカー連盟</strong><p>チームページ Ver.2（試験公開）。試合・成績は公式記録から自動反映、クラブ情報・選手名鑑は各クラブの登録内容を表示しています。</p><p id="updated"></p></div>
+    <div><strong>北海道サッカーリーグ</strong><p>チームページ Ver.2（試験公開）。試合・成績は公式記録から自動反映、クラブ情報・選手名鑑は各クラブの登録内容を表示しています。</p><p id="updated"></p></div>
     <nav><a href="./">新公式サイト</a><a href="./results.html">大会記録</a><a href="#" onclick="scrollTo({top:0});return false">ページ上部へ ↑</a></nav>
   </div>
 </footer>
@@ -444,7 +444,7 @@ const isDone=m=>m.status==='finished'&&m.score&&m.score.home!=null&&m.score.home
 const has=v=>v!=null&&String(v).trim()!=='';
 const PARAMS=new URLSearchParams(location.search);
 let DEMO=PARAMS.has('demo');
-const teamUrl=(comp,t)=>'./team.html?comp='+encodeURIComponent(comp)+'&team='+encodeURIComponent(tkey(t))+(DEMO?'&demo':'');
+const teamUrl=(comp,t)=>'./team.html?'+(comp&&comp!=='ALL'?'comp='+encodeURIComponent(comp)+'&':'')+'team='+encodeURIComponent(tkey(t))+(DEMO?'&demo':'');
 
 const PALETTE=['#145ec9','#0f7a6b','#7b3fb5','#c0392b','#1d6fa5','#b35c00','#2e7d32','#ad1457','#37474f','#5d4dbf'];
 let PROFILES=[];
@@ -558,7 +558,7 @@ function renderHero(row,ms){
   document.documentElement.style.setProperty('--team',teamColor(t));
   // 黒い背景の上の文字：暗いチームカラーは白を混ぜて読みやすくする
   document.documentElement.style.setProperty('--teamText',crestInk(teamColor(t))==='#fff'?'color-mix(in srgb,'+teamColor(t)+' 55%,#fff)':teamColor(t));
-  document.title=fullName(t)+' | 北海道社会人サッカー連盟';
+  document.title=fullName(t)+' | 北海道サッカーリーグ';
   $('crumbName').textContent=name(t);
   $('heroCrest').innerHTML=crest(t,'xl');
   const hp=teamPhotoUrl(p,1600);
@@ -590,7 +590,7 @@ function duel(m,next){
 function renderPair(){
   const nx=S.up[0],ls=S.res[0];
   const card=(m,next)=>!m?'<div class="mcard'+(next?' next':'')+'"><div class="top"><span class="lbl">'+(next?'NEXT MATCH':'LAST RESULT')+'</span></div><p class="empty" style="padding:8px 0;'+(next?'color:#bcd0df':'')+'">'+(next?'予定されている試合はありません。':'まだ試合結果はありません。')+'</p></div>':
-    '<a class="mcard'+(next?' next':'')+'" href="'+detail(S.comp,isDone(m)?m.matchId:'')+'"><div class="top"><span class="lbl">'+(next?'NEXT MATCH':'LAST RESULT')+'</span><span>'+esc(m.round||'')+(next?'':'　<span class="res '+outcome(m)+'">'+OUT[outcome(m)]+'</span>')+'</span></div>'+
+    '<a class="mcard'+(next?' next':'')+'" href="'+detail(m._comp||S.comp,isDone(m)?m.matchId:'')+'"><div class="top"><span class="lbl">'+(next?'NEXT MATCH':'LAST RESULT')+'</span><span>'+esc(m.round||'')+(next?'':'　<span class="res '+outcome(m)+'">'+OUT[outcome(m)]+'</span>')+'</span></div>'+
     duel(m,next)+'<div class="foot">📍 '+esc(m.venue||'会場未定')+'</div></a>';
   $('pair').innerHTML=card(nx,true)+card(ls,false);
 }
@@ -602,10 +602,10 @@ function renderMatches(which){
   $('matchList').innerHTML=list.map(m=>{
     const home=isMe(m.home),opp=home?m.away:m.home,o=outcome(m);
     const mine=o?(home?m.score.home:m.score.away):null,their=o?(home?m.score.away:m.score.home):null;
-    return '<a class="mrow" href="'+detail(S.comp,isDone(m)?m.matchId:'')+'">'+
+    return '<a class="mrow" href="'+detail(m._comp||S.comp,isDone(m)?m.matchId:'')+'">'+
       '<div class="d">'+esc(fmtDate(m.date,true))+'<small>（'+esc(wd(m.date))+'）'+esc(m.kickoff||'')+'</small></div>'+
       '<div class="ha'+(home?' H':'')+'">'+(home?'HOME':'AWAY')+'</div>'+
-      '<div class="opp">'+crest(opp,'sm')+'<div><span>vs '+esc(name(opp))+'</span><small>'+esc([m.round,m.venue].filter(has).join('　'))+'</small></div></div>'+
+      '<div class="opp">'+crest(opp,'sm')+'<div><span>vs '+esc(name(opp))+'</span><small>'+esc([m._compShort,m.round,m.venue].filter(has).join('　'))+'</small></div></div>'+
       (o?'<div class="sc">'+esc(mine)+' - '+esc(their)+'</div>':'<div class="sc vs">VS</div>')+
       '<div class="r">'+(o?'<span class="res '+o+'">'+OUT[o]+'</span>':'')+'</div></a>';
   }).join('');
@@ -623,8 +623,8 @@ function renderMiniTable(){
     '<table><thead><tr><th class="l">順位</th><th class="l">クラブ</th><th>勝点</th><th>試</th><th>得失</th></tr></thead><tbody>'+
     g.table.slice(a,b).map(r=>{
       let gd=pick(r,['goalDiff','gd','diff']);if(gd==null&&pick(r,['goalsFor','gf'])!=null)gd=(+pick(r,['goalsFor','gf']))-(+pick(r,['goalsAgainst','ga'])||0);
-      return '<tr class="'+(isMe(r.team)?'me':'')+'"><td class="l"><span class="pos">'+esc(r.rank)+'</span></td><td class="l"><a class="tt" href="'+esc(teamUrl(S.comp,r.team))+'">'+crest(r.team,'xs')+esc(name(r.team))+'</a></td><td class="pts">'+esc(r.points)+'</td><td class="n">'+esc(r.played)+'</td><td class="n">'+esc(gd!=null&&+gd>0?'+'+gd:gd??'')+'</td></tr>';
-    }).join('')+'</tbody></table><a class="tbl-foot" href="'+detail(S.comp)+'&tab=standings">全'+g.table.length+'チームの順位を見る ›</a>';
+      return '<tr class="'+(isMe(r.team)?'me':'')+'"><td class="l"><span class="pos">'+esc(r.rank)+'</span></td><td class="l"><a class="tt" href="'+esc(teamUrl(S.data._tableComp||S.comp,r.team))+'">'+crest(r.team,'xs')+esc(name(r.team))+'</a></td><td class="pts">'+esc(r.points)+'</td><td class="n">'+esc(r.played)+'</td><td class="n">'+esc(gd!=null&&+gd>0?'+'+gd:gd??'')+'</td></tr>';
+    }).join('')+'</tbody></table><a class="tbl-foot" href="'+detail(S.data._tableComp||S.comp)+'&tab=standings">全'+g.table.length+'チームの順位を見る ›</a>';
   return g.table[i];
 }
 function renderScorers(){
@@ -746,26 +746,66 @@ function showTeam(teams,wanted,univ){
   const t=teams.find(x=>tkey(x)===wanted)||(has(univ)&&teams.find(x=>univOf(x)===univ))||teams.find(x=>name(x)===wanted||fullName(x)===wanted)||teams[0];
   if(!t){$('teamTitle').textContent='チーム情報がありません';return}
   S.team=t;
-  const u=new URL(location.href);u.searchParams.set('comp',S.comp);u.searchParams.set('team',tkey(t));history.replaceState(null,'',u);
+  const u=new URL(location.href);if(S.comp===ALL)u.searchParams.delete('comp');else u.searchParams.set('comp',S.comp);u.searchParams.set('team',tkey(t));history.replaceState(null,'',u);
   $('clubbar').innerHTML='<small>CLUBS</small>'+teams.map(x=>'<a class="'+(tkey(x)===tkey(t)?'on':'')+'" href="'+esc(teamUrl(S.comp,x))+'" title="'+esc(name(x))+'">'+crest(x,'sm')+'</a>').join('');
   const ms=order((S.data.matches||[]).filter(m=>isMe(m.home)||isMe(m.away)));
   const today=jstToday();
   S.up=ms.filter(m=>!isDone(m)&&(m.date||'9999')>=today);
   S.res=ms.filter(isDone).reverse();
   const row=renderMiniTable();
-  renderHero(row,ms);renderPair();renderMatches(S.up.length?'up':'res');
-  renderScorers();renderRecord(row,ms);renderAbout();renderPlayers();renderNews();
+  renderHero(row,ms);
+  // すべての大会：上の順位・勝点・勝分敗は、どのリーグのものかを書く
+  {const c=COMPS.find(x=>x.id===(S.data._tableComp||S.comp)),lb=S.comp===ALL&&c?'（'+compShort(c.name)+'）':'';
+   [['hRank','順位'],['hWdl','勝-分-敗']].forEach(([id,l])=>{const s=$(id)?.nextElementSibling;if(s)s.textContent=l+lb})}renderPair();renderMatches(S.up.length?'up':'res');
+  renderScorers();renderRecord(S.comp===ALL?null:row,ms); // すべての大会：成績は全部の試合から数える
+  renderAbout();renderPlayers();renderNews();
+}
+/* 大会の一覧と、大会ごとのデータ（同じクラブは、どの大会でも同じチームID） */
+let COMPS=[];const CDATA=new Map(),CROSTER=new Map(),CTEAMS=new Map();
+const ALL='ALL';
+const compShort=n=>String(n||'').replace(/^\d{4}年度\s*/,'').replace(/第\d+回\s*/g,'').replace(/^北海道サッカーリーグ$/,'北海道リーグ').replace(/^北海道サッカーリーグ\s*(?=\S)/,'').replace(/ブロックリーグ決勝大会/,'決勝大会').replace(/ブロックリーグ$/,'ブロック').replace(/^(全国社会人|全国クラブ).*$/,'$1予選').replace(/^北海道サッカー選手権.*$/,'北海道選手権').trim()||n;
+function compData(id){
+  if(!CDATA.has(id))CDATA.set(id,json(encodeURIComponent(id)+'.json').then(d=>{if(!d.ok)throw Error('大会データを取得できません');return d}));
+  return CDATA.get(id);
+}
+function compRoster(id){if(!CROSTER.has(id))CROSTER.set(id,loadRoster(id));return CROSTER.get(id)}
+/* すべての大会：その年度の全大会の試合・得点・出場記録をまとめる（表示はクラブの分だけ） */
+async function mergedData(){
+  const ds=(await Promise.all(COMPS.map(c=>compData(c.id).catch(()=>null)))).map((d,i)=>d&&{d,c:COMPS[i]}).filter(Boolean);
+  const out={ok:true,competition:{id:ALL,name:'すべての大会'},matches:[],groups:[],scorers:[],assists:[],playerStats:[],cardTable:[],updatedAt:''};
+  const sc=new Map(),ps=new Map();
+  for(const {d,c} of ds){
+    if(String(d.updatedAt||'')>out.updatedAt)out.updatedAt=d.updatedAt;
+    for(const m of d.matches||[])out.matches.push({...m,_comp:c.id,_compShort:compShort(c.name)});
+    out._groups=(out._groups||[]).concat([{comp:c.id,groups:d.groups||[]}]);
+    for(const r of d.scorers||[]){const k=tkey(r.team)+'|'+(r.playerId||r.name);const x=sc.get(k)||{...r,count:0};x.count+=+r.count||0;sc.set(k,x)}
+    for(const t of d.playerStats||[]){
+      const k=tkey(t.team);const x=ps.get(k)||{team:t.team,matches:0,players:[]};x.matches+=+t.matches||0;
+      for(const p of t.players||[]){const y=x.players.find(q=>(q.id&&q.id===p.id)||q.name===p.name);
+        if(y){for(const f of ['apps','starts','min','goals','assists','yc','rc'])y[f]=(+y[f]||0)+(+p[f]||0)}else x.players.push({...p})}
+      ps.set(k,x);
+    }
+  }
+  out.scorers=[...sc.values()].sort((a,b)=>b.count-a.count);
+  let prev=null,rk=0;out.scorers.forEach((r,i)=>{if(r.count!==prev){rk=i+1;prev=r.count}r.rank=rk});
+  out.playerStats=[...ps.values()];
+  return out;
+}
+/* 大会のタブ：「すべての大会」と、そのクラブが出た大会だけ */
+function renderCompTabs(){
+  const key=S.team?tkey(S.team):'';
+  const mine=COMPS.filter(c=>!key||(CTEAMS.get(c.id)||[]).includes(key));
+  $('comptabs').innerHTML=[{id:ALL,name:'すべての大会'},...mine].map(c=>'<button role="tab" data-id="'+esc(c.id)+'" title="'+esc(c.name)+'" aria-selected="'+(c.id===S.comp)+'">'+esc(c.id===ALL?c.name:compShort(c.name))+'</button>').join('');
 }
 async function loadComp(id,wanted,univ){
   S.comp=id;
-  document.querySelectorAll('#comptabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.id===id)));
-  document.querySelectorAll('.js-detail').forEach(a=>a.href=detail(id));
-  document.querySelectorAll('.js-stand').forEach(a=>a.href=detail(id)+'&tab=standings');
+  document.querySelectorAll('.js-detail').forEach(a=>a.href=id===ALL?'./results.html':detail(id));
+  document.querySelectorAll('.js-stand').forEach(a=>a.href=id===ALL?'./results.html?tab=standings':detail(id)+'&tab=standings');
   try{
-    const d=await json(encodeURIComponent(id)+'.json');
-    if(!d.ok)throw Error('大会データを取得できません');
+    const d=id===ALL?await mergedData():await compData(id);
     S.data=d;
-    S.roster=await loadRoster(id);
+    if(id===ALL){const rs=await Promise.all(COMPS.map(c=>compRoster(c.id)));S.roster={teams:rs.flatMap(r=>r?.teams||[])}}
+    else S.roster=await compRoster(id);
     // シートの「チーム紹介」を teams.json より優先して使う
     PROFILES=PROFILES.filter(x=>!x._sheet);
     for(const t of S.roster?.teams||[])if(t.profile)PROFILES.unshift({...t.profile,_sheet:true,id:tkey(t.team),names:[t.team.univ,t.team.name,t.team.short].filter(has)});
@@ -773,7 +813,14 @@ async function loadComp(id,wanted,univ){
     const teams=collectTeams(d);
     makeBadges(teams,tkey,name);
     // 大会を切り替えても、同じクラブがいればそのまま表示
+    if(id===ALL){
+      // 順位表は、そのクラブが出たリーグ戦（一覧の先に並ぶ大会）のもの。クラブを決めてから選ぶ
+      const pickTable=k=>{const g=(d._groups||[]).find(x=>x.groups.some(g=>(g.table||[]).some(r=>tkey(r.team)===k)));d.groups=g?g.groups:[];d._tableComp=g?g.comp:''};
+      const first=teams.find(x=>tkey(x)===wanted)||(has(univ)&&teams.find(x=>univOf(x)===univ))||teams[0];
+      pickTable(first?tkey(first):'');
+    }
     showTeam(teams,wanted,univ);
+    renderCompTabs();
   }catch(e){
     $('teamTitle').textContent='読み込みに失敗しました';
     for(const k of ['pair','matchList','miniTable','scorers','recordBox'])$(k).innerHTML='<p class="empty">データを表示できません：'+esc(e.message)+'</p>';
@@ -795,9 +842,10 @@ $('nav').addEventListener('click',e=>{if(e.target.closest('a')){$('nav').classLi
   await embReady;
   const cs=d.competitions||[];
   if(!cs.length){$('teamTitle').textContent='大会が登録されていません';return}
-  const short=n=>String(n||'').replace(/^\d{4}年度\s*/,'').replace(/第\d+回\s*/g,'').replace(/^北海道サッカーリーグ$/,'北海道リーグ').replace(/^北海道サッカーリーグ\s*(?=\S)/,'').replace(/ブロックリーグ決勝大会/,'決勝大会').replace(/ブロックリーグ$/,'ブロック').replace(/^(全国社会人|全国クラブ).*$/,'$1予選').replace(/^北海道サッカー選手権.*$/,'北海道選手権').trim()||n;
-  $('comptabs').innerHTML=cs.map(c=>'<button role="tab" data-id="'+esc(c.id)+'" title="'+esc(c.name)+'">'+esc(short(c.name))+'</button>').join('');
-  const comp=cs.some(c=>c.id===PARAMS.get('comp'))?PARAMS.get('comp'):cs[0].id;
+  COMPS=cs;
+  // どの大会にどのクラブが出たか（タブを出す大会を決める）。読めない大会は飛ばす
+  await Promise.all(cs.map(c=>compData(c.id).then(d=>CTEAMS.set(c.id,collectTeams(d).map(tkey))).catch(()=>CTEAMS.set(c.id,[]))));
+  const comp=PARAMS.get('comp')&&cs.some(c=>c.id===PARAMS.get('comp'))?PARAMS.get('comp'):ALL;
   $('comptabs').addEventListener('click',e=>{
     const b=e.target.closest('button[data-id]');if(!b||b.dataset.id===S.comp)return;
     loadComp(b.dataset.id,S.team?tkey(S.team):null,S.team?univOf(S.team):'');
