@@ -1,121 +1,91 @@
-/* 新HPの配色（ヘッダー白・背景黒・強調は緑・注目の試合黒）
- * 強調の緑はロゴの緑（#78B549）から。白い文字をのせる面は濃い緑 #2F7D32、黒地の上の文字はロゴの緑（2026-10-12）
- * 4ページ（index・news・about・team）の <head> の最後で読み込み、各ページの色を上書きする
- * 色を変えるときは、まずこのファイルの :root を変える
+/* 公開サイトの配色（2026-10-12 決定）：色は案 C、形は案 A
+ *  色：濃い鉛色 #18252e（ヘッダー・試合の帯・フッター）、青 #1d6fa5（白い面の上の強調）、ロゴの黄 #F6E14F（濃い面の上の強調）
+ *  形：丸いエンブレム・見出しの左の縦線・角の小さいカード。ヘッダーの下とフッターの上にロゴの3色の線
+ *  すべてのページの <head> の最後で読み込み、各ページの色を上書きする。色を変えるときは、まず :root を変える
  */
 :root{
-  --bg:#0e0e0e;      /* ページの背景 */
-  --card:#1a1a1a;    /* カード */
-  --card2:#232323;   /* カードの中の帯・ボタン */
-  --line:#2e2e2e;    /* 罫線 */
-  --ink:#f2f2f2;     /* 文字 */
-  --muted:#9aa0a6;   /* 補足の文字 */
-  --navy:#000000;    /* 注目の試合・フッターなど黒い面 */
-  --navy2:#161616;
-  --lime:#2F7D32;    /* 強調（濃い緑。白い文字をのせる） */
-  --blue:#78B549;    /* 黒地の上のリンク・小見出し（ロゴの緑） */
-  --red:#2F7D32;     /* 学連版と同じく、強調の面（タブ・見出しの線）に使う */
-  --accent:#2F7D32;
+  --navy:#18252e;   /* 濃い鉛色（ヘッダー・注目の試合・フッター） */
+  --navy2:#22323d;
+  --lime:#F6E14F;   /* ロゴの黄：濃い面の上の強調 */
+  --blue:#1d6fa5;   /* 白い面の上の強調（ロゴの水色を濃く） */
+  --red:#1d6fa5;
+  --accent:#1d6fa5;
+  --ink:#18252e;
+  --muted:#5f6f7a;
+  --line:#dde4e9;
+  --bg:#f5f7f8;
+  --card:#fff;
+  --card2:#eef2f5;
 }
 body{background:var(--bg);color:var(--ink)}
 
-/* ヘッダー：白 */
-.header{background:#fff;color:#111;box-shadow:0 1px 0 #e5e5e5}
+/* ヘッダー：下にロゴの3色の線（色は下の「ヘッダー：濃い鉛色」で上書き） */
+.header{background:#fff;color:var(--ink);box-shadow:none;border-bottom:0}
+.header:after{content:"";display:block;height:4px;background:linear-gradient(90deg,#F6E14F 0 33.3%,#78B549 0 66.6%,#49ADE9 0)}
 .header .nav a{color:#333}
-.header .nav a:hover,.header .nav a.on{color:#111;border-bottom-color:var(--red)}
-.brandname small{color:#777}
-.logo{box-shadow:none}  /* ロゴにふち取りを付けない（2026-10） */
+.header .nav a:hover,.header .nav a.on{color:var(--ink);border-bottom-color:var(--blue)}
+.brandname small{color:#7a8a80}
+.logo{box-shadow:none}
 .menubtn{border-color:#ccc;color:#111}
-.comptabs{background:#161616;border-top:0}
-@media(max-width:680px){
-  .nav{background:#fff;border-bottom:1px solid #e5e5e5}
-  .nav a{border-bottom-color:#eee}
-}
+/* 大会のタブ：白地に下線（丸いボタンにしない） */
+.comptabs{background:#fff;border-top:1px solid var(--line)}
+.comptabs button,.comptabs a{color:#5c6a62;border-radius:0!important;border-bottom:3px solid transparent!important;padding:10px 12px!important}
+.comptabs button:hover,.comptabs a:hover{color:var(--ink)}
+.comptabs button[aria-selected=true],.comptabs a[aria-current=page]{background:transparent!important;color:var(--blue)!important;border-bottom-color:var(--blue)!important}
+@media(max-width:680px){.nav{background:#fff;border-bottom:1px solid var(--line)}.nav a{border-bottom-color:#eee}}
 
-/* 赤の上の文字は白 */
-.label,.comptabs button[aria-selected=true],.hero-foot a,.st.today,.crest .bdg,.ct .btn,.btn{color:#fff}
-.label.ghost{background:#ffffff1f;color:#ddd}
-.vs,.cd,.eyebrow{color:var(--blue)}
-.ph-dots button[aria-current=true]:before{background:var(--red)}
-.alert b{background:var(--red)}
+/* 見出し：左に青い太い線 */
+.sechead,.sh{border-bottom:1px solid var(--line)!important;padding-left:14px;position:relative}
+.sechead:before,.sh:before{content:"";position:absolute;left:0;top:2px;bottom:10px;width:5px;background:var(--blue)}
+.sechead h2 small,.boxhead h3 small,.ticker-head h2 small,.eyebrow{color:var(--blue)!important}
+.pagehead{background:#fff;color:var(--ink);border-bottom:1px solid var(--line)}
+.pagehead h1{color:var(--ink)}
+.pagehead .crumb,.pagehead .crumb a{color:var(--muted)}
 
-/* 面・カード */
-.ticker,.newsbox,.card,.tcard,.club,.feat article,.mcard,.article,.ov article,.player,.pagehead+.main .card{background:var(--card);border-color:var(--line)}
-.ticker{border-bottom-color:var(--line)}
-.sechead,.sh{border-bottom-color:var(--red)}
-.boxhead,.news a,.mrow,.dayhead,.list a,.docs a,.docs div,.scorer{border-color:var(--line)}
-.dayhead,.grouphead,th{background:var(--card2);color:var(--muted)}
-td,th{border-bottom-color:var(--line)}
-.mrow:hover,.news a:hover,.list a:hover,.docs a:hover,.tcard:hover{background:#222}
-.mrow .sc{background:#262626}
-.mrow .sc.done{background:#000}
-.mrow .sc.vs{border-color:var(--line);color:var(--muted)}
-.st{background:#2a2a2a;color:var(--muted)}
-.st.done{background:#000;color:#fff}
-.trow.lose,.tm.lose{color:#6f757b}
-.scorer.lead{background:linear-gradient(90deg,#1c3317,var(--card) 75%)}
-.p2{background:var(--card);border-color:#444}
-.club>.crest{border-color:var(--card)}
+/* カード：角を小さく */
+.card,.tcard,.newsbox,.club,.feat article,.mcard,.hero,.mh,.article,.ov article,.player,.bm,.leaf,.partner>div{border-radius:4px!important}
+.mrow .sc{border-radius:3px}
+.mrow .sc.done{background:var(--navy);color:#fff}
+.st.done{background:var(--navy)}
+.subtabs button,.subtabs a,.chips button,.chips a,.jump a,.roundnav button{border-radius:4px!important}
+.subtabs button[aria-selected=true],.subtabs a[aria-current=page],.chips [aria-selected=true],.ptabs button[aria-selected=true]{background:var(--blue)!important;border-color:var(--blue)!important;color:#fff!important}
+.tabbar button[aria-selected=true]{border-bottom-color:var(--blue)}
+.tabs button[aria-selected=true]{background:var(--blue);color:#fff}
 
-/* ボタン・タブ */
-.roundnav button,.subtabs button,.chips button,.chips a,.jump a,.more,.tabbar button,.ptabs button{background:var(--card2);border-color:var(--line);color:var(--muted)}
-.subtabs button[aria-selected=true],.chips [aria-selected=true],.ptabs button[aria-selected=true]{background:var(--red);border-color:var(--red);color:#fff}
-.tabbar button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--red)}
-.tabs{background:var(--card2)}
-.tabs button[aria-selected=true]{background:var(--red);color:#fff}
-
-/* お知らせ・連盟について */
-.list .thumb,.aphoto,.aphoto img{background:var(--card2)}
-.docs .ic{background:var(--card2);color:var(--muted)}
-.docs .ic.pdf{background:#3a1416;color:#ff6b73}
-.cat{color:var(--blue);border-color:#2c4a22}
-.article .body a,.ov p a{color:var(--blue)}
-
-/* チームページ */
-.lbl,.wdl,.pending{background:var(--card2);color:var(--ink)}
-tr.me td{background:#1c2e17}
-.sq tr.grp td{background:var(--card2)}
-.sq tbody tr:not(.grp):hover td{background:#222}
-
-/* エンブレム：黒地の上では白い版（暗い背景用）か、白い丸い台。白いヘッダーの上（CLUBS の列）は普通のエンブレム */
-.crest.img.hasdark .el{display:none}
-.crest.img.hasdark .ed{display:block}
-.crest.img:not(.hasdark){background:#fff!important;border-radius:50%!important}
-.crest.img:not(.hasdark) img{position:absolute;inset:15%;width:70%;height:70%}
-.clubbar .crest.img.hasdark .el{display:block}
-.clubbar .crest.img.hasdark .ed{display:none}
-.clubbar .crest.img{background:transparent!important;border-radius:0!important}
-.clubbar .crest.img img{position:static;width:100%;height:100%}
-
-/* 注目の試合の光（紺 → 赤み） */
-.hero:before{background:radial-gradient(600px 300px at 80% 0%,#1f4a1a,transparent 70%)}
-
-
-
-/* ───── 大会記録ページ（results.html）。もとは results.html の中にあったもの ───── */
-.pagehead .eyebrow{color:var(--blue)}
-.subtabs a{background:var(--card2);color:var(--muted)}
-.subtabs a:hover{color:var(--ink)}
-.subtabs a[aria-current=page]{background:var(--red);border-color:var(--red);color:#fff}
-.bar select{background-color:var(--card);color:var(--ink)}
-.sh{border-bottom-color:var(--red)}
-.mrow.link:hover{background:#222}
-.mrow .sc{background:#262626}
-.mrow .sc.done{background:#000;color:#fff}
-.mrow .sc.pend{background:transparent}
-.mrow .tm.lose{color:#6f757b}
-.dayhead{background:var(--card2);color:var(--muted)}
-.tbl th{background:var(--card2);color:var(--muted)}
-.tbl tr.me td{background:#1c2e17}
-.grid .w{color:var(--ink)}
-.bm,.leaf{background:var(--card);border-color:var(--line)}
-.ct th{background:var(--card2);color:var(--muted)}
-.ct td{border-color:var(--line)}
-.ct td.l,.ct th.l{background:var(--card)}
-.ct th.l{background:var(--card2)}
-.mh{background:#000;border:1px solid var(--line)}
-.mh:before{content:"";position:absolute;inset:0;background:radial-gradient(500px 240px at 50% 0%,#1f4a1a,transparent 70%);pointer-events:none}
+/* 白い文字をのせる強調の面 */
+.label{background:var(--lime);color:var(--navy)}
+.hero-foot a{background:var(--lime);color:var(--navy)}
+.alert b{background:var(--blue)}
+.scorer.lead{background:linear-gradient(90deg,#e4f0f8,#fff 75%)}
+tr.me td,.tbl tr.me td{background:#e4f0f8}
+.hero:before{background:radial-gradient(600px 300px at 80% 0%,#49ade955,transparent 70%)}
+.mh:before{content:"";position:absolute;inset:0;background:radial-gradient(500px 240px at 50% 0%,#49ade955,transparent 70%);pointer-events:none}
 .mh>*{position:relative}
 .back{color:var(--blue)}
-.footer{border-top:1px solid var(--line)}
-@media(max-width:680px){.nav{background:#fff;border-bottom:1px solid #e5e5e5}.nav a{border-bottom-color:#eee}}
+
+/* フッター：深い緑。上にロゴの3色の線 */
+.footer{background:var(--navy);border-top:4px solid transparent;border-image:linear-gradient(90deg,#F6E14F 0 33.3%,#78B549 0 66.6%,#49ADE9 0) 1}
+
+/* エンブレム：深い緑の上（注目の試合など）は白い丸い台 */
+.hero .crest.img:not(.hasdark),.mh .crest.img:not(.hasdark),.mcard.next .crest.img:not(.hasdark){background:#fff!important;border-radius:50%!important}
+.hero .crest.img:not(.hasdark) img,.mh .crest.img:not(.hasdark) img,.mcard.next .crest.img:not(.hasdark) img{position:absolute;inset:15%;width:70%;height:70%}
+.mh .crest.img.hasdark .el{display:none}
+.mh .crest.img.hasdark .ed{display:block}
+
+
+/* ───── ヘッダー：濃い鉛色。ロゴは白い台 ───── */
+.header{background:var(--navy);color:#fff}
+.header .nav a{color:#c9d5dd}
+.header .nav a:hover,.header .nav a.on{color:#fff;border-bottom-color:var(--lime)}
+.brandname small{color:#8fa4b2}
+.menubtn{border-color:#ffffff44;color:#fff}
+.comptabs{background:var(--navy2);border-top:0}
+.comptabs button,.comptabs a{color:#a9bac6}
+.comptabs button:hover,.comptabs a:hover{color:#fff}
+.comptabs button[aria-selected=true],.comptabs a[aria-current=page]{color:#fff!important;border-bottom-color:var(--lime)!important}
+@media(max-width:680px){.nav{background:var(--navy);border-bottom:0}.nav a{border-bottom-color:#ffffff1a}}
+/* 注目の試合の上にロゴの3色 */
+.hero,.mh{border-top:4px solid transparent;border-image:linear-gradient(90deg,#F6E14F 0 33.3%,#78B549 0 66.6%,#49ADE9 0) 1}
+.subtabs button[aria-selected=true],.subtabs a[aria-current=page],.chips [aria-selected=true],.ptabs button[aria-selected=true]{background:var(--navy)!important;border-color:var(--navy)!important}
+
+.logo{background:#fff;border-radius:3px}

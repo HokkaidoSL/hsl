@@ -1,23 +1,22 @@
-/* レイアウト案（試作）の共通部分：ヘッダー・フッター・データの読み込み・エンブレム */
+/* トップページ（index.html）の共通部分：ヘッダー・フッター・データの読み込み・エンブレム */
 'use strict';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const QS=new URLSearchParams(location.search);
 
 
-const PAGES=[['top.html','トップ'],['board.html','大会ボード']];
 function chrome(){
-  const here=location.pathname.split('/').pop();
   document.body.insertAdjacentHTML('afterbegin',
-    '<header class="hd"><div class="wrap in"><a class="brand" href="./top.html"><span class="lg"><img src="../img/hsl-logo.svg" alt="" width="34" height="38"></span><span><b>北海道サッカーリーグ</b><small>Hokkaido Soccer League</small></span></a>'+
-    '<nav><a href="./top.html#calendar">カレンダー</a><a href="./board.html">大会記録</a><a href="../news.html">お知らせ</a><a href="../about.html">連盟について</a></nav></div><div class="tri"></div></header>');
+    '<header class="hd"><div class="wrap in"><a class="brand" href="./"><span class="lg"><img src="./img/hsl-logo.svg" alt="" width="34" height="38"></span><span><b>北海道サッカーリーグ</b><small>Hokkaido Soccer League</small></span></a>'+
+    '<button class="menubtn" id="menu" aria-controls="nav" aria-expanded="false">☰ メニュー</button>'+
+    '<nav id="nav"><a href="./">トップ</a><a href="./#calendar">カレンダー</a><a href="./results.html">大会記録</a><a href="./news.html">お知らせ</a><a href="./about.html">連盟について</a></nav></div><div class="tri"></div></header>');
   document.body.insertAdjacentHTML('beforeend',
-    '<footer class="ft"><div class="tri"></div><div class="wrap in"><div><b>北海道サッカーリーグ</b><p>新しいトップの試作です。データは公式記録から反映しています。</p></div><nav><a href="./top.html">トップ</a><a href="./board.html">大会記録</a><a href="../">今のトップ</a></nav></div></footer>'+
-    '<div class="proto"><span>試作</span>'+PAGES.map(([f,t])=>'<a class="'+(f===here?'on':'')+'" href="./'+f+'">'+t+'</a>').join('')+'</div>');
+    '<footer class="ft"><div class="tri"></div><div class="wrap in"><div><b>北海道サッカーリーグ</b><p>内容は連盟の大会運営システムと公式記録から自動で反映しています。</p></div><nav><a href="./">トップ</a><a href="./results.html">大会記録</a><a href="./news.html">お知らせ</a><a href="./about.html">連盟について</a></nav></div></footer>');
+  $('menu').onclick=()=>{const o=$('nav').classList.toggle('open');$('menu').setAttribute('aria-expanded',String(o))};
 }
 
 /* データ */
-async function json(f){const r=await fetch('../../results/data/'+f,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json()}
+async function json(f){const r=await fetch('../results/data/'+f,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json()}
 async function loadAll(){
   const list=(await json('competitions.json')).competitions||[];
   const ds=await Promise.all(list.map(c=>json(encodeURIComponent(c.id)+'.json').catch(()=>null)));
@@ -36,9 +35,9 @@ const WD=['日','月','火','水','木','金','土'];
 function md(s){const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');return m?(+m[2])+'/'+(+m[3]):'未定'}
 function wd(s){const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');return m?WD[new Date(+m[1],+m[2]-1,+m[3]).getDay()]:''}
 function scoreText(m){if(!done(m))return 'vs';const s=m.score;return s.home+'-'+s.away+(s.pk?' (PK'+s.pk.home+'-'+s.pk.away+')':'')}
-const teamUrl=t=>'../team.html?team='+encodeURIComponent(t.id);
-const matchUrl=(c,m)=>'../results.html?comp='+encodeURIComponent(c)+(done(m)?'&match='+encodeURIComponent(m.matchId):'');
-const compUrl=(c,tab)=>'../results.html?comp='+encodeURIComponent(c)+(tab?'&tab='+tab:'');
+const teamUrl=t=>'./team.html?team='+encodeURIComponent(t.id);
+const matchUrl=(c,m)=>'./results.html?comp='+encodeURIComponent(c)+(done(m)?'&match='+encodeURIComponent(m.matchId):'');
+const compUrl=(c,tab)=>'./results.html?comp='+encodeURIComponent(c)+(tab?'&tab='+tab:'');
 /* 大会の勝者：リーグは1位、トーナメントは決勝（代表決定戦）の勝者 */
 function winners(c){
   const d=c.data;
@@ -59,8 +58,8 @@ function winners(c){
 const PROF=new Map();
 let EMB={},PH={};
 const embReady=Promise.all([
-  fetch('../emblems/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{EMB=j||{}}).catch(()=>{}),
-  fetch('../photos/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{PH=j||{}}).catch(()=>{})
+  fetch('./emblems/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{EMB=j||{}}).catch(()=>{}),
+  fetch('./photos/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{PH=j||{}}).catch(()=>{})
 ]);
 const FILE_RE=/^[^\/\\?#]+\.(png|jpe?g|webp|svg|gif)$/i;
 /* 画像のURL：https のURL・Googleドライブの共有リンク・dir に置いたファイル名 */
@@ -69,7 +68,7 @@ function imgUrl(v,dir,w){
   const d=v.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{20,})/);
   if(d)return 'https://drive.google.com/thumbnail?id='+d[1]+'&sz=w'+(w||400);
   if(/^https:\/\//i.test(v))return v;
-  if(FILE_RE.test(v))return '../'+dir+'/'+encodeURIComponent(v);
+  if(FILE_RE.test(v))return './'+dir+'/'+encodeURIComponent(v);
   return '';
 }
 const profOf=t=>PROF.get(t.id)||PROF.get(t.name)||PROF.get(t.univ)||null;

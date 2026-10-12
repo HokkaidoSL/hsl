@@ -1,4 +1,4 @@
-/* レイアウト案（試作）の共通部分：配色（A 雪原・C ヘキサ）・ヘッダー・フッター・エンブレム・切り替えボタン */
+/* トップページ（index.html）の共通部分：配色（色は案 C・形は案 A）・ヘッダー・フッター・エンブレム */
 :root{
   /* 色は案 C（濃い鉛色＋ロゴの水色を濃くした青）、形は案 A（丸いエンブレム・見出しの縦線・丸いボタン）。2026-10-12 決定 */
   --dark:#18252e;--dark2:#22323d;--acc:#1d6fa5;--hl:#F6E14F;
@@ -25,7 +25,14 @@ button{font:inherit;color:inherit;cursor:pointer}
 .hd nav{margin-left:auto;display:flex;gap:2px}
 .hd nav a{padding:8px 12px;font-size:13px;font-weight:700;opacity:.85}
 .hd nav a:hover{opacity:1}
-@media(max-width:780px){.hd nav{display:none}.brand b{font-size:14px}.brand .lg{height:38px}}
+.menubtn{display:none;margin-left:auto;background:transparent;border:1px solid #ffffff44;color:#fff;border-radius:6px;padding:7px 11px;font-size:12px}
+@media(max-width:780px){
+  .menubtn{display:block}
+  .hd nav{display:none;position:absolute;left:0;right:0;top:64px;background:var(--dark);flex-direction:column;padding:6px 0}
+  .hd nav.open{display:flex}
+  .hd nav a{padding:12px 20px}
+  .brand b{font-size:14px}.brand .lg{height:38px}
+}
 
 /* 見出し */
 .h2{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:0 0 12px}
@@ -54,10 +61,4 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ft b{color:#fff;font-size:14px}
 .ft nav{display:flex;gap:16px;flex-wrap:wrap}
 
-/* 試作の切り替え（左下） */
-.proto{position:fixed;left:10px;bottom:10px;z-index:99;display:flex;flex-wrap:wrap;gap:4px;align-items:center;max-width:calc(100% - 20px);background:#fff;color:#222;border:1px solid #ccc;border-radius:8px;padding:5px 6px;font:700 11px/1 "Noto Sans JP",sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.25)}
-.proto span{padding:0 3px}
-.proto a{padding:6px 8px;border-radius:5px;background:#eee}
-.proto a.on{background:#222;color:#fff}
-body{padding-bottom:64px}
 .sk{display:block;height:14px;margin:14px;border-radius:6px;background:var(--soft)}
