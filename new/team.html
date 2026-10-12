@@ -334,7 +334,7 @@ dl.facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
   #schedule,#record,#players,#about{scroll-margin-top:110px}
 }
 </style>
-<link rel="stylesheet" href="./theme.css?v=20261012b">
+<link rel="stylesheet" href="./theme.css?v=20261012c">
 </head>
 <body>
 <div class="demo" id="demo" hidden>プレビュー用のサンプルデータを表示しています（公開環境では公式データに自動で切り替わります）</div>
@@ -433,6 +433,7 @@ dl.facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
   </div>
 </footer>
 
+<script src="./season.js?v=20261012c"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -851,7 +852,8 @@ $('nav').addEventListener('click',e=>{if(e.target.closest('a')){$('nav').classLi
   $('demo').hidden=!DEMO;
   PROFILES=((await loadProfiles()).teams||[]);
   await embReady;await phReady;
-  const cs=d.competitions||[];
+  // 表示する年度（season.js）
+  const cs=(await pickSeason(d.competitions||[],id=>compData(id).then(x=>(x.matches||[]).length))).comps;
   if(!cs.length){$('teamTitle').textContent='大会が登録されていません';return}
   COMPS=cs;
   // どの大会にどのクラブが出たか（タブを出す大会を決める）。読めない大会は飛ばす

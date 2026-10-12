@@ -17,9 +17,13 @@ function chrome(){
 
 /* データ */
 async function json(f){const r=await fetch('../results/data/'+f,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json()}
+let SEASON=null;
 async function loadAll(){
-  const list=(await json('competitions.json')).competitions||[];
-  const ds=await Promise.all(list.map(c=>json(encodeURIComponent(c.id)+'.json').catch(()=>null)));
+  const all=(await json('competitions.json')).competitions||[];
+  const dsAll=new Map(await Promise.all(all.map(c=>json(encodeURIComponent(c.id)+'.json').then(d=>[c.id,d]).catch(()=>[c.id,null]))));
+  /* 表示する年度（season.js） */
+  SEASON=await pickSeason(all,id=>((dsAll.get(id)||{}).matches||[]).length);
+  const list=SEASON.comps,ds=list.map(c=>dsAll.get(c.id));
   /* チーム紹介（管理画面）のエンブレム・チーム写真：各大会の名簿（{id}-roster.json）の profile から */
   const rs=await Promise.all(list.map(c=>json(encodeURIComponent(c.id)+'-roster.json').catch(()=>null)));
   for(const r of rs)for(const t of (r&&r.teams)||[])if(t.profile&&t.team)for(const k of [t.team.id,t.team.name,t.team.univ])if(k&&!PROF.has(k))PROF.set(k,t.profile);

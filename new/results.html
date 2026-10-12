@@ -129,6 +129,9 @@ tr[data-z=up]{--zc:var(--z-up)}tr[data-z=po]{--zc:var(--z-po)}tr[data-z=dn]{--zc
 .lay{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start;margin-top:24px}
 .lay-main{min-width:0}
 .cmenu{position:sticky;top:84px;display:grid;gap:14px}
+.cmenu .season{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.cmenu .season select{flex:1;font:inherit;font-weight:700;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:7px 8px;background:#fff}
+@media(max-width:900px){.cmenu .season{flex:none}}
 .cmenu h3{margin:0 0 6px;font:700 11px/1 var(--num);letter-spacing:.16em;color:var(--muted)}
 .cmenu a{display:block;padding:10px 12px;background:#fff;border:1px solid var(--line);border-left:4px solid transparent;margin-top:-1px}
 .cmenu a{color:var(--ink)}
@@ -303,7 +306,7 @@ tr[data-z=up]{--zc:var(--z-up)}tr[data-z=po]{--zc:var(--z-po)}tr[data-z=dn]{--zc
   .tl li{padding:8px 10px;font-size:13px;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr)}
 }
 </style>
-<link rel="stylesheet" href="./theme.css?v=20261012b">
+<link rel="stylesheet" href="./theme.css?v=20261012c">
 </head>
 <body>
 <header class="header">
@@ -340,6 +343,7 @@ tr[data-z=up]{--zc:var(--z-up)}tr[data-z=po]{--zc:var(--z-po)}tr[data-z=dn]{--zc
   </div>
 </footer>
 
+<script src="./season.js?v=20261012c"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -418,7 +422,7 @@ const TABS=[
   ['assists','アシスト',d=>d.assists&&d.assists.length],
   ['cards','警告・退場',d=>d.cards&&d.cards.length]
 ];
-let COMPS=[],DATA=null,DETAIL=null,SCROLL_Y=0;
+let SEASON=null,COMPS=[],DATA=null,DETAIL=null,SCROLL_Y=0;
 const S={comp:QS.get('comp')||'',tab:QS.get('tab')||'',match:QS.get('match')||'',round:'',team:'',cteam:''};
 const pageUrl=(comp,tab,match)=>'./results.html?comp='+encodeURIComponent(comp)+(tab?'&tab='+encodeURIComponent(tab):'')+(match?'&match='+encodeURIComponent(match):'');
 function setQS(){try{const q=new URLSearchParams();if(S.comp)q.set('comp',S.comp);if(S.tab)q.set('tab',S.tab);if(DETAIL&&S.match)q.set('match',S.match);history.replaceState(null,'','?'+q.toString());}catch(e){}}
@@ -433,12 +437,12 @@ function renderMenu(){
   const by={};COMPS.forEach(c=>{(by[CODE(c.id)]=by[CODE(c.id)]||[]).push(c)});
   const known=new Set(MENU.flatMap(m=>m[1])),other=COMPS.filter(c=>!known.has(CODE(c.id)));
   const groups=MENU.map(([h,ks])=>[h,ks.flatMap(k=>by[k]||[])]).concat(other.length?[['OTHER',other]]:[]).filter(g=>g[1].length);
-  $('comptabs').innerHTML=groups.map(([h,cs])=>'<div><h3>'+h+'</h3>'+cs.map(c=>'<a href="'+pageUrl(c.id)+'"'+(c.id===S.comp?' aria-current="page"':'')+'><b>'+esc(shortComp(c.name))+'</b><small>'+esc(STATUS[c.id]||'')+'</small></a>').join('')+'</div>').join('');
+  $('comptabs').innerHTML=seasonSelect(SEASON,'season')+groups.map(([h,cs])=>'<div><h3>'+h+'</h3>'+cs.map(c=>'<a href="'+pageUrl(c.id)+'"'+(c.id===S.comp?' aria-current="page"':'')+'><b>'+esc(shortComp(c.name))+'</b><small>'+esc(STATUS[c.id]||'')+'</small></a>').join('')+'</div>').join('');
   const cur=$('comptabs').querySelector('[aria-current]');if(cur&&matchMedia('(max-width:900px)').matches)$('comptabs').scrollLeft=cur.offsetLeft-16;
 }
 /* それぞれの大会の進みぐあい（「終了」「8/14試合」）を一覧に出す */
 async function loadStatus(){
-  await Promise.all(COMPS.map(c=>getJSON(encodeURIComponent(c.id)+'.json').then(d=>{const n=(d.matches||[]).length,f=(d.matches||[]).filter(m=>m.score).length;STATUS[c.id]=n&&f===n?'終了':f+' / '+n+'試合'}).catch(()=>{})));
+  await Promise.all(COMPS.map(c=>getJSON(encodeURIComponent(c.id)+'.json').then(d=>{const n=(d.matches||[]).length,f=(d.matches||[]).filter(m=>m.score).length;STATUS[c.id]=!n?'日程はこれから':f===n?'終了':f+' / '+n+'試合'}).catch(()=>{})));
   renderMenu();
 }
 
@@ -447,7 +451,9 @@ async function init(){
   try{
     await embReady;
     const r=await getJSON('competitions.json');
-    COMPS=r.competitions||[];
+    // 表示する年度（season.js）：日程が入っている、いちばん新しい年度
+    SEASON=await pickSeason(r.competitions||[],id=>getJSON(encodeURIComponent(id)+'.json').then(d=>(d.matches||[]).length));
+    COMPS=SEASON.comps;
     if(!COMPS.length){$('main').innerHTML='<div class="card empty">公開中の大会はありません</div>';$('comptabs').innerHTML='';return;}
     if(!COMPS.some(c=>c.id===S.comp))S.comp=COMPS[0].id;
     renderMenu();
@@ -472,7 +478,7 @@ async function load(){
     // はじめに開くタブ：リーグは「概要」、トーナメントは「トーナメント」
     if(!avail.some(t=>t[0]===S.tab))S.tab=(avail.find(t=>t[0]==='board')||avail.find(t=>t[0]==='tournament')||avail[0])[0];
     const n=(d.matches||[]).length,f=(d.matches||[]).filter(m=>m.score).length;
-    $('compKind').textContent=(KIND[CODE(S.comp)]||'大会')+'　'+(n&&f===n?'終了':'開催中（'+f+' / '+n+'試合）');
+    $('compKind').textContent=(KIND[CODE(S.comp)]||'大会')+'　'+(!n?'日程はこれから':f===n?'終了':'開催中（'+f+' / '+n+'試合）');
     $('subtabs').innerHTML=avail.map(t=>'<a href="'+pageUrl(S.comp,t[0])+'"'+(t[0]===S.tab?' aria-current="page"':'')+'>'+t[1]+'</a>').join('');
     if(S.match){const id=S.match;S.match='';openMatch(id);return;}
     render();
