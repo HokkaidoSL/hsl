@@ -1,4 +1,5 @@
-/* 新HPの配色（ヘッダー白・背景黒・強調赤・注目の試合黒）
+/* 新HPの配色（ヘッダー白・背景黒・強調は緑・注目の試合黒）
+ * 強調の緑はロゴの緑（#78B549）から。白い文字をのせる面は濃い緑 #2F7D32、黒地の上の文字はロゴの緑（2026-10-12）
  * 4ページ（index・news・about・team）の <head> の最後で読み込み、各ページの色を上書きする
  * 色を変えるときは、まずこのファイルの :root を変える
  */
@@ -11,10 +12,10 @@
   --muted:#9aa0a6;   /* 補足の文字 */
   --navy:#000000;    /* 注目の試合・フッターなど黒い面 */
   --navy2:#161616;
-  --lime:#0091DA;    /* 強調（仮の色。連盟の色が決まったらここだけ変える） */
-  --blue:#4FC3F7;    /* 黒地の上のリンク・小見出し（読みやすい明るめの青。強調色に合わせる） */
-  --red:#0091DA;     /* 学連版と同じく、強調の面（タブ・見出しの線）に使う */
-  --accent:#0091DA;
+  --lime:#2F7D32;    /* 強調（濃い緑。白い文字をのせる） */
+  --blue:#78B549;    /* 黒地の上のリンク・小見出し（ロゴの緑） */
+  --red:#2F7D32;     /* 学連版と同じく、強調の面（タブ・見出しの線）に使う */
+  --accent:#2F7D32;
 }
 body{background:var(--bg);color:var(--ink)}
 
@@ -52,7 +53,7 @@ td,th{border-bottom-color:var(--line)}
 .st{background:#2a2a2a;color:var(--muted)}
 .st.done{background:#000;color:#fff}
 .trow.lose,.tm.lose{color:#6f757b}
-.scorer.lead{background:linear-gradient(90deg,#3a0a0e,var(--card) 75%)}
+.scorer.lead{background:linear-gradient(90deg,#1c3317,var(--card) 75%)}
 .p2{background:var(--card);border-color:#444}
 .club>.crest{border-color:var(--card)}
 
@@ -66,13 +67,13 @@ td,th{border-bottom-color:var(--line)}
 /* お知らせ・連盟について */
 .list .thumb,.aphoto,.aphoto img{background:var(--card2)}
 .docs .ic{background:var(--card2);color:var(--muted)}
-.docs .ic.pdf{background:#3a0a0e;color:#ff6b73}
-.cat{color:var(--blue);border-color:#1a3a5a}
+.docs .ic.pdf{background:#3a1416;color:#ff6b73}
+.cat{color:var(--blue);border-color:#2c4a22}
 .article .body a,.ov p a{color:var(--blue)}
 
 /* チームページ */
 .lbl,.wdl,.pending{background:var(--card2);color:var(--ink)}
-tr.me td{background:#2a1416}
+tr.me td{background:#1c2e17}
 .sq tr.grp td{background:var(--card2)}
 .sq tbody tr:not(.grp):hover td{background:#222}
 
@@ -87,5 +88,5 @@ tr.me td{background:#2a1416}
 .clubbar .crest.img img{position:static;width:100%;height:100%}
 
 /* 注目の試合の光（紺 → 赤み） */
-.hero:before{background:radial-gradient(600px 300px at 80% 0%,#5a0a12,transparent 70%)}
+.hero:before{background:radial-gradient(600px 300px at 80% 0%,#1f4a1a,transparent 70%)}
 
