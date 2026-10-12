@@ -1504,7 +1504,7 @@ function memberRowHTML(p){
   const tags=(sp?'<span class="tag red">出場停止</span> ':'')+(so?'<span class="tag red">退場</span> ':'')+(yc&&!so?'<span class="tag yel">警告</span> ':'');
   return `<div class="mRow${st.status==='out'?' isOut':''}${sp?' susp':''}${hide?' hidden':''}" data-pid="${esc(p.id)}">
     <input class="no" inputmode="numeric" value="${esc(pNo(p.id))}" aria-label="背番号" onchange="setNumber('${esc(p.id)}',this.value)">
-    <span class="nm">${tags}${esc(p.name)}${p.grade?`<small>${esc(p.grade)}年</small>`:''}</span>
+    <span class="nm">${tags}${esc(p.name)}</span>
     <select onchange="setPosition('${esc(p.id)}',this.value)">
       <option value="">位置</option>${POSITIONS.map(x=>`<option${st.position===x?' selected':''}>${x}</option>`).join('')}
     </select>

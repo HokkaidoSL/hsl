@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>体験版（登録からリーグ終了まで）｜北海道サッカーリーグ 大会運営システム</title>
+<link rel="icon" href="../../new/img/hsl-logo.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--dark:#18252e;--acc:#1d6fa5;--hl:#F6E14F;--ink:#18252e;--muted:#5f6f7a;--line:#dde4e9;--bg:#f5f7f8;--tint:#e4f0f8;--ok:#2e7d32;--warn:#D84315}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP",system-ui,sans-serif;font-size:16px;line-height:1.75}
+a{color:var(--acc)}
+.hd{background:var(--dark);color:#fff}
+.hd .in{max-width:820px;margin:auto;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.hd img{height:40px;background:#fff;border-radius:3px;padding:3px 6px}
+.hd b{font-size:15px;line-height:1.4}
+.tri{height:4px;background:linear-gradient(90deg,#F6E14F 0 33.3%,#78B549 0 66.6%,#49ADE9 0)}
+main{max-width:820px;margin:auto;padding:16px 16px 80px}
+h1{font-size:24px;line-height:1.4;margin:6px 0 8px}
+h2{font-size:20px;margin:30px 0 10px;padding-left:10px;border-left:5px solid var(--acc)}
+.safe{background:#fff;border:2px solid var(--acc);border-radius:8px;padding:12px 14px;margin:14px 0}
+.clock{position:sticky;top:0;z-index:5;background:var(--dark);color:#fff;border-radius:0 0 10px 10px;padding:10px 14px;margin:0 -4px 14px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.clock .d{font-size:18px;font-weight:900}
+.clock .d small{display:block;font-size:12px;font-weight:400;opacity:.8}
+.clock .sp{flex:1}
+.clock select{font:inherit;font-size:14px;padding:6px;border-radius:6px;border:0;max-width:100%}
+.clock button{font:inherit;font-weight:700;background:var(--hl);color:var(--dark);border:0;border-radius:6px;padding:7px 12px}
+.step{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0;position:relative}
+.step.done{border-color:#a5d6a7;background:#f6fbf6}
+.step .no{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;font-weight:900;margin-right:8px;flex:none}
+.step.done .no{background:var(--ok)}
+.step h3{display:flex;align-items:center;margin:0 0 6px;font-size:18px;line-height:1.4}
+.who{display:inline-block;background:var(--tint);color:var(--acc);font-weight:700;font-size:13px;padding:1px 10px;border-radius:20px;margin:0 0 6px}
+.who.jimu{background:#fde8e1;color:#b23b13}.who.club{background:var(--tint);color:var(--acc)}.who.ref{background:#efe8fb;color:#5b3fa0}.who.all{background:#eef2f4;color:var(--muted)}
+.step p{margin:4px 0}
+.step .st{font-size:14px;font-weight:700;color:var(--muted)}
+.step.done .st{color:var(--ok)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.go{display:inline-block;text-align:center;background:var(--acc);color:#fff;text-decoration:none;font-weight:900;font-size:16px;padding:11px 16px;border-radius:8px;border:0;font-family:inherit;cursor:pointer}
+.go.sub{background:#fff;color:var(--acc);border:2px solid var(--acc)}
+.go.time{background:var(--hl);color:var(--dark)}
+.go:disabled{opacity:.5}
+.hint{background:var(--bg);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:8px}
+.hint b{color:var(--warn)}
+table{border-collapse:collapse;width:100%;background:#fff;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:6px 6px;text-align:left}
+th{background:#eef2f4;font-size:13px}
+td.n,th.n{text-align:center}
+.match{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:6px 0}
+.match .t{font-weight:700}
+.match .s{font-size:13px;color:var(--muted)}
+.chip{display:inline-block;font-size:12px;font-weight:700;border-radius:4px;padding:0 6px;margin-right:4px;background:#eef2f4;color:var(--muted)}
+.chip.ok{background:#e3f3e4;color:var(--ok)}.chip.wait{background:#fff4d6;color:#8a6200}
+.match button{font:inherit;font-size:13px;padding:6px 10px;border-radius:6px;border:1px solid var(--acc);background:#fff;color:var(--acc);font-weight:700}
+.mail{background:#fff;border:1px solid var(--line);border-radius:8px;margin:6px 0}
+.mail summary{padding:10px 12px;cursor:pointer;list-style:none}
+.mail summary::-webkit-details-marker{display:none}
+.mail .to{font-size:13px;color:var(--muted)}
+.mail .sub{font-weight:700}
+.mail .body{border-top:1px solid var(--line);padding:10px 12px;font-size:14px;overflow-wrap:anywhere}
+.mail .body pre{white-space:pre-wrap;font:inherit;margin:0}
+.sheetwrap{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:6px}
+.sheetwrap table{font-size:12px;white-space:nowrap}
+.menu button{display:block;width:100%;text-align:left;margin:6px 0;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--dark);color:#fff;padding:12px 16px;border-radius:8px;max-width:92vw;z-index:20;box-shadow:0 4px 14px rgba(0,0,0,.3);white-space:pre-wrap;font-size:14px;display:none}
+.busy{position:fixed;inset:0;background:rgba(255,255,255,.7);display:none;align-items:center;justify-content:center;z-index:30;font-weight:700;font-size:18px}
+.reset{display:block;width:100%;margin-top:28px;padding:12px;border:1px solid var(--line);background:#fff;border-radius:8px;font:inherit;font-size:15px;color:var(--muted)}
+.pass{font-size:20px;font-weight:900;letter-spacing:.1em;background:#fff;border:1px dashed var(--acc);padding:0 8px;border-radius:4px}
+.note{color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<header class="hd"><div class="in"><img src="../../new/img/hsl-logo.svg" alt=""><b>北海道サッカーリーグ 大会運営システム<br>体験版（登録からリーグ終了まで）</b></div><div class="tri"></div></header>
+<main>
+  <div class="clock" id="clock">
+    <div class="d"><small>体験版の中の「今日」</small><span id="today">読み込み中…</span></div>
+    <div class="sp"></div>
+    <select id="jump" aria-label="日付を進める"></select>
+    <button type="button" id="jumpGo">この日へ</button>
+  </div>
+
+  <h1>選手登録からリーグ終了まで、ぜんぶ体験</h1>
+  <p>本物の大会運営システムを、そのまま<b>このスマホ（パソコン）の中だけ</b>で動かしています。事務局・クラブ・運営クラブ・主審、それぞれの立場で、実際の画面をさわれます。</p>
+  <div class="safe"><b>安心してさわってください。</b>入力したものは、このスマホの中だけに残ります。<b>本物のシステム・メール・ホームページには何も届きません。</b>メールは、下の「届いたメール」に入ります。いつでも「はじめからやり直す」ができます。</div>
+  <p class="note">架空のリーグ：4クラブ（札幌あおぞらFC・函館みなとSC・十勝ひろのFC・旭川あさひクラブ）が2回ずつ対戦する、全6節。クラブ・選手・審判の名前はすべて架空です。</p>
+
+  <h2>進め方（上から順に）</h2>
+  <div id="steps"></div>
+
+  <h2>試合と結果</h2>
+  <div id="matches"></div>
+
+  <h2>順位表</h2>
+  <div id="table"></div>
+
+  <h2 id="mailh">届いたメール</h2>
+  <p class="note">システムが送るメール（承認のお願い・処分の連絡など）は、本物では各クラブや審判に届きます。体験版ではここに入ります。メールの中のリンクも押せます。</p>
+  <div id="mails"></div>
+
+  <h2>スプレッドシートの中を見る（事務局）</h2>
+  <p class="note">本物では、記録はすべてGoogleスプレッドシートに入ります。体験版の中の表を見られます。</p>
+  <select id="sheetSel" style="font:inherit;padding:6px;max-width:100%"><option value="">表を選ぶ</option></select>
+  <div id="sheet" style="margin-top:8px"></div>
+
+  <h2>スプレッドシートのメニュー（事務局）</h2>
+  <p class="note">本物では、スプレッドシートの上のメニュー「大会運営」から押すものです。（ふだんは自動で動きます）</p>
+  <div class="menu" id="menu"></div>
+
+  <button class="reset" type="button" id="reset">体験版をはじめからやり直す（入力したものを全部消す）</button>
+  <p class="note" style="margin-top:14px"><a href="../">公式記録・審判報告書だけの体験版はこちら</a></p>
+</main>
+<div class="toast" id="toast"></div>
+<div class="busy" id="busy"><span id="busyT">動かしています…</span></div>
+<script src="client.js?v=mv5toprf"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var INFO = null;
+  function toast(t, ms) { var e = $('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(function () { e.style.display = 'none'; }, ms || 4000); }
+  function busy(on, t) { $('busy').style.display = on ? 'flex' : 'none'; if (t) $('busyT').textContent = t; }
+  function call(fn) { return DEMO_CALL.apply(null, arguments); }
+  var WD = ['日', '月', '火', '水', '木', '金', '土'];
+  function dayText(ymd) { var p = ymd.split('-'); var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])); return (+p[1]) + '月' + (+p[2]) + '日（' + WD[d.getUTCDay()] + '）'; }
+
+  // 日付を進める候補
+  function jumps(info) {
+    var out = [[info.start.day, info.start.time, dayText(info.start.day) + ' 選手登録の期間']];
+    info.days.forEach(function (d, i) {
+      var pre = new Date(Date.parse(d + 'T12:00:00Z') - 2 * 86400000), py = pre.getUTCFullYear() + '-' + ('0' + (pre.getUTCMonth() + 1)).slice(-2) + '-' + ('0' + pre.getUTCDate()).slice(-2);
+      if (i === 0) out.push([py, '19:00', dayText(py) + ' 第1節の2日前（スタメンを出す）']);
+      out.push([d, '10:00', dayText(d) + ' 第' + (i + 1) + '節の日（試合の前）']);
+      out.push([d, '17:00', dayText(d) + ' 第' + (i + 1) + '節の日（試合のあと）']);
+    });
+    out.push(['2027-07-10', '10:00', dayText('2027-07-10') + ' リーグが終わったあと']);
+    return out;
+  }
+  function setClock(day, time, label) {
+    busy(true, '日付を進めています…');
+    return DEMO_RPC('call', 'demoSetClock', [day, time]).then(function () { busy(false); toast((label || dayText(day)) + ' に進めました。'); return load(); }, fail);
+  }
+  function fail(e) { busy(false); toast('うまくいきませんでした：' + (e && e.message || e), 8000); }
+
+  function load() {
+    return call('demoInfo').then(function (info) { INFO = info; draw(info); return info; }, fail);
+  }
+  function stepHtml(no, who, whoCls, title, body, st, done, btns) {
+    return '<section class="step' + (done ? ' done' : '') + '"><h3><span class="no">' + (done ? '✓' : no) + '</span>' + title + '</h3>' +
+      '<span class="who ' + whoCls + '">' + who + '</span>' + body + (st ? '<p class="st">' + st + '</p>' : '') + '<div class="btns">' + btns + '</div></section>';
+  }
+  var a = function (href, t, cls) { return '<a class="go ' + (cls || '') + '" href="' + esc(href) + '">' + t + '</a>'; };
+  var b = function (act, t, cls, arg) { return '<button type="button" class="go ' + (cls || '') + '" data-act="' + act + '"' + (arg ? ' data-arg="' + esc(arg) + '"' : '') + '>' + t + '</button>'; };
+
+  function draw(info) {
+    $('today').textContent = DEMO_DAYTEXT(info.clock) + ' ' + (info.clock.time || '');
+    var J = jumps(info);
+    $('jump').innerHTML = J.map(function (j, i) { return '<option value="' + i + '">' + esc(j[2]) + '</option>'; }).join('');
+    var now = info.clock.day + ' ' + info.clock.time, cur = 0;
+    J.forEach(function (j, i) { if (j[0] + ' ' + j[1] <= now) cur = i; });
+    $('jump').value = String(Math.min(cur + 1, J.length - 1));
+    $('jumpGo').onclick = function () { var j = J[+$('jump').value]; setClock(j[0], j[1], j[2]); };
+
+    var L = info.links, club = function (code) { return L.clubs.filter(function (c) { return c.code === code; })[0]; };
+    var m1 = info.matches[0], m2 = info.matches[1];
+    var d1 = info.days[0], beforeD1 = info.clock.day < d1, onD1 = info.clock.day >= d1;
+    var lastDone = info.matches.every(function (m) { return m.confirmed; });
+    var s = [];
+    s.push(stepHtml(1, '事務局', 'jimu', '運営ダッシュボードに入ってみる',
+      '<p>事務局の担当者が使う画面です。試合・登録・処分の様子をまとめて見られます。</p><div class="hint">パスコード：<span class="pass">' + esc(info.pass) + '</span>（本物では事務局だけが知っています）</div>',
+      '', false, a(L.admin, 'ダッシュボードを開く')));
+    s.push(stepHtml(2, 'クラブ（札幌あおぞらFC）', 'club', '選手を登録する（追加登録）',
+      '<p>あおぞらFCのチームページを開いて、<b>「選手登録」</b>から新しい選手を申請します。名前・生年月日・背番号・JFAの登録番号を入れます（架空で大丈夫）。</p>' +
+      '<div class="hint">追加登録は<b>出たい試合の5日前まで</b>に申請します。4月10日の申請なら、4月25日の第1節に出られます。</div>',
+      'あおぞらFCの登録選手：' + info.regs + '人' + (info.reqs.all ? '／申請 ' + info.reqs.all + '件' : ''), info.reqs.all > 0, a(club('AOZORA').url, 'あおぞらFCのチームページ')));
+    s.push(stepHtml(3, '事務局', 'jimu', '登録の申請を承認する',
+      '<p>ダッシュボードの<b>「登録」</b>で、届いた申請を確かめて「承認」します。承認すると、選手が登録されます。</p>',
+      info.reqs.all ? (info.reqs.open ? '確認待ち：' + info.reqs.open + '件' : '申請はすべて確認済み') : 'まだ申請がありません（②を先に）', info.reqs.all > 0 && !info.reqs.open, a(L.admin, 'ダッシュボードを開く')));
+    s.push(stepHtml(4, '体験版の時計', 'all', '第1節の2日前に進める',
+      '<p>スタメンは試合の前に出します。体験版の日付を<b>4月23日</b>に進めます。</p>', beforeD1 ? '' : '進めました', !(info.clock.day < '2027-04-23'),
+      b('clock', '4月23日に進める', 'time', '2027-04-23|19:00')));
+    s.push(stepHtml(5, 'クラブ（両チーム）', 'club', 'スタメンを出す',
+      '<p>第1節 <b>' + esc(m1.home) + ' 対 ' + esc(m1.away) + '</b>。それぞれのチームページの<b>「スタメン」</b>から、先発11人と控えを選んで提出します。</p>' +
+      '<div class="hint">登録したばかりで<b>まだ出られない選手</b>は「まだ出られない」と表示されて、選べません。</div>',
+      'この試合のスタメン：' + m1.lineups + ' / 2チーム', m1.lineups >= 2, a(club('AOZORA').url, 'あおぞらFCのページ') + a(club('ASAHI').url, 'あさひクラブのページ', 'sub')));
+    s.push(stepHtml(6, '体験版の時計', 'all', '試合の日（4月25日）に進める', '<p>試合の日の朝に進めます。</p>', '', onD1, b('clock', '4月25日の朝に進める', 'time', d1 + '|10:00')));
+    s.push(stepHtml(7, '運営クラブ（あおぞらFC）', 'club', 'スタメンを確かめる・JFA登録を確かめる・審判を入れる',
+      '<p>運営クラブは、チームページの<b>「運営クラブ」</b>から、両チームのスタメンを確かめて「OK」を押します。選手ひとりずつ、JFAの登録も確かめます。審判の名前・メールもここで入れます。</p>' +
+      (L.jimu ? '<div class="hint">事務局も同じ確認ができます（事務局のスタメン確認ページ）。</div>' : ''),
+      '', false, a(club('AOZORA').url, 'あおぞらFCのページ') + (L.jimu ? a(L.jimu, '事務局のスタメン確認', 'sub') : '')));
+    s.push(stepHtml(8, '運営クラブの記録員', 'club', '公式記録をつける',
+      '<p>試合を見ながら、<b>得点・選手交代・警告・退場</b>を、起きた時間といっしょに入れます。試合が終わったら「提出」。</p><div class="hint">試合を選ぶ画面で <b>第1節 ' + esc(m1.home) + ' 対 ' + esc(m1.away) + '</b> を選びます。</div>',
+      m1.record ? '提出済み' : '', m1.record, a(L.official + '&match=' + encodeURIComponent(m1.id), '公式記録の画面を開く')));
+    s.push(stepHtml(9, '両チーム・主審', 'ref', '公式記録を承認する',
+      '<p>公式記録を出すと、<b>両チームと主審にメールで「承認のお願い」</b>が届きます。メールのリンクを開いて、内容を確かめて「承認」。3人がそろうと結果が確定します。</p>',
+      m1.record ? (m1.confirmed ? '確定しました' : '承認待ち：' + m1.waiting + '件') : '公式記録の提出のあと', m1.confirmed, a('#mailh', '届いたメールを見る')));
+    s.push(stepHtml(10, '主審', 'ref', '審判報告書を書く',
+      '<p>主審は試合のあとに審判報告書を出します。公式記録が出ていれば、<b>スコア・警告・退場は自動で入ります</b>。</p>',
+      m1.refReport ? '提出済み' : '', m1.refReport, a(L.referee + '&match=' + encodeURIComponent(m1.id), '審判報告書の画面を開く')));
+    s.push(stepHtml(11, '事務局・だれでも', 'jimu', '結果・順位・処分を見る',
+      '<p>確定した結果は、順位表・得点ランキング・警告の累積に自動で入ります。退場や警告の累積があると、出場停止も自動で計算されます。</p>' +
+      '<div class="hint">本物では1時間ごとに自動で更新されます。体験版では、日付を進めたときか、下のボタンで更新します。</div>',
+      '', false, b('hourly', '今すぐ更新する', 'sub') + a(L.public, '公開ページ（日程・結果・順位）') + a(L.admin, 'ダッシュボード', 'sub')));
+    var restD1 = info.matches.filter(function (m) { return m.date === d1 && !m.confirmed; });
+    s.push(stepHtml(12, '体験版の時計', 'all', '同じ日のもう1試合を終わらせる',
+      '<p>第1節のもう1試合（' + esc(m2.home) + ' 対 ' + esc(m2.away) + '）は、自動で終わらせられます（スタメン・公式記録・承認まで、本物と同じ手順で進めます）。</p>',
+      '', !restD1.length || restD1.every(function (m) { return m.id === m1.id; }), b('auto', 'もう1試合を自動で終わらせる', 'sub', m2.id)));
+    s.push(stepHtml(13, '体験版の時計', 'all', 'リーグを最後まで進める',
+      '<p>第2節から第6節まで、残りの試合を自動で終わらせます。途中の節で、自分で入力してみることもできます（上の日付から節の日を選んで、⑤〜⑩をくり返す）。</p><div class="hint">自動で終わらせた試合は、審判報告書だけは出していません。ダッシュボードの「やること」に「審判報告書が出ていません」と出ます（本物でも、出ていない試合はこのように知らせます）。</div>',
+      lastDone ? 'リーグが終わりました' : '', lastDone, b('season', '残りの試合をすべて自動で終わらせる', 'time')));
+    s.push(stepHtml(14, '事務局', 'jimu', 'リーグの終わり：最終順位・処分・記録',
+      '<p>最終の順位表・得点ランキング・警告退場の記録・処分（出場停止）の記録を確かめます。処分の決定通知は、ダッシュボードの<b>「処分」「決定通知」</b>から作って送ります。</p>',
+      '', false, a(L.public, '公開ページ（最終順位）') + a(L.admin, 'ダッシュボード', 'sub')));
+    $('steps').innerHTML = s.join('');
+
+    // 試合
+    var rounds = {};
+    info.matches.forEach(function (m) { (rounds[m.round] = rounds[m.round] || []).push(m); });
+    $('matches').innerHTML = Object.keys(rounds).map(function (r) {
+      var ms = rounds[r];
+      return '<h3 style="font-size:16px;margin:14px 0 4px">' + esc(r) + '　<span class="note">' + dayText(ms[0].date) + '</span></h3>' + ms.map(function (m) {
+        var chips = m.confirmed ? '<span class="chip ok">確定</span>' : m.record ? '<span class="chip wait">承認待ち ' + m.waiting + '</span>' : m.lineups ? '<span class="chip">スタメン ' + m.lineups + '/2</span>' : '<span class="chip">予定</span>';
+        if (m.refReport) chips += '<span class="chip ok">審判報告書</span>';
+        var score = m.confirmed ? ' <b>' + esc(m.hs) + ' - ' + esc(m.as) + '</b> ' : ' 対 ';
+        return '<div class="match"><div><div class="t">' + esc(m.home) + score + esc(m.away) + '</div><div class="s">' + esc(m.ko) + '　' + esc(m.venue) + '　主審 ' + esc(m.referee) + '　運営 ' + esc(m.duty) + '</div><div>' + chips + '</div></div>' +
+          (m.confirmed ? '' : '<button type="button" data-act="auto" data-arg="' + esc(m.id) + '">自動で終わらせる</button>') + '</div>';
+      }).join('');
+    }).join('');
+    // 順位
+    $('table').innerHTML = '<table><tr><th class="n">順位</th><th>クラブ</th><th class="n">試合</th><th class="n">勝点</th><th class="n">勝</th><th class="n">分</th><th class="n">負</th><th class="n">得失点</th></tr>' +
+      info.table.map(function (t, i) { return '<tr><td class="n">' + (i + 1) + '</td><td>' + esc(t.name) + '</td><td class="n">' + t.p + '</td><td class="n"><b>' + t.pts + '</b></td><td class="n">' + t.w + '</td><td class="n">' + t.d + '</td><td class="n">' + t.l + '</td><td class="n">' + (t.gf - t.ga > 0 ? '+' : '') + (t.gf - t.ga) + '</td></tr>'; }).join('') + '</table>';
+    $('mailh').textContent = '届いたメール（' + info.mail + '通）';
+    loadMails();
+  }
+
+  var WHO = { kantoku: '監督', daihyo: '代表', aozora: 'あおぞらFC', minato: 'みなとSC', hirono: 'ひろのFC', asahi: 'あさひクラブ' };
+  function whoOf(addr) {
+    return String(addr || '').split(/[,;\s]+/).filter(Boolean).map(function (x) {
+      var m = x.match(/^(\w+)\.(\w+)@example\.com$/);
+      if (m && WHO[m[2]]) return WHO[m[2]] + ' ' + (WHO[m[1]] || m[1]);
+      if (/^jimu@/.test(x)) return '連盟事務局';
+      if (/^kiritsu@/.test(x)) return '規律委員会';
+      if (/^shinpan/.test(x) || /referee/.test(x)) return '審判（' + x + '）';
+      return x;
+    }).join('、');
+  }
+  function linkify(t) { return esc(t).replace(/https?:\/\/[^\s<]+/g, function (u) { return '<a href="' + u + '">' + (u.indexOf(DEMO_BASE) === 0 ? 'このリンクを開く' : u) + '</a>'; }); }
+  function loadMails() {
+    call('demoMails').then(function (ms) {
+      if (!ms.length) { $('mails').innerHTML = '<p class="note">まだメールはありません。</p>'; return; }
+      $('mails').innerHTML = ms.slice(0, 60).map(function (m) {
+        var body = m.html ? '<div>' + m.html.replace(/<script[\s\S]*?<\/script>/gi, '') + '</div>' : '<pre>' + linkify(m.body) + '</pre>';
+        return '<details class="mail"><summary><div class="to">' + esc(m.at) + '　宛先：' + esc(whoOf(m.to)) + (m.cc ? '（CC：' + esc(whoOf(m.cc)) + '）' : '') + '</div><div class="sub">' + esc(m.subject) + '</div></summary><div class="body">' + body + '</div></details>';
+      }).join('') + (ms.length > 60 ? '<p class="note">古いメールは省いています。</p>' : '');
+    });
+  }
+  function loadSheets(name) {
+    call('demoSheets', name || '').then(function (r) {
+      var sel = $('sheetSel'), cur = sel.value;
+      sel.innerHTML = '<option value="">表を選ぶ（' + r.list.length + '）</option>' + r.list.map(function (x) { return '<option value="' + esc(x.name) + '">' + esc(x.name) + '（' + x.rows + '行）</option>'; }).join('');
+      sel.value = name || cur || '';
+      if (!name) return;
+      $('sheet').innerHTML = r.rows.length ? '<div class="sheetwrap"><table>' + r.rows.map(function (row, i) {
+        return '<tr>' + row.map(function (v) { return (i ? '<td>' : '<th>') + esc(String(v).slice(0, 60)) + (i ? '</td>' : '</th>'); }).join('') + '</tr>';
+      }).join('') + '</table></div>' : '<p class="note">空です。</p>';
+    });
+  }
+  $('sheetSel').onchange = function () { loadSheets(this.value); };
+  var MENU = [['runHourlyUpdateFromMenu', '集計・処分・ダッシュボードを今すぐ更新'], ['applyApprovedRegistrationsFromMenu', '承認した登録申請を反映'], ['buildNoticeDraftsFromMenu', '決定通知を今すぐ作成（作られない理由も表示）']];
+  $('menu').innerHTML = MENU.map(function (m) { return '<button type="button" data-act="menu" data-arg="' + m[0] + '">大会運営 ▸ ' + esc(m[1]) + '</button>'; }).join('');
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-act]'); if (!t) return;
+    var act = t.getAttribute('data-act'), arg = t.getAttribute('data-arg') || '';
+    if (act === 'clock') { var p = arg.split('|'); setClock(p[0], p[1]); }
+    else if (act === 'hourly') { busy(true, '更新しています…'); call('demoHourly').then(function (r) { busy(false); toast(r); load(); }, fail); }
+    else if (act === 'auto') { busy(true, '試合を進めています…'); call('demoAutoPlay', [arg]).then(function (r) { busy(false); toast(r); load(); }, fail); }
+    else if (act === 'season') {
+      if (!confirm('残りの試合をすべて自動で終わらせます。よろしいですか？')) return;
+      var rest = INFO.matches.filter(function (m) { return !m.confirmed; });
+      var days = []; rest.forEach(function (m) { if (days.indexOf(m.date) < 0) days.push(m.date); });
+      var chain = Promise.resolve();
+      days.forEach(function (d) {
+        chain = chain.then(function () { busy(true, dayText(d) + ' の試合を進めています…'); return DEMO_RPC('call', 'demoSetClock', [d, '17:00']); })
+          .then(function () { return call('demoAutoPlay', rest.filter(function (m) { return m.date === d; }).map(function (m) { return m.id; })); });
+      });
+      chain.then(function () { busy(false); toast('リーグの全試合が終わりました。'); load(); }, fail);
+    }
+    else if (act === 'menu') { busy(true, '実行しています…'); call('demoMenu', arg).then(function (r) { busy(false); toast(r, 7000); load(); }, fail); }
+  });
+  $('reset').onclick = function () {
+    if (!confirm('体験版で入力したものを全部消して、はじめに戻します。よろしいですか？')) return;
+    busy(true, 'はじめに戻しています…');
+    DEMO_RPC('reset').then(function () { try { Object.keys(localStorage).forEach(function (k) { localStorage.removeItem(k); }); sessionStorage.clear(); } catch (e) {} busy(false); toast('はじめに戻しました。'); load(); loadSheets(''); }, fail);
+  };
+  load().then(function () { loadSheets(''); });
+})();
+</script>
+</body>
+</html>

@@ -2351,7 +2351,7 @@ function submitReport(){
     toast('提出しました','ok');
     $('result').scrollIntoView({behavior:'smooth',block:'center'});
   };
-  const fail=msg=>{
+  const failSend=msg=>{
     btn.disabled=false;
     btn.textContent='審判報告書を提出';
     $('submitStatus').textContent='入力内容は端末に保存されています。';
@@ -2365,11 +2365,11 @@ function submitReport(){
       .withSuccessHandler(r=>{
         if(r&&r.found)return done(r);
         if(n<8)return setTimeout(()=>check(n+1),10000);
-        fail('報告書はまだ届いていません。電波のよい場所で、もう一度「審判報告書を提出」を押してください（2回入ることはありません）。');
+        failSend('報告書はまだ届いていません。電波のよい場所で、もう一度「審判報告書を提出」を押してください（2回入ることはありません）。');
       })
       .withFailureHandler(()=>{
         if(n<8)return setTimeout(()=>check(n+1),10000);
-        fail('通信できませんでした。電波のよい場所で、もう一度「審判報告書を提出」を押してください（2回入ることはありません）。');
+        failSend('通信できませんでした。電波のよい場所で、もう一度「審判報告書を提出」を押してください（2回入ることはありません）。');
       })
       .refereeReportCheck(payload.matchId,clientKey);
   };
@@ -2379,7 +2379,7 @@ function submitReport(){
     .withFailureHandler(err=>{
       const msg=err&&err.message||String(err);
       if(/NetworkError|HTTP 0|接続できません/i.test(msg))return setTimeout(()=>check(1),5000);
-      fail(msg);
+      failSend(msg);
     })
     .submitRefereeReport(payload);
 }
