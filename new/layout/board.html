@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>北海道サッカーリーグ | レイアウト案③ 大会ボード</title>
+<link rel="icon" href="../../results/favicon.png" sizes="32x32">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./common.css">
+<style>
+/* ③ 大会ボード：左に大会の一覧（いつも出しておく）、右に選んだ大会の順位・結果・得点を1画面に。スマホでは一覧が上の横並びになる */
+.lay{display:grid;grid-template-columns:250px minmax(0,1fr);gap:24px;margin-top:24px;align-items:start}
+.menu{position:sticky;top:84px;display:grid;gap:14px}
+.menu h3{margin:0 0 6px;font:700 11px/1 var(--num);letter-spacing:.16em;color:var(--muted)}
+.menu a{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-left:4px solid transparent;margin-top:-1px}
+.menu a b{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu a small{grid-column:1;font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu a .crest{grid-row:1/3;grid-column:2}
+.menu a[aria-current=page]{border-left-color:var(--acc);background:var(--tint)}
+.menu a:hover{background:var(--soft)}
+@media(max-width:900px){
+  .lay{grid-template-columns:minmax(0,1fr);gap:16px}
+  .menu{position:static;display:flex;overflow-x:auto;gap:6px;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+  .menu h3{display:none}
+  .menu>div{display:contents}
+  .menu a{flex:none;width:170px;margin:0;border-left-width:1px;border-top:4px solid transparent}
+  .menu a[aria-current=page]{border-top-color:var(--acc);border-left-color:var(--line)}
+}
+
+.cover{background:var(--dark);color:#fff;padding:22px 24px;position:relative;overflow:hidden}
+.cover:after{content:"";position:absolute;right:-40px;bottom:-60px;width:220px;height:220px;border-radius:50%;border:36px solid #ffffff0d}
+[data-p=c] .cover:after{border:0;border-radius:0;background:#ffffff0a;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.cover small{font:700 12px/1 var(--num);letter-spacing:.16em;color:var(--hl)}
+.cover h1{margin:6px 0 10px;font-size:clamp(20px,3vw,28px);font-weight:900;line-height:1.35}
+.facts{display:flex;gap:24px;flex-wrap:wrap;position:relative;z-index:1}
+.facts div b{display:block;font:800 26px/1 var(--num)}
+.facts div span{font-size:11px;color:#c6d3cc}
+.facts .w{display:flex;align-items:center;gap:10px}
+.facts .w b{font:900 16px/1.3 "Noto Sans JP"}
+.links{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1}
+.links a{font-size:12px;font-weight:700;border:1px solid #ffffff44;padding:6px 12px}
+.links a:hover{background:#ffffff1a}
+
+.g2{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;margin-top:22px}
+@media(max-width:1100px){.g2{grid-template-columns:minmax(0,1fr)}}
+.blk{margin-top:22px}
+.g2 .blk{margin-top:0}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+td,th{padding:8px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:center}
+th{font-size:10.5px;color:var(--muted);font-weight:700;background:var(--soft)}
+tr:last-child td{border-bottom:0}
+td.l,th.l{text-align:left}
+td.rk{font:800 15px/1 var(--num);width:36px;box-shadow:inset 4px 0 0 var(--zc,transparent)}
+td.pt{font:800 17px/1 var(--num)}
+.tn{display:flex;align-items:center;gap:7px;font-weight:700}
+tr[data-z=up]{--zc:#43A047}tr[data-z=po]{--zc:#F6B93B}tr[data-z=dn]{--zc:#E53935}tr[data-z=hi]{--zc:#49ADE9}
+.gname{padding:9px 12px;font-size:12px;font-weight:900;border-bottom:1px solid var(--line)}
+.scroll{overflow-x:auto}
+.rd{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line)}
+.rd b{font-size:13px}
+.rd button{width:30px;height:30px;border:1px solid var(--line);background:var(--card)}
+.rd button:disabled{opacity:.3}
+.m{display:grid;grid-template-columns:minmax(0,1fr) 58px minmax(0,1fr);gap:8px;align-items:center;padding:10px 12px;border-top:1px solid var(--line);font-size:13px;font-weight:700}
+.rd+div .m:first-child,.m.first{border-top:0}
+.m .h{display:flex;gap:6px;align-items:center;justify-content:flex-end;text-align:right;min-width:0}
+.m .a{display:flex;gap:6px;align-items:center;min-width:0}
+.m span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m .s{font:800 18px/1 var(--num);text-align:center;background:var(--dark);color:#fff;padding:4px 0}
+.m .s.vs{background:transparent;border:1px solid var(--line);color:var(--muted);font-size:13px}
+.m .s small{display:block;font:500 9px/1.3 "Noto Sans JP"}
+.m .lose{color:var(--muted);font-weight:500}
+.m .c{grid-column:1/-1;text-align:center;font-size:10.5px;color:var(--muted);font-weight:500;margin-top:-3px}
+.sc{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 12px;border-top:1px solid var(--line)}
+.sc:first-child{border-top:0}
+.sc .r{font:800 16px/1 var(--num);color:var(--muted);text-align:center}
+.sc b{display:block;font-size:13px}
+.sc small{font-size:10.5px;color:var(--muted)}
+.sc .g{font:800 22px/1 var(--num)}
+.sc .g small{font:500 10px "Noto Sans JP";margin-left:2px}
+.sc.top .r{color:var(--acc)}
+.br{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:12px;overflow-x:auto;padding-bottom:6px}
+.br .col h4{margin:0 0 8px;font-size:12px;color:var(--muted)}
+.br .col{display:flex;flex-direction:column;gap:8px}
+.bc{display:flex;flex-direction:column}
+.bl{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 10px;font-size:13px;font-weight:700}
+.bl+.bl{border-top:1px solid var(--line)}
+.bl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bl b{font:800 18px/1 var(--num)}
+.bl b small{font:600 11px var(--num);color:var(--muted);margin-left:3px}
+.bl.lose{color:var(--muted);font-weight:500}
+.bd{font-size:10.5px;color:var(--muted);padding:6px 10px;background:var(--soft)}
+.bc:hover{border-color:var(--acc)}
+.scs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.scs .sc:nth-child(2){border-top:0}
+.scs .sc:nth-child(2n){border-left:1px solid var(--line)}
+@media(max-width:700px){.scs{grid-template-columns:minmax(0,1fr)}.scs .sc:nth-child(2){border-top:1px solid var(--line)}.scs .sc:nth-child(2n){border-left:0}}
+</style>
+</head>
+<body>
+<main class="wrap lay">
+  <nav class="menu" id="menu"></nav>
+  <section id="main"><span class="sk"></span></section>
+</main>
+<script src="./common.js"></script>
+<script>
+chrome();
+const GROUPS=[['LEAGUE',['TOP']],['BLOCK',['SD','DN','DT']],['FINAL',['BF']],['CUP',['HC','SC','CC']]];
+const ZONE={TOP:(r,n)=>r===1?'hi':r===n?'dn':r===n-1?'po':'',DN:r=>r===1?'up':'',DT:r=>r===1?'up':'',SD:(r,n,g)=>/上位/.test(g)?(r===1?'up':''):/下位/.test(g)?'':(r<=4?'hi':''),BF:r=>r<=2?'up':''};
+let C=[],CUR=null,RI=0,ROUNDS=[];
+function mrow(c,m,first){const f=done(m),lh=f&&m.winner&&m.winner!==m.home.id,la=f&&m.winner&&m.winner!==m.away.id;
+  return '<a class="m'+(first?' first':'')+'" href="'+matchUrl(c.id,m)+'"><span class="h'+(lh?' lose':'')+'"><span>'+esc(m.home.short)+'</span>'+crest(m.home,'xs')+'</span><span class="s'+(f?'':' vs')+'">'+(f?esc(m.score.home+'-'+m.score.away)+(m.score.pk?'<small>PK '+m.score.pk.home+'-'+m.score.pk.away+'</small>':''):'VS')+'</span><span class="a'+(la?' lose':'')+'">'+crest(m.away,'xs')+'<span>'+esc(m.away.short)+'</span></span><span class="c">'+esc(md(m.date)+'（'+wd(m.date)+'）'+(m.kickoff?' '+m.kickoff:'')+(m.venue?'　'+m.venue:''))+'</span></a>'}
+/* トーナメントの1試合：2チームを上下に並べ、右に点数 */
+function bcard(c,m){const f=done(m),pk=f&&m.score.pk;
+  const line=(t,g,p)=>'<span class="bl'+(f&&m.winner&&m.winner!==t.id?' lose':'')+'">'+crest(t,'xs')+'<span>'+esc(t.short)+'</span><b>'+(f?esc(g)+(pk?'<small>('+esc(p)+')</small>':''):'')+'</b></span>';
+  return '<a class="card bc" href="'+matchUrl(c.id,m)+'">'+line(m.home,m.score&&m.score.home,pk&&pk.home)+line(m.away,m.score&&m.score.away,pk&&pk.away)+'<span class="bd">'+esc(md(m.date)+'（'+wd(m.date)+'）'+(m.kickoff?' '+m.kickoff:''))+'</span></a>'}
+function renderMenu(){
+  const by=Object.fromEntries(C.map(c=>[c.code,c]));
+  $('menu').innerHTML=GROUPS.map(([h,ks])=>'<div><h3>'+h+'</h3>'+ks.filter(k=>by[k]).map(k=>{const c=by[k],w=winners(c),n=c.data.matches.length,f=c.data.matches.filter(done).length;
+    return '<a href="?c='+k+'" data-c="'+k+'"'+(c===CUR?' aria-current="page"':'')+'><b>'+esc(c.short)+'</b><small>'+(f===n?'終了':f+'/'+n+'試合')+(w.list[0]?'　'+esc(w.label)+' '+esc(w.list[0].short):'')+'</small>'+(w.list[0]?crest(w.list[0],'xs'):'')+'</a>'}).join('')+'</div>').join('');
+}
+function renderRounds(){
+  const r=ROUNDS[RI];if(!r){$('rounds').innerHTML='<p class="empty">試合はまだありません。</p>';return}
+  $('rounds').innerHTML='<div class="rd"><button id="rp" aria-label="前"'+(RI?'':' disabled')+'>‹</button><b>'+esc(r.label)+'</b><button id="rn" aria-label="次"'+(RI<ROUNDS.length-1?'':' disabled')+'>›</button></div><div>'+r.list.map((m,i)=>mrow(CUR,m,i===0)).join('')+'</div>';
+  $('rp').onclick=()=>{RI--;renderRounds()};$('rn').onclick=()=>{RI++;renderRounds()};
+}
+function show(code){
+  CUR=C.find(c=>c.code===code)||C[0];renderMenu();
+  const c=CUR,d=c.data,w=winners(c),n=d.matches.length,f=d.matches.filter(done).length;
+  const fin=d.matches.filter(done),goals=fin.reduce((s,m)=>s+(+m.score.home)+(+m.score.away),0);
+  const isTable=(d.groups||[]).some(g=>g.table&&g.table.length);
+  let h='<div class="cover"><small>'+esc((KIND[c.code]||'')+'　'+(f===n?'FINISHED':'IN PROGRESS'))+'</small><h1>'+esc(c.name)+'</h1><div class="facts">'+
+    (w.list.length?'<div class="w">'+w.list.map(t=>crest(t,'lg')).join('')+'<span><span>'+esc(w.label)+'</span><b>'+w.list.map(t=>esc(t.short)).join('・')+'</b></span></div>':'')+
+    '<div><b>'+f+'<small style="font-size:14px">/'+n+'</small></b><span>試合</span></div><div><b>'+goals+'</b><span>ゴール</span></div><div><b>'+(f?(goals/f).toFixed(1):'–')+'</b><span>1試合平均</span></div></div>'+
+    '<div class="links"><a href="'+compUrl(c.id,'')+'">日程・結果</a>'+(isTable?'<a href="'+compUrl(c.id,'standings')+'">順位表</a><a href="'+compUrl(c.id,'grid')+'">星取表</a>':'')+'<a href="'+compUrl(c.id,'scorers')+'">得点</a><a href="'+compUrl(c.id,'cards')+'">警告・退場</a></div></div>';
+  if(isTable){
+    const z=ZONE[c.code]||(()=>'');
+    const tables=d.groups.filter(g=>g.table&&g.table.length).map(g=>(g.group?'<div class="gname">'+esc(g.group)+'</div>':'')+'<div class="scroll"><table><tr><th>順位</th><th class="l">クラブ</th><th>勝点</th><th>試</th><th>勝</th><th>分</th><th>敗</th><th>得失</th></tr>'+
+      g.table.map(r=>{const k=z(r.rank,g.table.length,g.group||'');return '<tr'+(k?' data-z="'+k+'"':'')+'><td class="rk">'+r.rank+'</td><td class="l"><a class="tn" href="'+teamUrl(r.team)+'">'+crest(r.team,'xs')+esc(r.team.short)+'</a></td><td class="pt">'+r.points+'</td><td>'+r.played+'</td><td>'+r.won+'</td><td>'+r.drawn+'</td><td>'+r.lost+'</td><td>'+(r.goalDiff>0?'+':'')+r.goalDiff+'</td></tr>'}).join('')+'</table></div>').join('');
+    h+='<div class="g2"><section class="blk"><div class="h2"><h2><small>STANDINGS</small>順位</h2></div><div class="card">'+tables+'</div></section>'+
+      '<section class="blk"><div class="h2"><h2><small>RESULTS</small>節ごとの結果</h2></div><div class="card" id="rounds"></div></section></div>';
+  }else{
+    const rs=(d.rounds||[]).length?d.rounds:[{round:'試合',matches:d.matches}];
+    h+='<section class="blk"><div class="h2"><h2><small>BRACKET</small>トーナメント</h2></div><div class="br">'+rs.map(r=>'<div class="col"><h4>'+esc(r.round)+'</h4>'+order(r.matches).map(m=>bcard(c,m)).join('')+'</div>').join('')+'</div></section>';
+  }
+  const sc=(d.scorers||[]).slice(0,8);
+  h+='<section class="blk"><div class="h2"><h2><small>TOP SCORERS</small>得点ランキング</h2><a href="'+compUrl(c.id,'scorers')+'">すべて ›</a></div><div class="card scs">'+(sc.length?sc.map(p=>'<div class="sc'+(p.rank===1?' top':'')+'"><span class="r">'+p.rank+'</span><span><b>'+esc(p.name)+'</b><small>'+esc(p.team.short)+'</small></span><span class="g">'+p.count+'<small>点</small></span></div>').join(''):'<p class="empty">得点の記録はまだありません。</p>')+'</div></section>';
+  $('main').innerHTML=h;
+  if(isTable){
+    const map=new Map();for(const m of order(d.matches)){const k=m.round||'日程';if(!map.has(k))map.set(k,[]);map.get(k).push(m)}
+    ROUNDS=[...map].map(([label,list])=>({label,list}));
+    const li=ROUNDS.map(r=>r.list.some(done)).lastIndexOf(true);RI=Math.max(0,li);renderRounds();
+  }
+}
+$('menu').onclick=e=>{const a=e.target.closest('[data-c]');if(!a)return;e.preventDefault();show(a.dataset.c);try{history.replaceState(null,'','?c='+a.dataset.c)}catch(x){}window.scrollTo({top:0})};
+(async()=>{await embReady;C=await loadAll();show(QS.get('c')||'TOP')})().catch(e=>{$('main').innerHTML='<p class="empty">読み込みに失敗しました：'+esc(e.message)+'</p>'});
+</script>
+</body>
+</html>
