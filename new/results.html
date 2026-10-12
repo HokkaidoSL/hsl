@@ -113,6 +113,11 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 .tbl tr:last-child td{border-bottom:0}
 .tbl td.pts{font-family:var(--num);font-size:18px;font-weight:800}
 .tbl td.rk{font-family:var(--num);font-size:17px;font-weight:800;width:44px}
+.tbl tr[data-z] td.rk{box-shadow:inset 4px 0 0 var(--zc)}
+:root{--z-up:#43A047;--z-po:#F6B93B;--z-dn:#E53935;--z-hi:#49ADE9}
+tr[data-z=up]{--zc:var(--z-up)}tr[data-z=po]{--zc:var(--z-po)}tr[data-z=dn]{--zc:var(--z-dn)}tr[data-z=hi]{--zc:var(--z-hi)}
+.zones{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 2px 0;font-size:11.5px;color:var(--muted)}
+.zones i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--zc)}
 .tbl .tn{display:flex;align-items:center;gap:9px;font-weight:700}
 .tbl .tn a:hover{text-decoration:underline}
 .grid td{font-size:12.5px;min-width:72px}
@@ -229,40 +234,7 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 }
 </style>
 <link rel="stylesheet" href="./theme.css">
-<style>
-/* 黒い背景（theme.css）の上での調整 */
-.pagehead .eyebrow{color:var(--blue)}
-.subtabs a{background:var(--card2);color:var(--muted)}
-.subtabs a:hover{color:var(--ink)}
-.subtabs a[aria-current=page]{background:var(--red);border-color:var(--red);color:#fff}
-.bar select{background-color:var(--card);color:var(--ink)}
-.sh{border-bottom-color:var(--red)}
-.mrow.link:hover{background:#222}
-.mrow .sc{background:#262626}
-.mrow .sc.done{background:#000;color:#fff}
-.mrow .sc.pend{background:transparent}
-.mrow .tm.lose{color:#6f757b}
-.dayhead{background:var(--card2);color:var(--muted)}
-.tbl th{background:var(--card2);color:var(--muted)}
-.tbl tr.me td{background:#2a1416}
-.grid .w{color:var(--ink)}
-.bm,.leaf{background:var(--card);border-color:var(--line)}
-.ct th{background:var(--card2);color:var(--muted)}
-.ct td{border-color:var(--line)}
-.ct td.l,.ct th.l{background:var(--card)}
-.ct th.l{background:var(--card2)}
-.mh{background:#000;border:1px solid var(--line)}
-.mh:before{content:"";position:absolute;inset:0;background:radial-gradient(500px 240px at 50% 0%,#5a0a12,transparent 70%);pointer-events:none}
-.mh>*{position:relative}
-.back{color:var(--blue)}
-.footer{border-top:1px solid var(--line)}
-@media(max-width:680px){.nav{background:#fff;border-bottom:1px solid #e5e5e5}.nav a{border-bottom-color:#eee}}
-/* 黒地の上のエンブレム：白い版か白い丸い台 */
-.crest.img.hasdark .el{display:none}
-.crest.img.hasdark .ed{display:block}
-.crest.img:not(.hasdark){background:#fff!important;border-radius:50%!important}
-.crest.img:not(.hasdark) img{position:absolute;inset:15%;width:70%;height:70%}
-</style>
+<script src="./design.js"></script>
 </head>
 <body>
 <header class="header">
@@ -464,15 +436,29 @@ function mRow(m){
 }
 
 /* ---------- 順位表 ---------- */
+/* 順位の意味（昇格・決勝大会・降格など）を色の帯で示す。2026年度の開催要項による */
+const ZONES={
+  TOP:(r,n)=>r===1?'hi':r===n?'dn':r===n-1?'po':'',
+  DN:r=>r===1?'up':'',DT:r=>r===1?'up':'',
+  SD:(r,n,g)=>/上位/.test(g)?(r===1?'up':''):/下位/.test(g)?'':(r<=4?'hi':''),
+  BF:r=>r<=2?'up':''
+};
+const ZLABEL={
+  TOP:[['hi','優勝'],['po','ブロックリーグ決勝大会へ'],['dn','ブロックリーグへ降格']],
+  DN:[['up','ブロックリーグ決勝大会へ']],DT:[['up','ブロックリーグ決勝大会へ']],
+  SD:[['hi','上位リーグへ（予選リーグ）'],['up','ブロックリーグ決勝大会へ']],
+  BF:[['up','北海道リーグへ昇格']]
+};
+const zoneCode=()=>String(S.comp||'').split('-').pop();
 function rStandings(){
   return (DATA.groups||[]).map(g=>{
     const fp=g.table.some(r=>r.fairPlay!=null),rate=g.table.some(r=>r.pointsRate!=null);
     return (g.group?'<div class="sh"><h2>'+esc(g.group)+'</h2></div>':'<div style="height:14px"></div>')+'<div class="card scroll"><table class="tbl">'+
       '<tr><th>順位</th><th class="l">チーム</th><th>勝点</th><th>試合</th><th>勝</th><th>分</th><th>敗</th><th class="hide-sp">得点</th><th class="hide-sp">失点</th><th>得失点</th>'+(rate?'<th>勝点率</th>':'')+(fp?'<th>FP</th>':'')+'</tr>'+
-      g.table.map(r=>'<tr><td class="rk">'+r.rank+'</td><td class="l"><span class="tn">'+crest(r.team,'xs')+teamLink(r.team,r.team.short)+'</span></td><td class="pts">'+r.points+'</td><td>'+r.played+'</td><td>'+r.won+'</td><td>'+r.drawn+'</td><td>'+r.lost+'</td>'+
-        '<td class="hide-sp">'+r.goalsFor+'</td><td class="hide-sp">'+r.goalsAgainst+'</td><td>'+(r.goalDiff>0?'+':'')+r.goalDiff+'</td>'+(rate?'<td>'+(r.pointsRate??'')+'</td>':'')+(fp?'<td>'+(r.fairPlay??'')+'</td>':'')+'</tr>').join('')+
+      g.table.map(r=>{const z=(ZONES[zoneCode()]||(()=>''))(+r.rank,g.table.length,g.group||'');return '<tr'+(z?' data-z="'+z+'"':'')+'><td class="rk">'+r.rank+'</td><td class="l"><span class="tn">'+crest(r.team,'xs')+teamLink(r.team,r.team.short)+'</span></td><td class="pts">'+r.points+'</td><td>'+r.played+'</td><td>'+r.won+'</td><td>'+r.drawn+'</td><td>'+r.lost+'</td>'+
+        '<td class="hide-sp">'+r.goalsFor+'</td><td class="hide-sp">'+r.goalsAgainst+'</td><td>'+(r.goalDiff>0?'+':'')+r.goalDiff+'</td>'+(rate?'<td>'+(r.pointsRate??'')+'</td>':'')+(fp?'<td>'+(r.fairPlay??'')+'</td>':'')+'</tr>'}).join('')+
       '</table></div>'+(g.table.some(r=>r.note)?'<p class="note">'+g.table.filter(r=>r.note).map(r=>esc(r.team.short+'：'+r.note)).join('　')+'</p>':'');
-  }).join('')+'<p class="note">順位は勝点・得失点差・総得点・当該チーム同士の勝敗の順で決めます（大会要項による）。</p>';
+  }).join('')+((ZLABEL[zoneCode()]||[]).length?'<div class="zones">'+ZLABEL[zoneCode()].map(([k,t])=>'<span style="--zc:var(--z-'+k+')"><i></i>'+esc(t)+'</span>').join('')+'</div>':'')+'<p class="note">順位は勝点・得失点差・総得点・当該チーム同士の勝敗の順で決めます（大会要項による）。</p>';
 }
 
 /* ---------- 星取表 ---------- */

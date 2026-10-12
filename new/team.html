@@ -161,6 +161,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .mrow .d small{display:block;font-family:"Noto Sans JP";font-size:10px;color:var(--muted);font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ha{font-size:10px;font-weight:700;text-align:center;border:1px solid var(--line);border-radius:4px;padding:2px 0;color:var(--muted)}
 .ha.H{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ha:empty{border:0}
+.noha .mrow{grid-template-columns:62px minmax(0,1fr) 74px 40px}
+.noha .ha{display:none}
 .opp{display:flex;align-items:center;gap:9px;min-width:0;font-size:14px;font-weight:700}
 .opp span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .opp small{display:block;font-size:10.5px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -317,7 +320,9 @@ dl.facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
   .main{padding-top:20px}
   .pair{grid-template-columns:minmax(0,1fr)}
   .sechead h2{font-size:19px}
-  .mrow{grid-template-columns:48px 28px minmax(0,1fr) 54px;gap:8px;padding:12px}
+  .mrow{grid-template-columns:48px 32px minmax(0,1fr) 54px;gap:8px;padding:12px}
+  .noha .mrow{grid-template-columns:48px minmax(0,1fr) 54px}
+  .ha{font-size:8.5px;letter-spacing:-.02em}
   .mrow .r{display:none}
   .mrow .sc{font-size:19px}
   .opp{font-size:13px}
@@ -331,6 +336,7 @@ dl.facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
 }
 </style>
 <link rel="stylesheet" href="./theme.css">
+<script src="./design.js"></script>
 </head>
 <body>
 <div class="demo" id="demo" hidden>プレビュー用のサンプルデータを表示しています（公開環境では公式データに自動で切り替わります）</div>
@@ -594,17 +600,20 @@ function renderPair(){
     duel(m,next)+'<div class="foot">📍 '+esc(m.venue||'会場未定')+'</div></a>';
   $('pair').innerHTML=card(nx,true)+card(ls,false);
 }
+/* ホーム・アウェイがあるのは北海道リーグ（トップ）だけ。ブロックリーグ・決勝大会・カップ戦は出さない */
+const hasHA=id=>/-TOP$/.test(String(id||''));
 function renderMatches(which){
   const list=which==='up'?S.up:S.res;
   $('tabUp').setAttribute('aria-selected',String(which==='up'));
   $('tabRes').setAttribute('aria-selected',String(which!=='up'));
   if(!list.length){$('matchList').innerHTML='<p class="empty">'+(which==='up'?'予定されている試合はありません。':'まだ試合結果はありません。')+'</p>';return}
+  $('matchList').classList.toggle('noha',!list.some(m=>hasHA(m._comp||S.comp)));
   $('matchList').innerHTML=list.map(m=>{
     const home=isMe(m.home),opp=home?m.away:m.home,o=outcome(m);
     const mine=o?(home?m.score.home:m.score.away):null,their=o?(home?m.score.away:m.score.home):null;
     return '<a class="mrow" href="'+detail(m._comp||S.comp,isDone(m)?m.matchId:'')+'">'+
       '<div class="d">'+esc(fmtDate(m.date,true))+'<small>（'+esc(wd(m.date))+'）'+esc(m.kickoff||'')+'</small></div>'+
-      '<div class="ha'+(home?' H':'')+'">'+(home?'HOME':'AWAY')+'</div>'+
+      (hasHA(m._comp||S.comp)?'<div class="ha'+(home?' H':'')+'">'+(home?'HOME':'AWAY')+'</div>':'<div class="ha"></div>')+
       '<div class="opp">'+crest(opp,'sm')+'<div><span>vs '+esc(name(opp))+'</span><small>'+esc([m._compShort,m.round,m.venue].filter(has).join('　'))+'</small></div></div>'+
       (o?'<div class="sc">'+esc(mine)+' - '+esc(their)+'</div>':'<div class="sc vs">VS</div>')+
       '<div class="r">'+(o?'<span class="res '+o+'">'+OUT[o]+'</span>':'')+'</div></a>';
@@ -641,12 +650,12 @@ function renderRecord(row,ms){
   }
   const P=W+D+L;
   if(!P){$('recordBox').innerHTML='<p class="empty">まだ試合結果がありません。</p>';return}
-  const home=done.filter(m=>isMe(m.home)),away=done.filter(m=>isMe(m.away));
+  const ha=done.filter(m=>hasHA(m._comp||S.comp)),home=ha.filter(m=>isMe(m.home)),away=ha.filter(m=>isMe(m.away));
   const cnt=(l,o)=>l.filter(m=>outcome(m)===o).length;
   const cells=[['試合',P],['勝利',W],['引分',D],['敗戦',L],['得点',GF??'–'],['失点',GA??'–'],['1試合平均得点',GF!=null?(GF/P).toFixed(1):'–'],['勝率',Math.round(W/P*100)+'%']];
   $('recordBox').innerHTML='<div class="rec">'+cells.map(([k,v])=>'<div><b>'+esc(v)+'</b><span>'+esc(k)+'</span></div>').join('')+'</div>'+
     '<div class="wdl" title="勝 '+W+' / 分 '+D+' / 敗 '+L+'"><i class="w" style="width:'+(W/P*100)+'%"></i><i class="d" style="width:'+(D/P*100)+'%"></i><i class="l" style="width:'+(L/P*100)+'%"></i></div>'+
-    (home.length||away.length?'<p class="note" style="margin:-6px 16px 14px">ホーム '+cnt(home,'W')+'勝'+cnt(home,'D')+'分'+cnt(home,'L')+'敗　／　アウェイ '+cnt(away,'W')+'勝'+cnt(away,'D')+'分'+cnt(away,'L')+'敗</p>':'');
+    (home.length||away.length?'<p class="note" style="margin:-6px 16px 14px">北海道リーグ　ホーム '+cnt(home,'W')+'勝'+cnt(home,'D')+'分'+cnt(home,'L')+'敗　／　アウェイ '+cnt(away,'W')+'勝'+cnt(away,'D')+'分'+cnt(away,'L')+'敗</p>':'');
 }
 const SNS={instagram:'Instagram',x:'X',twitter:'X',facebook:'Facebook',youtube:'YouTube',tiktok:'TikTok',note:'note'};
 function safeUrl(u){return /^https?:\/\//i.test(String(u||''))?u:''}

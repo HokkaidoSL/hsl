@@ -90,3 +90,32 @@ tr.me td{background:#1c2e17}
 /* 注目の試合の光（紺 → 赤み） */
 .hero:before{background:radial-gradient(600px 300px at 80% 0%,#1f4a1a,transparent 70%)}
 
+
+
+/* ───── 大会記録ページ（results.html）。もとは results.html の中にあったもの ───── */
+.pagehead .eyebrow{color:var(--blue)}
+.subtabs a{background:var(--card2);color:var(--muted)}
+.subtabs a:hover{color:var(--ink)}
+.subtabs a[aria-current=page]{background:var(--red);border-color:var(--red);color:#fff}
+.bar select{background-color:var(--card);color:var(--ink)}
+.sh{border-bottom-color:var(--red)}
+.mrow.link:hover{background:#222}
+.mrow .sc{background:#262626}
+.mrow .sc.done{background:#000;color:#fff}
+.mrow .sc.pend{background:transparent}
+.mrow .tm.lose{color:#6f757b}
+.dayhead{background:var(--card2);color:var(--muted)}
+.tbl th{background:var(--card2);color:var(--muted)}
+.tbl tr.me td{background:#1c2e17}
+.grid .w{color:var(--ink)}
+.bm,.leaf{background:var(--card);border-color:var(--line)}
+.ct th{background:var(--card2);color:var(--muted)}
+.ct td{border-color:var(--line)}
+.ct td.l,.ct th.l{background:var(--card)}
+.ct th.l{background:var(--card2)}
+.mh{background:#000;border:1px solid var(--line)}
+.mh:before{content:"";position:absolute;inset:0;background:radial-gradient(500px 240px at 50% 0%,#1f4a1a,transparent 70%);pointer-events:none}
+.mh>*{position:relative}
+.back{color:var(--blue)}
+.footer{border-top:1px solid var(--line)}
+@media(max-width:680px){.nav{background:#fff;border-bottom:1px solid #e5e5e5}.nav a{border-bottom-color:#eee}}

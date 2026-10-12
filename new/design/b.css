@@ -1,0 +1,144 @@
+/* デザイン案 B「ピッチ」：芝の深い緑の面に、ロゴの黄
+ *  背景は黒ではなく芝の深い緑。強調はロゴの黄（黄色の面の上の文字は濃い緑）
+ *  注目の試合は芝の刈り目（しま模様）、スコアは電光掲示板のような黄色い数字
+ *  theme.css（今のデザイン）をもとに色を変え、下の「B だけの部品」を足したもの
+ */
+:root{
+  --bg:#0b1f16;      /* ページの背景（芝の深い緑） */
+  --card:#10291d;    /* カード */
+  --card2:#173525;   /* カードの中の帯・ボタン */
+  --line:#21412f;    /* 罫線 */
+  --ink:#eef4ef;     /* 文字 */
+  --muted:#9db3a5;   /* 補足の文字 */
+  --navy:#06140d;    /* 注目の試合・フッターなど濃い面 */
+  --navy2:#0d2218;
+  --lime:#F6E14F;    /* 強調（ロゴの黄） */
+  --blue:#F6E14F;    /* 濃い緑の上のリンク・小見出し */
+  --red:#F6E14F;
+  --accent:#F6E14F;
+  --onacc:#10261a;   /* 黄色の面の上の文字 */
+}
+body{background:var(--bg);color:var(--ink)}
+
+/* ヘッダー：白 */
+.header{background:#fff;color:#111;box-shadow:0 1px 0 #e5e5e5}
+.header .nav a{color:#333}
+.header .nav a:hover,.header .nav a.on{color:#111;border-bottom-color:var(--red)}
+.brandname small{color:#777}
+.logo{box-shadow:none}  /* ロゴにふち取りを付けない（2026-10） */
+.menubtn{border-color:#ccc;color:#111}
+.comptabs{background:#161616;border-top:0}
+@media(max-width:680px){
+  .nav{background:#fff;border-bottom:1px solid #e5e5e5}
+  .nav a{border-bottom-color:#eee}
+}
+
+/* 赤の上の文字は白 */
+.label,.comptabs button[aria-selected=true],.hero-foot a,.st.today,.crest .bdg,.ct .btn,.btn{color:var(--onacc)}
+.label.ghost{background:#ffffff1f;color:#ddd}
+.vs,.cd,.eyebrow{color:var(--blue)}
+.ph-dots button[aria-current=true]:before{background:var(--red)}
+.alert b{background:var(--red)}
+
+/* 面・カード */
+.ticker,.newsbox,.card,.tcard,.club,.feat article,.mcard,.article,.ov article,.player,.pagehead+.main .card{background:var(--card);border-color:var(--line)}
+.ticker{border-bottom-color:var(--line)}
+.sechead,.sh{border-bottom-color:var(--red)}
+.boxhead,.news a,.mrow,.dayhead,.list a,.docs a,.docs div,.scorer{border-color:var(--line)}
+.dayhead,.grouphead,th{background:var(--card2);color:var(--muted)}
+td,th{border-bottom-color:var(--line)}
+.mrow:hover,.news a:hover,.list a:hover,.docs a:hover,.tcard:hover{background:#173525}
+.mrow .sc{background:#0a1a12}
+.mrow .sc.done{background:#000}
+.mrow .sc.vs{border-color:var(--line);color:var(--muted)}
+.st{background:#173525;color:var(--muted)}
+.st.done{background:#000;color:#fff}
+.trow.lose,.tm.lose{color:#6f757b}
+.scorer.lead{background:linear-gradient(90deg,#2f3a12,var(--card) 75%)}
+.p2{background:var(--card);border-color:#444}
+.club>.crest{border-color:var(--card)}
+
+/* ボタン・タブ */
+.roundnav button,.subtabs button,.chips button,.chips a,.jump a,.more,.tabbar button,.ptabs button{background:var(--card2);border-color:var(--line);color:var(--muted)}
+.subtabs button[aria-selected=true],.chips [aria-selected=true],.ptabs button[aria-selected=true]{background:var(--red);border-color:var(--red);color:var(--onacc)}
+.tabbar button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--red)}
+.tabs{background:var(--card2)}
+.tabs button[aria-selected=true]{background:var(--red);color:var(--onacc)}
+
+/* お知らせ・連盟について */
+.list .thumb,.aphoto,.aphoto img{background:var(--card2)}
+.docs .ic{background:var(--card2);color:var(--muted)}
+.docs .ic.pdf{background:#3a1416;color:#ff6b73}
+.cat{color:var(--blue);border-color:#2c4a22}
+.article .body a,.ov p a{color:var(--blue)}
+
+/* チームページ */
+.lbl,.wdl,.pending{background:var(--card2);color:var(--ink)}
+tr.me td{background:#2a3414}
+.sq tr.grp td{background:var(--card2)}
+.sq tbody tr:not(.grp):hover td{background:#173525}
+
+/* エンブレム：黒地の上では白い版（暗い背景用）か、白い丸い台。白いヘッダーの上（CLUBS の列）は普通のエンブレム */
+.crest.img.hasdark .el{display:none}
+.crest.img.hasdark .ed{display:block}
+.crest.img:not(.hasdark){background:#fff!important;border-radius:50%!important}
+.crest.img:not(.hasdark) img{position:absolute;inset:15%;width:70%;height:70%}
+.clubbar .crest.img.hasdark .el{display:block}
+.clubbar .crest.img.hasdark .ed{display:none}
+.clubbar .crest.img{background:transparent!important;border-radius:0!important}
+.clubbar .crest.img img{position:static;width:100%;height:100%}
+
+/* 注目の試合の光（紺 → 赤み） */
+.hero:before{background:radial-gradient(600px 300px at 80% 0%,#2f7d3255,transparent 70%)}
+
+
+
+/* ───── 大会記録ページ（results.html）。もとは results.html の中にあったもの ───── */
+.pagehead .eyebrow{color:var(--blue)}
+.subtabs a{background:var(--card2);color:var(--muted)}
+.subtabs a:hover{color:var(--ink)}
+.subtabs a[aria-current=page]{background:var(--red);border-color:var(--red);color:var(--onacc)}
+.bar select{background-color:var(--card);color:var(--ink)}
+.sh{border-bottom-color:var(--red)}
+.mrow.link:hover{background:#173525}
+.mrow .sc{background:#0a1a12}
+.mrow .sc.done{background:#000;color:#fff}
+.mrow .sc.pend{background:transparent}
+.mrow .tm.lose{color:#6f757b}
+.dayhead{background:var(--card2);color:var(--muted)}
+.tbl th{background:var(--card2);color:var(--muted)}
+.tbl tr.me td{background:#2a3414}
+.grid .w{color:var(--ink)}
+.bm,.leaf{background:var(--card);border-color:var(--line)}
+.ct th{background:var(--card2);color:var(--muted)}
+.ct td{border-color:var(--line)}
+.ct td.l,.ct th.l{background:var(--card)}
+.ct th.l{background:var(--card2)}
+.mh{background:#000;border:1px solid var(--line)}
+.mh:before{content:"";position:absolute;inset:0;background:radial-gradient(500px 240px at 50% 0%,#2f7d3255,transparent 70%);pointer-events:none}
+.mh>*{position:relative}
+.back{color:var(--blue)}
+.footer{border-top:1px solid var(--line)}
+@media(max-width:680px){.nav{background:#fff;border-bottom:1px solid #e5e5e5}.nav a{border-bottom-color:#eee}}
+
+
+/* ───── B だけの部品 ───── */
+/* ヘッダーは白、その下に黄色の細い線 */
+.header{border-bottom:3px solid var(--accent)}
+.comptabs{background:var(--navy2)}
+.comptabs button[aria-selected=true],.comptabs a[aria-current=page]{background:var(--accent)!important;color:var(--onacc)!important}
+/* 注目の試合・試合の見出し：芝の刈り目 */
+.hero,.mh,.mcard.next{background:repeating-linear-gradient(90deg,#0f3321 0 60px,#0c2b1b 60px 120px)!important}
+.hero svg.pitch{opacity:.16}
+/* スコア：電光掲示板の黄色い数字 */
+.duel .score,.mh .score,.mh .sc{color:var(--accent);text-shadow:0 0 14px #f6e14f55}
+.mrow .sc.done{background:#06140d!important;color:var(--accent)!important}
+.trow b{color:var(--accent)}
+.trow.lose b{color:var(--muted)}
+/* 見出し：黄色の下線を短く */
+.sechead,.sh{border-bottom:1px solid var(--line)!important;position:relative}
+.sechead:after,.sh:after{content:"";position:absolute;left:0;bottom:-1px;width:56px;height:3px;background:var(--accent)}
+.st.done{background:#06140d;color:var(--accent)}
+.alert b{color:var(--onacc)}
+.ha.H{background:var(--accent)!important;color:var(--onacc)!important;border-color:var(--accent)!important}
+.footer{background:var(--navy);border-top:3px solid var(--accent)}
