@@ -14,7 +14,7 @@
 <script>
   // 公式サイトは new/。?page=… のときは大会運営システム（Apps Script のWebアプリ）を開く
   // ↓ Apps Script のWebアプリURL（/exec で終わるもの）。デプロイしたら書き換える
-  var EXEC = '';
+  var EXEC = 'https://script.google.com/macros/s/AKfycbyI3D4g0run3xLc1NGRmXsgTj53ddx3zd8zTVNBe5WVUorCHEDIb0uwCmekPGkGYp0/exec';
   var q = location.search || '';
   var m = q.match(/[?&]page=([^&]+)/);
   if (m && EXEC) {
