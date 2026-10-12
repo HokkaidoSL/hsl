@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>体験版｜北海道サッカーリーグ 大会運営システム</title>
+<link rel="icon" href="../new/img/hsl-logo.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--dark:#18252e;--acc:#1d6fa5;--hl:#F6E14F;--ink:#18252e;--muted:#5f6f7a;--line:#dde4e9;--bg:#f5f7f8;--tint:#e4f0f8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP",system-ui,sans-serif;font-size:17px;line-height:1.8}
+.hd{background:var(--dark);color:#fff}
+.hd .in{max-width:760px;margin:auto;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.hd img{height:44px;background:#fff;border-radius:3px;padding:3px 6px}
+.hd b{font-size:16px}
+.tri{height:4px;background:linear-gradient(90deg,#F6E14F 0 33.3%,#78B549 0 66.6%,#49ADE9 0)}
+main{max-width:760px;margin:auto;padding:20px 16px 60px}
+h1{font-size:26px;line-height:1.4;margin:6px 0 10px}
+.lead{font-size:17px}
+.safe{background:#fff;border:2px solid var(--acc);border-radius:8px;padding:14px 16px;margin:18px 0}
+.safe b{color:var(--acc)}
+.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px 16px;margin:18px 0}
+.card h2{margin:0 0 4px;font-size:21px}
+.card .who{display:inline-block;background:var(--tint);color:var(--acc);font-weight:700;font-size:14px;padding:2px 10px;border-radius:20px}
+ol{padding-left:1.4em;margin:10px 0}
+li{margin:6px 0}
+.go{display:block;text-align:center;background:var(--acc);color:#fff;text-decoration:none;font-weight:900;font-size:20px;padding:16px;border-radius:10px;margin-top:12px}
+.go:active{transform:translateY(1px)}
+.match{background:var(--bg);border-radius:6px;padding:8px 12px;font-weight:700}
+.note{color:var(--muted);font-size:15px}
+.reset{display:block;width:100%;margin-top:22px;padding:12px;border:1px solid var(--line);background:#fff;border-radius:8px;font:inherit;font-size:15px;color:var(--muted)}
+.qa dt{font-weight:700;margin-top:10px}
+.qa dd{margin:2px 0 0}
+</style>
+</head>
+<body>
+<header class="hd"><div class="in"><img src="../new/img/hsl-logo.svg" alt=""><b>北海道サッカーリーグ<br>大会運営システム</b></div><div class="tri"></div></header>
+<main>
+  <h1>体験版</h1>
+  <p class="lead">試合の日に使う<b>「公式記録」</b>と<b>「審判報告書」</b>を、スマホで実際にさわってみるためのページです。</p>
+  <div class="safe"><b>安心してさわってください。</b><br>ここで入力したものは、<b>どこにも保存・送信されません</b>。本物の試合の記録や、ほかの人には何も影響しません。間違えても大丈夫です。何度でもやり直せます。</div>
+
+  <section class="card">
+    <span class="who">運営クラブの記録員</span>
+    <h2>① 公式記録をつけてみる</h2>
+    <div class="match">【体験版】第1節　札幌あおぞらFC 対 函館みなとSC</div>
+    <ol>
+      <li>下のボタンを押すと、この試合の画面が開きます。</li>
+      <li>両チームのメンバー（スタメン）は、もう入っています。</li>
+      <li>試合が始まったら、<b>得点・選手交代・警告</b>を、起きた時間といっしょに入れてみましょう。</li>
+      <li>最後に「公式記録を提出」を押します。</li>
+    </ol>
+    <a class="go" href="./official.html?match=2027-TOP-D01">公式記録をつけてみる</a>
+  </section>
+
+  <section class="card">
+    <span class="who">主審</span>
+    <h2>② 審判報告書を書いてみる</h2>
+    <div class="match">【体験版】第1節　十勝ひろのFC 2-1 旭川あさひクラブ</div>
+    <ol>
+      <li>下のボタンを押すと、この試合の画面が開きます。</li>
+      <li>この試合は公式記録が出ているので、<b>スコアや警告は自動で入っています</b>。</li>
+      <li>内容を確かめて、足りないところだけ書きます。</li>
+      <li>最後に「審判報告書を提出」を押します。</li>
+    </ol>
+    <a class="go" href="./referee.html?match=2027-TOP-D02">審判報告書を書いてみる</a>
+  </section>
+
+  <section class="card qa">
+    <h2>よくある心配</h2>
+    <dl>
+      <dt>途中で電話がかかってきたら？</dt>
+      <dd>入力したものはスマホの中に自動でとっておかれます。もう一度開けば続きから入れられます。</dd>
+      <dt>電波が悪い会場では？</dt>
+      <dd>入力はスマホの中だけでできます。提出するときだけ電波が必要です。</dd>
+      <dt>文字が小さくて見えにくい</dt>
+      <dd>2本の指で画面を広げると大きくなります。</dd>
+    </dl>
+  </section>
+
+  <button class="reset" type="button" id="reset">入力したものを消して、はじめからやり直す</button>
+  <p class="note">クラブ・選手・審判の名前は、すべて架空です。</p>
+</main>
+<script>
+document.getElementById('reset').onclick=function(){
+  if(!confirm('このスマホに残っている体験版の入力を消して、はじめからにします。よろしいですか？'))return;
+  try{Object.keys(localStorage).forEach(function(k){if(/officialRecord|referee|Referee|record/i.test(k))localStorage.removeItem(k);});}catch(e){}
+  alert('消しました。はじめからさわれます。');
+};
+</script>
+</body>
+</html>

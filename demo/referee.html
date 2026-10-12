@@ -1,0 +1,2607 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta name="robots" content="noindex,nofollow">
+<script src="./data.js"></script>
+<script src="./demo-gas.js"></script>
+
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<title>【体験版】審判報告書</title>
+<!--
+  RefereeReport.html v13（v12＋承認メールのリンクから試合を自動選択）
+  - v3〜v10 の上書きCSSを廃止し、スマホ基準の単一スタイルに統合
+  - スマホ：試合｜審判｜事象｜重要 の4タブ。提出は「重要」タブ末尾
+  - タブレット・PC（幅760px以上かつ非スマホ）：全項目を縦に並べる通常レイアウト
+  - 端末内自動保存（試合ごと）／主審情報の記憶
+  - サーバー関数・payload形式は v10 と同一
+-->
+<script>
+(function(){
+  var d=document.documentElement,ua=navigator.userAgent||'';
+  var touch=(navigator.maxTouchPoints||0)>1;
+  var shortSide=Math.min(Number(screen.width)||9999,Number(screen.height)||9999);
+  var phone=/iPhone|iPod|Android.+Mobile/i.test(ua)||(touch&&shortSide<=700);
+  if(phone)d.classList.add('phone');
+  function apply(){d.classList.toggle('wide',!phone&&window.innerWidth>=760);}
+  apply();
+  window.addEventListener('resize',apply);
+})();
+</script>
+<style>
+:root{
+  --blue:#174ea6;--blueL:#eaf2ff;--ink:#172033;--sub:#64748b;--line:#d9e0e7;
+  --bg:#f3f5f7;--red:#b91c1c;--redL:#fee2e2;--green:#15803d;--tabH:62px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+.hidden{display:none!important}
+
+/* ---------- ヘッダー ---------- */
+.appHeader{
+  position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--line);
+  padding:calc(6px + env(safe-area-inset-top)) 12px 6px;
+}
+.appTitle{font-size:15px;font-weight:900;letter-spacing:.2em;text-align:center}
+.headMatch{
+  margin-top:2px;font-size:14px;font-weight:800;text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.headMatch:empty,.saveState:empty{display:none}
+.saveState{font-size:11px;color:var(--sub);text-align:center}
+.wideNav{display:none}
+
+/* ---------- レイアウト ---------- */
+.wrap{max-width:980px;margin:0 auto;padding:8px 8px calc(var(--tabH) + 28px + env(safe-area-inset-bottom))}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 12px 4px;margin:0 0 10px;scroll-margin-top:90px}
+.card h2{font-size:18px;line-height:1.3;margin:0 0 12px;padding-left:9px;border-left:5px solid #315b72}
+.sub{font-size:13px;color:var(--sub);margin:-4px 0 12px;line-height:1.55}
+.field{margin-bottom:12px;min-width:0}
+.grid{display:grid;grid-template-columns:1fr;column-gap:10px}
+.grid.two{grid-template-columns:1fr 1fr}
+.grid.g12{grid-template-columns:1fr 2fr}
+.span2{grid-column:1/-1}
+
+/* ---------- 入力 ---------- */
+.lbl{display:block;font-size:14px;font-weight:800;color:#475569;margin-bottom:5px}
+.req::after{content:"必須";margin-left:6px;padding:1px 5px;border-radius:4px;background:var(--redL);color:var(--red);font-size:10px;vertical-align:2px}
+input,select,textarea,button{font:inherit;color:inherit}
+input,select,textarea{
+  width:100%;min-height:52px;padding:10px 12px;font-size:17px;
+  border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827;
+  -webkit-appearance:none;appearance:none;
+}
+select.detailPick{margin-bottom:6px;color:var(--sub, #888888)}
+select{
+  padding-right:34px;text-overflow:ellipsis;
+  background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2364758b' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center;
+}
+textarea{min-height:104px;line-height:1.6;resize:vertical}
+input[readonly]{background:#f8fafc}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,78,166,.18)}
+input[type=date],input[type=time]{display:block;text-align:left}
+.invalid,.pick.invalid button{border-color:#dc2626!important;background-color:#fff7f7!important}
+
+button{
+  min-height:48px;padding:10px 14px;border:1px solid #cbd5e1;border-radius:10px;
+  background:#fff;font-weight:800;cursor:pointer;touch-action:manipulation;
+}
+button:disabled{opacity:.45;cursor:not-allowed}
+.btnPrimary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btnAdd{width:100%;min-height:58px;margin:4px 0 12px;border-style:dashed;color:var(--blue);background:#f8fbff;font-size:17px}
+.btnDanger{min-height:42px;padding:6px 14px;color:#be123c;background:#fff1f2;border-color:#fecdd3;font-size:14px}
+.btnNext{width:100%;min-height:56px;margin:2px 0 12px;background:#fff;color:var(--blue);border-color:#bfd3f2;font-size:16px}
+.btnSub{width:100%;min-height:50px;margin-bottom:12px;color:var(--blue);border-color:#bfd3f2;background:#f8fbff}
+
+/* 選択ボタン（時間帯・チーム・種別） */
+.pick{display:flex;gap:6px}
+.pick button{flex:1 1 0;min-width:0;min-height:50px;padding:6px 4px;font-size:16px;line-height:1.2;color:#334155;white-space:normal}
+.pick button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.noET .pick button.et{display:none}
+
+/* ---------- 試合 ---------- */
+.matchBox{background:#f8fafc;border:1px solid #dbe3ec;border-radius:10px;padding:12px 10px;margin-bottom:12px}
+.matchTeams{display:grid;grid-template-columns:minmax(0,1fr) 30px minmax(0,1fr);align-items:center;gap:4px;text-align:center;font-weight:900;font-size:18px;line-height:1.3}
+.matchTeams .vs{font-size:13px;color:var(--sub)}
+.scoreLine{text-align:center;margin-top:6px;color:#475569;font-size:14px}
+.notice{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between;background:#fffbeb;border:1px solid #fde68a;color:#854d0e;border-radius:12px;padding:10px 12px;margin:0 0 10px;font-size:14px;font-weight:700}
+.notice button{min-height:40px;padding:6px 12px;font-size:13px}
+.notice.fromRecord{background:#E8F4FB;border-color:#1976D2;color:#222222}
+.notice.fromRecord.unapproved{background:#fffbeb;border-color:#D84315;color:#222222}
+.preview{padding:10px 12px;border-radius:10px;background:#f8fafc;border:1px solid #dbe3ec;font-size:15px;line-height:1.7;margin-bottom:12px}
+
+/* ---------- 審判員 ---------- */
+.official{border:1px solid #dbe3ec;border-radius:10px;margin:0 0 10px;background:#fbfdff}
+.official summary{
+  display:flex;align-items:center;gap:8px;min-height:54px;padding:8px 12px;
+  list-style:none;cursor:pointer;font-weight:900;font-size:17px;
+}
+.official summary::-webkit-details-marker{display:none}
+.official summary::after{content:"";margin-left:auto;width:9px;height:9px;border-right:2px solid var(--sub);border-bottom:2px solid var(--sub);transform:rotate(45deg);transition:transform .15s}
+.official[open] summary::after{transform:rotate(-135deg)}
+.offName{font-size:14px;font-weight:700;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.offBody{padding:2px 12px 2px}
+
+/* ---------- 事象 ---------- */
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 10px}
+.seg button{min-height:54px;padding:4px;font-size:15px;color:var(--blue);display:flex;align-items:center;justify-content:center;gap:6px}
+.seg button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.segCount{min-width:22px;height:22px;line-height:22px;border-radius:11px;background:var(--blueL);color:var(--blue);font-size:12px}
+.seg button.active .segCount{background:#fff}
+.eventCard{border:1px solid #dbe3ec;border-radius:12px;padding:10px 10px 0;margin:0 0 10px;background:#fff;scroll-margin-top:90px}
+.eventCard.need{border:2px solid #dc2626;background:#fffafa}
+.eventHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.eventHead b{font-size:17px}
+.timePreview{font-size:14px;font-weight:900;color:var(--blue);min-height:0;margin-top:4px}
+.timePreview:empty{display:none}
+.personMeta{font-size:13px;color:var(--sub);margin-top:4px}
+.personMeta:empty{display:none}
+.empty{font-size:14px;color:var(--sub);text-align:center;padding:6px 0 10px}
+
+/* ---------- 重要事項 ---------- */
+.importantCard{border:2px solid #c2410c}
+.requiredMsg{padding:10px 12px;border-radius:10px;background:var(--redL);color:#991b1b;font-weight:900;font-size:14px;margin-bottom:12px}
+.toggle{display:flex;align-items:center;gap:10px;min-height:52px;margin-bottom:12px;font-size:15px;font-weight:800}
+.toggle input{width:26px;min-width:26px;height:26px;min-height:26px;padding:0;-webkit-appearance:checkbox;appearance:auto}
+.qNo{display:inline-block;min-width:22px;color:#c2410c}
+.custom{margin-top:6px}
+.hintBox{margin-top:6px;padding:8px 10px;border-radius:8px;background:#fffbea;border:1px solid #f5e1a4;font-size:13px;line-height:1.6;color:#5b4a12}
+.hintBox:empty{display:none}
+.impGuide{margin:0 0 12px;padding:8px 12px;border-radius:10px;background:#f8fbff;border:1px solid #dbe3ec;font-size:13px;line-height:1.7}
+.impGuide summary{font-weight:900;color:var(--blue);cursor:pointer}
+.impGuide ul{margin:6px 0 0;padding-left:18px}
+.otherBtns{margin:0 0 8px}
+.otherBtns button{min-height:40px;padding:0 16px;border-radius:10px;border:1px solid #bfd3f2;background:#f8fbff;color:var(--blue);font-weight:900}
+#otherPick{margin-bottom:6px}
+.draft{white-space:pre-wrap}
+.recipient{font-weight:900;font-size:16px;margin-bottom:8px}
+.success,.error{padding:12px;border-radius:10px;font-weight:800;margin-bottom:12px;line-height:1.6}
+.success{background:#dcfce7;color:#166534}
+.success a{color:#166534}
+.error{background:var(--redL);color:#991b1b}
+.submitRow{margin-bottom:12px}
+#submitBtn{width:100%;min-height:62px;font-size:18px;border-radius:12px}
+.submitStatus{font-size:12px;color:var(--sub);text-align:center;margin-top:6px}
+.submitStatus:empty{display:none}
+
+/* ---------- 下部タブ（スマホ） ---------- */
+.tabBar{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;
+  grid-template-columns:repeat(4,1fr);gap:2px;
+  background:rgba(255,255,255,.98);border-top:1px solid var(--line);
+  padding:3px 4px calc(3px + env(safe-area-inset-bottom));
+}
+body.loaded .tabBar{display:grid}
+.tabBar button{
+  position:relative;min-height:var(--tabH);padding:4px 2px;border:0;border-radius:10px;background:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  color:var(--sub);font-size:13px;
+}
+.tabBar button.active{background:var(--blueL);color:var(--blue)}
+.tabBar svg{width:24px;height:24px}
+.badge{
+  position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  background:var(--blue);color:#fff;font-size:11px;line-height:18px;font-weight:900;
+}
+.badge.ok{background:var(--green)}
+.badge.ng{background:#dc2626}
+.badge:empty{display:none}
+
+/* スマホ：タブごとに表示を切り替え */
+body:not(.loaded) [data-pane]:not(#selectCard){display:none}
+html:not(.wide) body[data-mode="match"] [data-pane]:not([data-pane="match"]),
+html:not(.wide) body[data-mode="officials"] [data-pane]:not([data-pane="officials"]),
+html:not(.wide) body[data-mode="events"] [data-pane]:not([data-pane="events"]),
+html:not(.wide) body[data-mode="important"] [data-pane]:not([data-pane="important"]),
+html:not(.wide) body[data-event="warning"] [data-evpane]:not([data-evpane="warning"]),
+html:not(.wide) body[data-event="sendoff"] [data-evpane]:not([data-evpane="sendoff"]),
+html:not(.wide) body[data-event="official"] [data-evpane]:not([data-evpane="official"]){display:none}
+.wide .phoneOnly{display:none!important}
+html:not(.wide) .wideOnly{display:none!important}
+
+/* ---------- テンキー ---------- */
+.sheetBackdrop{position:fixed;inset:0;z-index:100;display:none;align-items:flex-end;justify-content:center;background:rgba(15,23,42,.5)}
+.sheetBackdrop.open{display:flex}
+.sheet{width:min(520px,100%);background:#fff;border-radius:18px 18px 0 0;padding:14px 12px calc(14px + env(safe-area-inset-bottom))}
+.sheetHead{text-align:center;font-weight:900;font-size:15px;color:#475569}
+.keyDisplay{font-size:42px;font-weight:900;text-align:center;line-height:1.2;margin:4px 0}
+.keyPreview{text-align:center;font-size:14px;font-weight:800;color:var(--blue);min-height:22px;margin-bottom:10px}
+.keyGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keyGrid button{min-height:60px;font-size:24px}
+.keyActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.keyActions button{min-height:56px;font-size:17px}
+
+/* ---------- トースト ---------- */
+.toast{
+  position:fixed;left:12px;right:12px;z-index:90;display:none;
+  bottom:calc(var(--tabH) + 18px + env(safe-area-inset-bottom));
+  padding:12px 14px;border-radius:12px;font-size:15px;font-weight:800;line-height:1.5;
+  box-shadow:0 6px 20px rgba(0,0,0,.18);
+}
+.toast.show{display:block}
+.toast.err{background:#991b1b;color:#fff}
+.toast.ok{background:#166534;color:#fff}
+body:not(.loaded) .toast{bottom:calc(18px + env(safe-area-inset-bottom))}
+
+/* ---------- タブレット・PC ---------- */
+.wide .appHeader{padding:10px 16px 8px}
+.wide .appTitle{font-size:20px}
+.wide body.loaded .wideNav{display:flex;justify-content:center;gap:6px;margin-top:6px;flex-wrap:wrap}
+.wide .wideNav button{min-height:36px;padding:4px 14px;border-radius:999px;font-size:13px;color:#334155}
+.wide .wrap{padding:12px 16px 120px}
+.wide .card{padding:16px 16px 6px}
+.wide .grid.cols2{grid-template-columns:1fr 1fr}
+.wide .tabBar{display:none!important}
+.wide .submitRow{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;
+  background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:10px 16px;
+}
+.wide .submitRow > *{max-width:948px;margin-left:auto;margin-right:auto}
+.wide .toast{bottom:100px;max-width:560px;margin:0 auto}
+.wide .sheetBackdrop{align-items:center}
+.wide .sheet{border-radius:18px}
+
+/* ===== 見た目 v2（2026-10）：連盟の色・カード・両チームの色 ===== */
+:root{--blue:#1976D2;--blueL:#E8F4FB;--ink:#222222;--sub:#888888;--red:#D84315;--canvas:#F3F7FB;--shadow:0 1px 2px rgba(34,34,34,.06),0 2px 8px rgba(34,34,34,.05);--tcH:#E0E0E0;--tcA:#E0E0E0}
+body{background:var(--canvas);font-family:"Noto Sans JP",-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.appHeader{border-bottom:0;box-shadow:0 1px 0 var(--line),0 2px 12px rgba(34,34,34,.06)}
+.appHeader::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--tcH) 0 50%,var(--tcA) 50% 100%);box-shadow:inset 0 -1px 0 rgba(0,0,0,.1)}
+.appTitle{color:var(--blue);font-size:12px;letter-spacing:.24em;margin-top:2px}
+.card{border:0;box-shadow:var(--shadow);border-radius:14px;padding:16px 14px 6px}
+.card h2{border-left:0;padding-left:12px;position:relative}
+.card h2::before{content:"";position:absolute;left:0;top:2px;bottom:2px;width:4px;border-radius:2px;background:var(--blue)}
+.matchBox{background:#fff;border:0;box-shadow:inset 0 0 0 1px var(--line);position:relative;overflow:hidden;padding-top:16px}
+.matchBox::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,var(--tcH) 0 50%,var(--tcA) 50% 100%);box-shadow:inset 0 -1px 0 rgba(0,0,0,.12)}
+</style>
+<!-- UiTheme.html：運営の画面で共通に使う部品（チームカラーと、その色の上の文字色）。各画面の head で uiInclude_('UiTheme') を読み込む -->
+<script>
+window.JUFA_TC = {};
+/* チームID・クラブ名・チーム名・略称から色（なければ ''） */
+function tcOf() {
+  const T = window.JUFA_TC || {};
+  for (const k of arguments) {
+    const s = String(k == null ? '' : k).trim();
+    if (!s) continue;
+    const c = (T.team || {})[s] || (T.univ || {})[s] || (T.name || {})[s];
+    if (c) return c;
+  }
+  return '';
+}
+/* 色の上に置く文字の色（明るい色なら黒、暗い色なら白） */
+function tcInk(c) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(c || ''));
+  if (!m) return '#fff';
+  const n = parseInt(m[1], 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const L = [r, g, b].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); });
+  return (0.2126 * L[0] + 0.7152 * L[1] + 0.0722 * L[2]) > 0.45 ? '#222' : '#fff';
+}
+/* チーム名の前に付ける色の丸（色がなければ何も出さない） */
+function tcDot() {
+  const c = tcOf.apply(null, arguments);
+  return c ? '<i class="tc-dot" style="--tc:' + c + '"></i>' : '';
+}
+</script>
+<style>
+.tc-dot{display:inline-block;width:.72em;height:.72em;border-radius:50%;background:var(--tc);box-shadow:0 0 0 1px rgba(0,0,0,.18);margin-right:.35em;vertical-align:.02em;flex:none}
+</style>
+
+</head>
+<body data-mode="match" data-event="warning">
+
+<header class="appHeader">
+  <div class="appTitle">審 判 報 告 書</div>
+  <div class="headMatch" id="headMatch"></div>
+  <div class="saveState" id="saveState">読み込み中…</div>
+  <nav class="wideNav wideOnly">
+    <button type="button" onclick="jump('selectCard')">試合</button>
+    <button type="button" onclick="jump('officialsCard')">審判員</button>
+    <button type="button" onclick="jump('conditionCard')">競技場・用具</button>
+    <button type="button" onclick="jump('warningsCard')">警告</button>
+    <button type="button" onclick="jump('sendoffsCard')">退場</button>
+    <button type="button" onclick="jump('teamOfficialsCard')">チーム役員</button>
+    <button type="button" onclick="jump('importantCard')">重要事項</button>
+    <button type="button" onclick="jump('submitCard')">提出</button>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <!-- ===== 試合 ===== -->
+  <section class="card" id="selectCard" data-pane="match">
+    <h2>試合を選択</h2>
+    <div class="grid cols2">
+      <div class="field">
+        <label class="lbl" for="competition">競技会名</label>
+        <select id="competition" onchange="competitionChanged()"></select>
+      </div>
+      <div class="field">
+        <label class="lbl" for="match">試合</label>
+        <select id="match" onchange="matchChanged()"></select>
+      </div>
+    </div>
+    <div id="loadingNote" class="sub hidden">試合情報を読み込んでいます…</div>
+    <div id="matchBox" class="matchBox hidden">
+      <div class="matchTeams"><span id="homeName"></span><span class="vs">vs</span><span id="awayName"></span></div>
+      <div id="scoreLine" class="scoreLine"></div>
+      <div id="benchStaff" class="sub" style="margin-top:6px"></div>
+    </div>
+  </section>
+
+  <div id="restoreBanner" class="notice hidden" data-pane="match">
+    <span id="restoreText"></span>
+    <button type="button" onclick="discardDraft()">破棄して最初から</button>
+  </div>
+
+  <!-- 公式記録からの反映（どのタブでも表示） -->
+  <div id="prefillBanner" class="notice fromRecord hidden">
+    <span id="prefillText"></span>
+  </div>
+
+  <section class="card" id="matchInfoCard" data-pane="match">
+    <h2>試合情報</h2>
+    <div class="grid two">
+      <div class="field">
+        <label class="lbl req" for="matchTime">試合時間</label>
+        <select id="matchTime"></select>
+      </div>
+      <div class="field">
+        <label class="lbl req" for="extraTime">延長戦</label>
+        <select id="extraTime" onchange="applyExtraTime()"></select>
+      </div>
+    </div>
+    <div class="field">
+      <label class="lbl req" for="venue">会場</label>
+      <select id="venue"></select>
+    </div>
+    <div class="grid two">
+      <div class="field">
+        <label class="lbl req" for="matchDate">日付</label>
+        <input id="matchDate" type="date">
+      </div>
+      <div class="field">
+        <label class="lbl req" for="kickoff">キックオフ</label>
+        <input id="kickoff" type="time">
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="conditionCard" data-pane="match">
+    <h2>競技場、用具の状態</h2>
+    <div class="grid two">
+      <div class="field">
+        <label class="lbl req" for="groundState">競技場</label>
+        <select id="groundState" onchange="buildConditionText()">
+          <option value="">選択</option>
+          <option value="良好">良好</option>
+          <option value="概ね良好">概ね良好</option>
+          <option value="一部不良">一部不良</option>
+          <option value="不良">不良</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="lbl req" for="equipmentState">用具</label>
+        <select id="equipmentState" onchange="buildConditionText()">
+          <option value="">選択</option>
+          <option value="良好">良好</option>
+          <option value="概ね良好">概ね良好</option>
+          <option value="一部不備あり">一部不備あり</option>
+          <option value="不良">不良</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label class="lbl" for="conditionDetail">補足（不良・不備がある場合など）</label>
+      <textarea id="conditionDetail" rows="2" oninput="buildConditionText()" style="min-height:80px"></textarea>
+    </div>
+    <label class="lbl">報告書に記載される文章</label>
+    <div id="conditionPreview" class="preview">状態を選択してください。</div>
+  </section>
+
+  <button type="button" class="btnNext phoneOnly" data-pane="match" onclick="setMode('officials')">次へ：審判員 →</button>
+
+  <!-- ===== 審判員 ===== -->
+  <section class="card" id="officialsCard" data-pane="officials">
+    <h2>審判員</h2>
+    <div class="sub">氏名は姓と名を分けて入力します（PDFでは「姓　名」）。審判級はPDFに記載されず、所属協会の候補を絞るためだけに使います。</div>
+
+    <details class="official" id="mainDetails" open>
+      <summary>主審<span class="offName" id="mainSummary"></span></summary>
+      <div class="offBody">
+        <div class="grid two">
+          <div class="field"><label class="lbl req" for="mainLast">姓</label><input id="mainLast" autocomplete="family-name"></div>
+          <div class="field"><label class="lbl req" for="mainFirst">名</label><input id="mainFirst" autocomplete="given-name"></div>
+        </div>
+        <div class="field"><label class="lbl req" for="mainPhone">電話番号</label><input id="mainPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="090-1234-5678"></div>
+        <div class="grid g12">
+          <div class="field"><label class="lbl req" for="mainGrade">審判級</label><select id="mainGrade" onchange="gradeChanged('main')"></select></div>
+          <div class="field"><label class="lbl req" for="mainAssoc">所属協会</label><select id="mainAssoc" onchange="associationChanged('main')"></select></div>
+        </div>
+        <div class="field hidden" id="mainAssocCustomWrap"><input id="mainAssocCustom" placeholder="所属協会を入力"></div>
+      </div>
+    </details>
+
+    <details class="official" id="ar1Details" open>
+      <summary>副審1<span class="offName" id="ar1Summary"></span></summary>
+      <div class="offBody">
+        <div class="grid two">
+          <div class="field"><label class="lbl req" for="ar1Last">姓</label><input id="ar1Last"></div>
+          <div class="field"><label class="lbl req" for="ar1First">名</label><input id="ar1First"></div>
+        </div>
+        <div class="grid g12">
+          <div class="field"><label class="lbl req" for="ar1Grade">審判級</label><select id="ar1Grade" onchange="gradeChanged('ar1')"></select></div>
+          <div class="field"><label class="lbl req" for="ar1Assoc">所属協会</label><select id="ar1Assoc" onchange="associationChanged('ar1')"></select></div>
+        </div>
+        <div class="field hidden" id="ar1AssocCustomWrap"><input id="ar1AssocCustom" placeholder="所属協会を入力"></div>
+      </div>
+    </details>
+
+    <details class="official" id="ar2Details" open>
+      <summary>副審2<span class="offName" id="ar2Summary"></span></summary>
+      <div class="offBody">
+        <div class="grid two">
+          <div class="field"><label class="lbl req" for="ar2Last">姓</label><input id="ar2Last"></div>
+          <div class="field"><label class="lbl req" for="ar2First">名</label><input id="ar2First"></div>
+        </div>
+        <div class="grid g12">
+          <div class="field"><label class="lbl req" for="ar2Grade">審判級</label><select id="ar2Grade" onchange="gradeChanged('ar2')"></select></div>
+          <div class="field"><label class="lbl req" for="ar2Assoc">所属協会</label><select id="ar2Assoc" onchange="associationChanged('ar2')"></select></div>
+        </div>
+        <div class="field hidden" id="ar2AssocCustomWrap"><input id="ar2AssocCustom" placeholder="所属協会を入力"></div>
+      </div>
+    </details>
+
+    <details class="official" id="fourthDetails" open>
+      <summary>第4の審判員<span class="offName" id="fourthSummary"></span></summary>
+      <div class="offBody">
+        <div class="grid two">
+          <div class="field"><label class="lbl req" for="fourthLast">姓</label><input id="fourthLast"></div>
+          <div class="field"><label class="lbl req" for="fourthFirst">名</label><input id="fourthFirst"></div>
+        </div>
+        <div class="grid g12">
+          <div class="field"><label class="lbl req" for="fourthGrade">審判級</label><select id="fourthGrade" onchange="gradeChanged('fourth')"></select></div>
+          <div class="field"><label class="lbl req" for="fourthAssoc">所属協会</label><select id="fourthAssoc" onchange="associationChanged('fourth')"></select></div>
+        </div>
+        <div class="field hidden" id="fourthAssocCustomWrap"><input id="fourthAssocCustom" placeholder="所属協会を入力"></div>
+      </div>
+    </details>
+  </section>
+
+  <button type="button" class="btnNext phoneOnly" data-pane="officials" onclick="setMode('events')">次へ：警告・退場 →</button>
+
+  <!-- ===== 事象 ===== -->
+  <div id="eventSeg" class="seg phoneOnly" data-pane="events">
+    <button type="button" data-event="warning" class="active" onclick="setEventMode('warning')">警告<span class="segCount" id="cnt-warning">0</span></button>
+    <button type="button" data-event="sendoff" onclick="setEventMode('sendoff')">退場<span class="segCount" id="cnt-sendoff">0</span></button>
+    <button type="button" data-event="official" onclick="setEventMode('official')">役員<span class="segCount" id="cnt-official">0</span></button>
+  </div>
+
+  <section class="card" id="warningsCard" data-pane="events" data-evpane="warning">
+    <h2>警告（競技者／交代要員）</h2>
+    <div class="sub">時間は時間帯を選び、その時間帯の開始からの経過分をタップ入力します。チーム名は略称、氏名は当該試合のメンバー表から選択します。</div>
+    <div id="warnings"></div>
+    <div class="empty" id="empty-warning">警告はありません</div>
+    <button type="button" class="btnAdd" onclick="addEvent('warning')">＋ 警告を追加</button>
+  </section>
+
+  <section class="card" id="sendoffsCard" data-pane="events" data-evpane="sendoff">
+    <h2>退場（競技者／交代要員）</h2>
+    <div class="sub">一発退場（「警告2」以外）を入力すると、重要事項の記入が必須になります。</div>
+    <div id="sendoffs"></div>
+    <div class="empty" id="empty-sendoff">退場はありません</div>
+    <button type="button" class="btnAdd" onclick="addEvent('sendoff')">＋ 退場を追加</button>
+  </section>
+
+  <section class="card" id="teamOfficialsCard" data-pane="events" data-evpane="official">
+    <h2>警告／退場（チーム役員）</h2>
+    <div class="sub">監督・コーチなどから選択します。退場で「警告2」以外の場合は重要事項の記入が必須です。</div>
+    <div id="officialEvents"></div>
+    <div class="empty" id="empty-official">チーム役員の事象はありません</div>
+    <button type="button" class="btnAdd" onclick="addEvent('official')">＋ チーム役員の事象を追加</button>
+  </section>
+
+  <button type="button" class="btnNext phoneOnly" data-pane="events" onclick="setMode('important')">次へ：重要事項・提出 →</button>
+
+  <!-- ===== 重要・提出 ===== -->
+  <section class="card importantCard" id="importantCard" data-pane="important">
+    <h2>審判報告書（重要事項）</h2>
+    <div id="importantRequiredMessage" class="requiredMsg hidden">一発退場等が入力されているため、重要事項の記入が必要です。</div>
+    <label class="toggle">
+      <input id="importantEnabled" type="checkbox" onchange="importantToggleChanged()">
+      一発退場以外でも重要事項を報告する
+    </label>
+
+    <div id="importantFields" class="hidden">
+      <div id="impFreeNote" class="sub" style="margin-top:0">一発退場以外の報告です。種類を選んで「書き方の型を入れる」を押し、［　］の部分を書き換えてください。</div>
+      <div id="impFree">
+        <div class="field">
+          <label class="lbl" for="impFreeType">報告の種類</label>
+          <select id="impFreeType">
+            <option value="time">懲戒罰を運用できない時間帯の行為（試合終了後など）</option>
+            <option value="ref">副審や第4の審判員に問題があった</option>
+            <option value="law5">主審の権限・職権と任務に関わる問題（規則第5条）</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+        <button type="button" class="btnSub" onclick="insertFreeTemplate()">書き方の型を入れる</button>
+      </div>
+      <div id="impGuided">
+      <div class="sub" style="margin-top:0">一発退場の報告です。①〜⑩に回答すると、「タイトル → いつ・どこで・誰が・誰に・どのように・どうした → 主審の決定 → 退場後の態度」の順で文章を作ります。</div>
+      <details class="impGuide">
+        <summary>書き方のポイント（タップで開く）</summary>
+        <ul>
+          <li><b>読む人に光景が浮かぶように</b>：「いつ」「どこで」「誰が（誰に）」「どのように」「どうした」を書く。</li>
+          <li><b>客観的に</b>：「悪質だった」「ひどい」などの感想ではなく、足裏の向き・勢い・当たった場所・声の大きさなど、誰が読んでも同じに理解できる事実で書く。</li>
+          <li><b>競技規則の何を適用したか</b>：著しく不正なプレー／乱暴な行為／決定的な得点の機会の阻止などを明記し、起きた事象と必ず一致させる。</li>
+          <li><b>退場後の行動・態度</b>：例「素直に競技のフィールドから出ていった」。</li>
+          <li>2度の警告による退場は、重要事項ではなく通常の報告書（退場欄）に書く。</li>
+        </ul>
+      </details>
+      <div class="field">
+        <label class="lbl req" for="impWho"><span class="qNo">①</span>誰が</label>
+        <input id="impWho" placeholder="例：北大 No.10 山田　太郎氏">
+      </div>
+      <div class="field">
+        <label class="lbl req"><span class="qNo">②</span>いつ（何分に）</label>
+        <div class="pick">
+          <button type="button" data-v="前半" class="active">前半</button>
+          <button type="button" data-v="後半">後半</button>
+          <button type="button" data-v="延長前半" class="et">延長前半</button>
+          <button type="button" data-v="延長後半" class="et">延長後半</button>
+        </div>
+        <input type="hidden" id="impPeriod" value="前半" onchange="importantTimePreview()">
+        <input id="impMinute" readonly onclick="openMinuteKeypad(this)" placeholder="タップして経過分を入力" style="margin-top:6px">
+        <div id="impTimePreview" class="timePreview"></div>
+      </div>
+      <div class="field">
+        <label class="lbl req" for="impWhere"><span class="qNo">③</span>どこで</label>
+        <select id="impWhere" onchange="importantCandidateChanged('impWhere')"></select>
+        <input id="impWhereCustom" class="custom hidden" placeholder="例：自陣ゴールエリアの右角付近">
+      </div>
+      <div class="field">
+        <label class="lbl" for="impSituation"><span class="qNo">④</span>どんな場面で</label>
+        <select id="impSituation" onchange="importantCandidateChanged('impSituation')"></select>
+        <input id="impSituationCustom" class="custom hidden" placeholder="例：相手競技者がドリブルで前進してきた場面で">
+      </div>
+      <div class="field">
+        <label class="lbl req" for="impTarget"><span class="qNo">⑤</span>誰に対して</label>
+        <select id="impTarget" onchange="importantCandidateChanged('impTarget')"></select>
+        <input id="impTargetCustom" class="custom hidden" placeholder="例：札大 No.7 佐藤　次郎氏／主審">
+      </div>
+      <div class="field">
+        <label class="lbl req" for="impAction"><span class="qNo">⑥</span>どのように・どうした</label>
+        <select id="impAction" onchange="importantCandidateChanged('impAction')"></select>
+        <textarea id="impActionCustom" class="custom hidden" placeholder="例：足裏を上げた状態で、勢いよくスライディングタックルを行い、右足首付近に激しく接触した"></textarea>
+        <div id="impActionHint" class="hintBox"></div>
+      </div>
+      <div class="field">
+        <label class="lbl req" for="impReason"><span class="qNo">⑦</span>適用した競技規則（退場の理由）</label>
+        <select id="impReason" onchange="importantCandidateChanged('impReason')"></select>
+        <input id="impReasonCustom" class="custom hidden" placeholder="競技規則の文言で入力">
+        <div id="impReasonHint" class="hintBox"></div>
+      </div>
+      <div class="field">
+        <label class="lbl req" for="impDecision"><span class="qNo">⑧</span>反則の判定</label>
+        <select id="impDecision" onchange="importantCandidateChanged('impDecision');importantDecisionChanged()"></select>
+        <input id="impDecisionCustom" class="custom hidden" placeholder="例：直接フリーキック">
+      </div>
+      <div class="field">
+        <label class="lbl req" for="impReaction"><span class="qNo">⑨</span>退場後の行動・態度</label>
+        <select id="impReaction" onchange="importantCandidateChanged('impReaction')"></select>
+        <textarea id="impReactionCustom" class="custom hidden" placeholder="例：素直に競技のフィールドから出ていった"></textarea>
+      </div>
+      <div class="field">
+        <label class="lbl req" for="impRestart"><span class="qNo">⑩</span>試合の再開方法</label>
+        <select id="impRestart" onchange="importantCandidateChanged('impRestart')"></select>
+        <input id="impRestartCustom" class="custom hidden" placeholder="再開方法を入力">
+      </div>
+
+      <button type="button" class="btnSub" onclick="buildImportantDraft()">回答から文章を作成</button>
+
+      <label class="lbl">文章の下書き</label>
+      <div id="importantDraft" class="preview draft">上の質問に回答すると、ここに下書きを作成できます。</div>
+      </div>
+
+      <div class="field">
+        <label class="lbl req" for="importantFinal" id="importantFinalLabel">最終提出文（必要に応じて修正）</label>
+        <textarea id="importantFinal" style="min-height:180px"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="otherCard" data-pane="important">
+    <h2>その他の報告事項</h2>
+    <div class="sub" style="margin-top:0">特に問題がなければ「特になし」。あれば具体的に書きます（空のまま提出すると「特になし」になります）。</div>
+    <div class="otherBtns">
+      <button type="button" onclick="setOtherNone()">特になし</button>
+    </div>
+    <div class="field">
+      <select id="otherPick" onchange="pickOther(this)">
+        <option value="">報告する内容の例から選ぶ</option>
+        <option value="1">① 懲戒罰を運用できない時間帯の行為（試合終了後など）※重要事項も必要</option>
+        <option value="2">② チームのユニフォーム等の問題</option>
+        <option value="3">③ キックオフ時刻の遅れ</option>
+        <option value="4">④ 副審や第4の審判員の問題 ※重要事項も必要</option>
+        <option value="5">⑤ 運営面の問題</option>
+        <option value="6">⑥ 主審の権限・職権と任務に関わる問題 ※重要事項も必要</option>
+      </select>
+      <textarea id="otherReport" placeholder="特になし"></textarea>
+      <div id="otherNeedImp" class="requiredMsg hidden" style="margin-top:8px">①・④・⑥は、この欄に加えて「重要事項」にも詳しく書いてください（上の「一発退場以外でも重要事項を報告する」をオンにしました）。</div>
+    </div>
+  </section>
+
+  <section class="card" id="submitCard" data-pane="important">
+    <h2>提出</h2>
+    <label class="lbl">提出先</label>
+    <div id="recipient" class="recipient"></div>
+    <div class="sub" style="margin-top:0">主催地域協会に応じてPDF下部の宛名へ自動反映します。</div>
+    <div id="result"></div>
+    <div class="submitRow">
+      <div>
+        <button id="submitBtn" type="button" class="btnPrimary" onclick="submitReport()" disabled>審判報告書を提出</button>
+        <div id="submitStatus" class="submitStatus"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="tabBar" id="tabBar" aria-label="入力セクション">
+  <button type="button" data-mode="match" class="active" onclick="setMode('match')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5l3.8 2.8-1.4 4.5H9.6l-1.4-4.5z"/></svg>
+    <span>試合</span><span class="badge"></span>
+  </button>
+  <button type="button" data-mode="officials" onclick="setMode('officials')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+    <span>審判</span><span class="badge"></span>
+  </button>
+  <button type="button" data-mode="events" onclick="setMode('events')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="9" height="14" rx="1.5"/><rect x="11" y="6" width="9" height="14" rx="1.5"/></svg>
+    <span>事象</span><span class="badge"></span>
+  </button>
+  <button type="button" data-mode="important" onclick="setMode('important')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7M9 7h4"/></svg>
+    <span>重要</span><span class="badge"></span>
+  </button>
+</nav>
+
+<div id="keypadBackdrop" class="sheetBackdrop" onclick="backdropClose(event)">
+  <div class="sheet" role="dialog" aria-label="時間入力">
+    <div class="sheetHead" id="keyHead"></div>
+    <div id="keyDisplay" class="keyDisplay">0</div>
+    <div id="keyPreview" class="keyPreview"></div>
+    <div class="keyGrid">
+      <button type="button" onclick="keyPress('1')">1</button><button type="button" onclick="keyPress('2')">2</button><button type="button" onclick="keyPress('3')">3</button>
+      <button type="button" onclick="keyPress('4')">4</button><button type="button" onclick="keyPress('5')">5</button><button type="button" onclick="keyPress('6')">6</button>
+      <button type="button" onclick="keyPress('7')">7</button><button type="button" onclick="keyPress('8')">8</button><button type="button" onclick="keyPress('9')">9</button>
+      <button type="button" onclick="keyBack()">⌫</button><button type="button" onclick="keyPress('0')">0</button><button type="button" onclick="keyClear()">クリア</button>
+    </div>
+    <div class="keyActions">
+      <button type="button" onclick="closeKeypad()">キャンセル</button>
+      <button type="button" class="btnPrimary" onclick="keyOk()">決定</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" onclick="this.className='toast'"></div>
+
+<script>
+/* =========================================================
+   状態
+   ========================================================= */
+let BOOT=null;
+let DETAIL=null;
+let MODE='match';
+let EVMODE='warning';
+let keypadTarget=null;
+let keypadValue='';
+let IMPORTANT_SOURCE_KEY=null;
+let IMPORTANT_AUTO={who:'',minute:'',period:'',kind:''};
+let LAST_DRAFT='';
+let RESTORING=false;
+let DIRTY=false;
+let saveTimer=null;
+let toastTimer=null;
+
+const STORE_PREFIX='refReportDraft:v1:';
+const MAIN_REF_KEY='refReportMainRef:v1';
+const OFFICIALS=['main','ar1','ar2','fourth'];
+const OFFICIAL_LABEL={main:'主審',ar1:'副審1',ar2:'副審2',fourth:'第4の審判員'};
+const KIND_LABEL={warning:'警告',sendoff:'退場',official:'チーム役員'};
+const HOLDER={warning:'warnings',sendoff:'sendoffs',official:'officialEvents'};
+const DRAFT_PLACEHOLDER='上の質問に回答すると、ここに下書きを作成できます。';
+const DRAFT_SIMPLE=['matchTime','extraTime','venue','matchDate','kickoff','groundState','equipmentState','conditionDetail','otherReport'];
+const IMP_SELECT=['impWhere','impSituation','impTarget','impAction','impDecision','impReason','impReaction','impRestart'];
+const IMP_TEXT=['impWho','impMinute','importantFinal'].concat(IMP_SELECT.map(id=>id+'Custom'));
+
+/* =========================================================
+   共通
+   ========================================================= */
+const $=id=>document.getElementById(id);
+
+function esc(s){
+  return String(s??'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function val(id){
+  const el=$(id);
+  return el?String(el.value??''):'';
+}
+
+function setVal(id,v){
+  const el=$(id);
+  if(!el)return;
+  if(el.type==='hidden' && el.previousElementSibling && el.previousElementSibling.classList.contains('pick')){
+    setPick(el,v);
+  }else{
+    el.value=v??'';
+  }
+}
+
+function isWide(){
+  return document.documentElement.classList.contains('wide');
+}
+
+function fillSelect(id,items,placeholder='選択してください'){
+  const el=$(id);
+  if(!el)return;
+  el.innerHTML=
+    `<option value="">${esc(placeholder)}</option>`+
+    (items||[]).map(x=>{
+      const value=typeof x==='string'?x:x.value;
+      const label=typeof x==='string'?x:x.label;
+      return `<option value="${esc(value)}">${esc(label)}</option>`;
+    }).join('');
+}
+
+function hasOption(sel,v){
+  return !!sel && [...sel.options].some(o=>o.value===String(v));
+}
+
+function ensureOption(id,v){
+  const sel=$(id);
+  if(!sel || !v || hasOption(sel,v))return;
+  const o=document.createElement('option');
+  o.value=v;o.textContent=v;
+  sel.appendChild(o);
+}
+
+function pad2(n){return String(n).padStart(2,'0');}
+function hhmm(d){return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;}
+function fmtSaved(ts){
+  const d=new Date(ts);
+  return `${d.getMonth()+1}/${d.getDate()} ${hhmm(d)}`;
+}
+
+function toast(msg,type){
+  const t=$('toast');
+  t.textContent=msg;
+  t.className='toast show '+(type||'ok');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.className='toast';},type==='err'?5000:2500);
+}
+
+function setSaveState(text){
+  $('saveState').textContent=text||'';
+}
+
+/* 選択ボタン（.pick + hidden input） */
+function setPick(input,v,fire){
+  if(!input)return;
+  input.value=v??'';
+  const pick=input.previousElementSibling;
+  if(pick && pick.classList.contains('pick')){
+    pick.querySelectorAll('button[data-v]').forEach(b=>{
+      b.classList.toggle('active',b.dataset.v===input.value);
+    });
+    pick.classList.remove('invalid');
+  }
+  if(fire){
+    input.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+}
+
+function pickHTML(cls,items,value,onchange,wrapCls){
+  return `<div class="pick ${wrapCls||''}">`+
+    items.map(([v,l,extra])=>{
+      const c=[extra||'',v===value?'active':''].filter(Boolean).join(' ');
+      return `<button type="button" data-v="${esc(v)}" class="${c}">${esc(l)}</button>`;
+    }).join('')+
+    `</div><input type="hidden" class="${cls}" value="${esc(value)}" onchange="${onchange}">`;
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.pick button[data-v]');
+  if(!b)return;
+  const input=b.parentElement.nextElementSibling;
+  if(input && input.type==='hidden'){
+    setPick(input,b.dataset.v,true);
+  }
+});
+
+document.addEventListener('input',onAnyEdit);
+document.addEventListener('change',onAnyEdit);
+
+function onAnyEdit(e){
+  if(e && e.target && e.target.classList){
+    e.target.classList.remove('invalid');
+    const card=e.target.closest && e.target.closest('.eventCard');
+    if(card)card.classList.remove('need');
+  }
+  markEdited();
+}
+
+function markEdited(){
+  if(!DETAIL || RESTORING)return;
+  DIRTY=true;
+  scheduleSave();
+  refreshStatus();
+}
+
+/* =========================================================
+   起動・試合選択
+   ========================================================= */
+window.addEventListener('load',()=>{
+  google.script.run
+    .withSuccessHandler(init)
+    .withFailureHandler(showFatal)
+    .getRefereeReportBootstrap();
+});
+
+function init(data){
+  BOOT=data;
+
+  fillSelect('competition',(data.competitions||[]).map(c=>({value:c.id,label:c.name})),'競技会を選択');
+  fillSelect('venue',data.venues||[]);
+  fillSelect('matchTime',(data.matchTimes||[]).map(x=>({value:x,label:x+'分'})),'選択');
+  fillSelect('extraTime',(data.extraTimes||[]).map(x=>({value:x,label:x==='なし'?'なし':x+'分'})),'選択');
+
+  OFFICIALS.forEach(p=>{
+    fillSelect(p+'Grade',['1級','2級','3級','4級'],'級');
+    fillSelect(p+'Assoc',[],'先に審判級を選択');
+  });
+
+  fillSelect('match',[],'先に競技会を選択');
+  setSaveState('');
+
+  restoreMainRefFromStore();
+
+  if((data.competitions||[]).length===1){
+    $('competition').value=data.competitions[0].id;
+    competitionChanged();
+  }
+
+  /* 承認メールのリンク（?page=referee&match=試合ID）から開いた場合は、その試合を自動選択 */
+  try{
+    google.script.url.getLocation(loc=>{
+      const mid=loc&&loc.parameter&&loc.parameter.match;
+      if(mid)preselectMatch(String(mid));
+    });
+  }catch(e){}
+}
+
+function preselectMatch(mid){
+  const m=(BOOT.matches||[]).find(x=>String(x.matchId)===mid);
+  if(!m){
+    toast('メールの試合が見つかりませんでした。試合を選択してください。','err');
+    return;
+  }
+  $('competition').value=m.competitionId;
+  competitionChanged();
+  $('match').value=m.matchId;
+  matchChanged();
+}
+
+function competitionChanged(){
+  const cid=val('competition');
+  const matches=(BOOT.matches||[]).filter(m=>m.competitionId===cid);
+
+  fillSelect(
+    'match',
+    matches.map(m=>({value:m.matchId,label:`${m.round}｜${m.date}｜${m.home} vs ${m.away}`})),
+    cid?'試合を選択':'先に競技会を選択'
+  );
+
+  unloadMatch();
+}
+
+function unloadMatch(){
+  if(DIRTY)saveDraft();
+  DETAIL=null;
+  DIRTY=false;
+  document.body.classList.remove('loaded');
+  $('matchBox').classList.add('hidden');
+  $('restoreBanner').classList.add('hidden');
+  $('prefillBanner').classList.add('hidden');
+  $('headMatch').textContent='';
+  document.documentElement.style.removeProperty('--tcH');document.documentElement.style.removeProperty('--tcA');
+  $('submitBtn').disabled=true;
+  setSaveState('');
+  closeKeypad();
+}
+
+function matchChanged(){
+  const id=val('match');
+  unloadMatch();
+  if(!id)return;
+
+  $('loadingNote').classList.remove('hidden');
+
+  google.script.run
+    .withSuccessHandler(d=>renderMatch(d))
+    .withFailureHandler(err=>{
+      $('loadingNote').classList.add('hidden');
+      toast(err.message||String(err),'err');
+    })
+    .getRefereeReportMatchDetail(id);
+}
+
+function renderMatch(d,opts){
+  opts=opts||{};
+  $('loadingNote').classList.add('hidden');
+
+  DETAIL=d;
+  RESTORING=true;
+
+  /* 対戦・結果は正式名称 */
+  if(typeof tcOf==='function'){const r=document.documentElement.style;r.setProperty('--tcH',tcOf(d.home.id,d.home.name)||'#E0E0E0');r.setProperty('--tcA',tcOf(d.away.id,d.away.name)||'#E0E0E0');}
+  $('homeName').textContent=d.home.name;
+  $('awayName').textContent=d.away.name;
+  $('headMatch').textContent=`${d.home.name} vs ${d.away.name}`;
+
+  const s=d.score||{};
+  const has=v=>v!=='' && v!=null;
+  const parts=[];
+  if(has(s.regularHome)||has(s.regularAway))parts.push(`結果 ${s.regularHome||0} - ${s.regularAway||0}`);
+  if(has(s.extraHome)||has(s.extraAway))parts.push(`延長 ${s.extraHome||0} - ${s.extraAway||0}`);
+  if(has(s.pkHome)||has(s.pkAway))parts.push(`PK ${s.pkHome||0} - ${s.pkAway||0}`);
+  $('scoreLine').textContent=parts.join('　')||'結果未入力';
+  /* ベンチ入りスタッフ（スタメン提出・公式記録から） */
+  const bench=t=>(t.officials||[]).filter(o=>o.bench).map(o=>`${o.role} ${o.name}`).join('、');
+  const bh=bench(d.home),ba=bench(d.away);
+  $('benchStaff').innerHTML=(bh||ba)?`ベンチ入りスタッフ<br>${esc(d.home.shortName||d.home.name)}：${esc(bh||'（なし）')}<br>${esc(d.away.shortName||d.away.name)}：${esc(ba||'（なし）')}`:'';
+  $('matchBox').classList.remove('hidden');
+
+  /* 試合マスターの値を初期値に */
+  ensureOption('venue',d.venue);
+  setVal('matchDate',d.date||'');
+  setVal('kickoff',d.kickoff||'');
+  setVal('venue',d.venue||'');
+  setVal('matchTime',d.matchTime||'90');
+  setVal('extraTime',d.extraTime||'なし');
+
+  $('recipient').textContent=d.recipient||'';
+
+  Object.values(HOLDER).forEach(id=>{$(id).innerHTML='';});
+  ['otherReport','groundState','equipmentState','conditionDetail'].forEach(id=>setVal(id,''));
+
+  $('importantEnabled').checked=false;
+  refreshImportantTargetOptions();
+  clearImportant();
+  $('result').innerHTML='';
+  $('submitStatus').textContent='';
+  $('restoreBanner').classList.add('hidden');
+
+  document.body.classList.add('loaded');
+
+  let restored=false;
+  if(!opts.skipRestore){
+    restored=restoreDraft(d.matchId);
+  }
+  if(!restored && !val('mainLast') && !val('mainFirst')){
+    restoreMainRefFromStore();
+  }
+
+  /* 公式記録から審判団の氏名・警告・退場を反映（入力途中の内容を復元したときは上書きしない） */
+  $('prefillBanner').classList.add('hidden');
+  if(!restored)applyRecordPrefill(d);
+
+  buildConditionText();
+  applyExtraTime();
+  renumberEvents();
+
+  RESTORING=false;
+
+  syncImportantRequirement();
+  refreshStatus();
+
+  DIRTY=false;
+  $('submitBtn').disabled=false;
+  setSaveState(restored?'入力途中の内容を復元しました':'入力内容はこの端末に自動保存されます');
+
+  setEventMode('warning');
+  setMode('match');
+}
+
+/* =========================================================
+   公式記録からの反映（主審が承認した公式記録なら基本的に正しい）
+   ========================================================= */
+/* 公式記録の理由コード → この画面の理由 */
+const RECORD_REASON={
+  C1:'反',C2:'ラ',C3:'異',C4:'繰',C5:'遅',C6:'距',C7:'入',C8:'去',
+  S1:'不正',S2:'乱暴',S3:'つば',S4:'阻止(手)',S5:'阻止(他)',S6:'暴言',CS:'警告2'
+};
+
+function splitName(n){
+  const t=String(n||'').trim().replace(/\s+/g,' ');
+  if(!t)return{last:'',first:''};
+  const i=t.indexOf(' ');
+  return i<0?{last:t,first:''}:{last:t.slice(0,i),first:t.slice(i+1).replace(/ /g,'')};
+}
+
+function samePerson(a,b){
+  const k=x=>String(x||'').replace(/[\s　]/g,'');
+  return !!k(a) && k(a)===k(b);
+}
+
+function applyRecordPrefill(d){
+  const pf=d&&d.prefill;
+  if(!pf)return;
+  const done=[];
+
+  /* 審判団：姓と名に分けて入れる（電話番号・審判級・所属協会は手入力） */
+  const map={main:'main',ar1:'ar1',ar2:'ar2',fourth:'fourth'};
+  let names=0;
+  OFFICIALS.forEach(p=>{
+    const name=(pf.officials||{})[map[p]];
+    if(!name)return;
+    const cur=fullName(p);
+    if(samePerson(cur,name))return names++; /* 同じ人なら、この端末に保存された級・協会・電話をそのまま使う */
+    const sp=splitName(name);
+    if(cur){
+      /* 別の人の情報が残っていたら消す */
+      restoreOfficial(p,{last:'',first:'',grade:'',assoc:'',assocCustom:'',phone:p==='main'?'':undefined});
+    }
+    setVal(p+'Last',sp.last);
+    setVal(p+'First',sp.first);
+    /* 審判員マスターに登録があれば、審判級・所属協会・電話番号も入れる */
+    const dt=(pf.details||{})[p];
+    if(dt){
+      restoreOfficial(p,{last:sp.last,first:sp.first,grade:dt.grade,assoc:dt.assoc,assocCustom:'',phone:p==='main'?dt.phone:undefined});
+    }
+    if(p!=='main' && $(p+'Details'))$(p+'Details').open=true;
+    names++;
+  });
+  if(names)done.push('審判団の氏名');
+
+  /* 警告・退場：時間帯・時間・チーム・選手・理由を入れる（具体的事由は審判が記入） */
+  const hasCards=document.querySelectorAll('.eventCard').length>0;
+  const evs=(pf.events||[]).filter(e=>e.type==='警告'||e.type==='一発退場'||e.type==='警告2枚による退場');
+  if(!hasCards && evs.length){
+    const order={'前半':1,'後半':2,'延長前半':3,'延長後半':4};
+    evs.slice().sort((a,b)=>((order[a.period]||9)-(order[b.period]||9))||((Number(a.time)||0)-(Number(b.time)||0)))
+      .forEach(e=>{
+        const code=(String(e.reason||'').match(/^(C\d|S\d|CS)/)||[])[1]||'';
+        const kind=e.type==='警告'?'warning':'sendoff';
+        const reason=e.type==='警告2枚による退場'?'警告2':(RECORD_REASON[code]||'');
+        const t=String(e.time||'').trim();
+        addEvent(kind,{
+          period:order[e.period]?e.period:'前半',
+          minute:/^\d+$/.test(t)?t:'',
+          teamId:e.teamId,
+          targetId:e.playerId,
+          reason,
+          detail:''
+        });
+      });
+    const w=evs.filter(e=>e.type==='警告').length,so=evs.length-w;
+    done.push(`警告${w}件・退場${so}件`);
+  }
+
+  if(!done.length)return;
+  const box=$('prefillBanner');
+  box.classList.toggle('unapproved',!pf.refereeApproved);
+  $('prefillText').textContent=
+    (pf.refereeApproved
+      ?'公式記録（主審承認済み）から反映しました：'
+      :'承認前の公式記録から反映しています。内容を確認してください：')+
+    done.join('・')+
+    '。審判級・所属協会・電話番号と、警告・退場の「具体的事由」を入力してください。';
+  box.classList.remove('hidden');
+}
+
+function applyExtraTime(){
+  const et=val('extraTime');
+  document.body.classList.toggle('noET',!et || et==='なし');
+}
+
+/* =========================================================
+   タブ（スマホ）
+   ========================================================= */
+function setMode(mode){
+  MODE=mode||'match';
+  document.body.dataset.mode=MODE;
+  document.querySelectorAll('#tabBar button').forEach(b=>{
+    b.classList.toggle('active',b.dataset.mode===MODE);
+  });
+  closeKeypad();
+  if(!isWide())window.scrollTo(0,0);
+}
+
+function setEventMode(m){
+  EVMODE=m||'warning';
+  document.body.dataset.event=EVMODE;
+  document.querySelectorAll('#eventSeg button').forEach(b=>{
+    b.classList.toggle('active',b.dataset.event===EVMODE);
+  });
+}
+
+function jump(id){
+  const el=$(id);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function setBadge(mode,cls,text){
+  const b=document.querySelector(`#tabBar button[data-mode="${mode}"] .badge`);
+  if(!b)return;
+  b.className='badge'+(cls?' '+cls:'');
+  b.textContent=text||'';
+}
+
+function refreshStatus(){
+  if(!DETAIL)return;
+
+  const matchOk=['matchTime','extraTime','venue','matchDate','kickoff','groundState','equipmentState'].every(id=>val(id));
+  setBadge('match',matchOk?'ok':'',matchOk?'✓':'');
+
+  const offOk=!officialMissing();
+  setBadge('officials',offOk?'ok':'',offOk?'✓':'');
+
+  OFFICIALS.forEach(p=>{
+    const n=fullName(p);
+    $(p+'Summary').textContent=n||'未入力';
+  });
+
+  const events=collectEventCards();
+  const bad=events.some(e=>!validateEvent(e));
+  if(bad)setBadge('events','ng','!');
+  else setBadge('events','',events.length?String(events.length):'');
+
+  ['warning','sendoff','official'].forEach(k=>{
+    const n=events.filter(e=>e.kind===k).length;
+    $('cnt-'+k).textContent=n;
+    $('empty-'+k).classList.toggle('hidden',n>0);
+  });
+
+  const required=events.some(requiresImportant);
+  const enabled=required || $('importantEnabled').checked;
+  const impOk=!enabled || !importantMissing();
+  if(required && !impOk)setBadge('important','ng','!');
+  else if(enabled && impOk)setBadge('important','ok','✓');
+  else setBadge('important','','');
+}
+
+/* =========================================================
+   審判員
+   ========================================================= */
+function gradeChanged(prefix){
+  const grade=val(prefix+'Grade');
+  let items=[];
+
+  if(grade==='1級'){
+    items=['日本'];
+  }else if(grade==='2級'){
+    items=[...(BOOT.regionalAssociations||[]),'__custom__'];
+  }else if(grade==='3級' || grade==='4級'){
+    items=[...(BOOT.districtAssociations||[]),'__custom__'];
+  }
+
+  fillSelect(
+    prefix+'Assoc',
+    items.map(x=>x==='__custom__'?{value:'__custom__',label:'その他（手入力）'}:x),
+    grade?'選択してください':'先に審判級を選択'
+  );
+
+  setVal(prefix+'AssocCustom','');
+  if(items.length===1)$(prefix+'Assoc').value=items[0];
+
+  associationChanged(prefix,true);
+}
+
+function associationChanged(prefix,noFocus){
+  const custom=val(prefix+'Assoc')==='__custom__';
+  $(prefix+'AssocCustomWrap').classList.toggle('hidden',!custom);
+  if(custom && !noFocus){
+    setTimeout(()=>$(prefix+'AssocCustom').focus(),50);
+  }
+}
+
+function resolvedAssociation(prefix){
+  const a=val(prefix+'Assoc');
+  return a==='__custom__'?val(prefix+'AssocCustom').trim():a;
+}
+
+function fullName(prefix){
+  const last=val(prefix+'Last').trim();
+  const first=val(prefix+'First').trim();
+  return [last,first].filter(Boolean).join('　');
+}
+
+/* 主審・副審1・副審2・第4の審判員すべて必須（電話番号は主審のみ） */
+function officialMissing(){
+  for(const p of OFFICIALS){
+    const t=OFFICIAL_LABEL[p];
+    const assocId=val(p+'Assoc')==='__custom__'?p+'AssocCustom':p+'Assoc';
+    const checks=[
+      [p+'Last',`${t}の姓`,val(p+'Last').trim()],
+      [p+'First',`${t}の名`,val(p+'First').trim()]
+    ];
+    if(p==='main')checks.push(['mainPhone','主審の電話番号',val('mainPhone').trim()]);
+    checks.push(
+      [p+'Grade',`${t}の審判級`,val(p+'Grade')],
+      [assocId,`${t}の所属協会`,resolvedAssociation(p)]
+    );
+    const m=checks.find(x=>!x[2]);
+    if(m)return{id:m[0],label:m[1]};
+  }
+  return null;
+}
+
+function collectOfficial(prefix){
+  return{
+    name:fullName(prefix),
+    grade:val(prefix+'Grade'),
+    association:resolvedAssociation(prefix)
+  };
+}
+
+function restoreOfficial(p,o){
+  if(!o)return;
+  setVal(p+'Last',o.last||'');
+  setVal(p+'First',o.first||'');
+  if(p==='main' && o.phone!==undefined)setVal('mainPhone',o.phone||'');
+  setVal(p+'Grade',o.grade||'');
+  gradeChanged(p);
+
+  let assoc=o.assoc||'';
+  let custom=o.assocCustom||'';
+  const sel=$(p+'Assoc');
+  if(assoc && !hasOption(sel,assoc)){
+    if(hasOption(sel,'__custom__')){
+      custom=custom||assoc;
+      assoc='__custom__';
+    }else{
+      assoc='';
+    }
+  }
+  sel.value=assoc;
+  associationChanged(p,true);
+  setVal(p+'AssocCustom',custom);
+}
+
+/* =========================================================
+   競技場・用具
+   ========================================================= */
+function buildConditionText(){
+  const ground=val('groundState');
+  const equip=val('equipmentState');
+  const detail=val('conditionDetail').trim();
+
+  let text='';
+  if(ground || equip){
+    const parts=[];
+    if(ground)parts.push(`競技場の状態は「${ground}」`);
+    if(equip)parts.push(`用具の状態は「${equip}」`);
+    text=parts.join('、')+'でした。';
+  }
+  if(detail){
+    text+=(text?' ':'')+`補足：${detail}`;
+  }
+
+  $('conditionPreview').textContent=text||'状態を選択してください。';
+  return text;
+}
+
+/* =========================================================
+   警告・退場・チーム役員
+   ========================================================= */
+const PERIOD_ITEMS=[['前半','前半'],['後半','後半'],['延長前半','延長前半','et'],['延長後半','延長後半','et']];
+
+function addEvent(kind,data){
+  if(!DETAIL)return null;
+
+  const card=document.createElement('div');
+  card.className='eventCard';
+  card.dataset.kind=kind;
+
+  const subtypeHTML=kind==='official'
+    ?`<div class="field"><label class="lbl">種別</label>${pickHTML('eventSubtype',[['警告','警告'],['退場','退場']],'警告','eventSubtypeChanged(this)')}</div>`
+    :'';
+
+  const teamItems=[[DETAIL.home.id,DETAIL.home.shortName],[DETAIL.away.id,DETAIL.away.shortName]];
+
+  card.innerHTML=`
+    <div class="eventHead">
+      <b>${KIND_LABEL[kind]} <span class="evNo"></span></b>
+      <button type="button" class="btnDanger" onclick="removeEvent(this)">削除</button>
+    </div>
+    ${subtypeHTML}
+    <div class="field">
+      <label class="lbl">時間帯</label>
+      ${pickHTML('period',PERIOD_ITEMS,'前半',"eventTimePreview(this.closest('.eventCard'))",'periodPick')}
+    </div>
+    <div class="field">
+      <label class="lbl">時間（時間帯開始からの経過分）</label>
+      <input class="minute" readonly onclick="openMinuteKeypad(this)" placeholder="タップして入力">
+      <div class="timePreview"></div>
+    </div>
+    <div class="field">
+      <label class="lbl">チーム</label>
+      ${pickHTML('team',teamItems,'','eventTeamChanged(this)','teamPick')}
+    </div>
+    <div class="field">
+      <label class="lbl">氏名</label>
+      <select class="person" onchange="eventChanged(this)">
+        <option value="">チームを先に選択</option>
+      </select>
+      <div class="personMeta"></div>
+    </div>
+    <div class="field">
+      <label class="lbl">理由</label>
+      <select class="reason" onchange="eventChanged(this);setDetailOptions(this.closest('.eventCard'))"></select>
+      <div class="reasonHint hintBox"></div>
+    </div>
+    <div class="field">
+      <label class="lbl">具体的事由</label>
+      <select class="detailPick" onchange="pickDetail(this)"><option value="">理由を選ぶと、例文から選べます</option></select>
+      <textarea class="detail" rows="3" oninput="eventChanged(this)" placeholder="具体的な状況を記入（例文を選んでから、必要に応じて書き足してください）"></textarea>
+    </div>
+  `;
+
+  $(HOLDER[kind]).appendChild(card);
+  setReasonOptions(card);
+
+  if(data)fillEventCard(card,data);
+
+  renumberEvents();
+  syncImportantRequirement();
+
+  if(!data && !RESTORING){
+    markEdited();
+    setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  }
+  return card;
+}
+
+function fillEventCard(card,d){
+  if(card.dataset.kind==='official' && d.subtype){
+    setPick(card.querySelector('.eventSubtype'),d.subtype);
+    setReasonOptions(card);
+  }
+  setPick(card.querySelector('.period'),d.period||'前半');
+  card.querySelector('.minute').value=d.minute||'';
+  if(d.teamId){
+    setPick(card.querySelector('.team'),d.teamId);
+    eventTeamChanged(card.querySelector('.team'));
+  }
+  const person=card.querySelector('.person');
+  if(hasOption(person,d.targetId))person.value=d.targetId;
+  const reason=card.querySelector('.reason');
+  if(hasOption(reason,d.reason))reason.value=d.reason;
+  setDetailOptions(card);
+  card.querySelector('.detail').value=d.detail||'';
+  updatePersonMeta(card);
+  eventTimePreview(card);
+}
+
+function removeEvent(btn){
+  const card=btn.closest('.eventCard');
+  const e=collectEvent(card);
+  if((e.minute||e.teamId||e.reason||e.detail) && !confirm(`この${KIND_LABEL[e.kind]}を削除しますか？`)){
+    return;
+  }
+  card.remove();
+  renumberEvents();
+  syncImportantRequirement();
+  markEdited();
+}
+
+function renumberEvents(){
+  Object.values(HOLDER).forEach(id=>{
+    $(id).querySelectorAll('.eventCard').forEach((c,i)=>{
+      c.querySelector('.evNo').textContent=i+1;
+    });
+  });
+}
+
+function eventSubtypeChanged(input){
+  setReasonOptions(input.closest('.eventCard'));
+  syncImportantRequirement();
+}
+
+function setReasonOptions(card){
+  const kind=card.dataset.kind;
+  const reason=card.querySelector('.reason');
+  const keep=reason.value;
+  let values=[];
+
+  if(kind==='warning'){
+    values=[
+      ['反','反スポーツ的行為'],['ラ','ラフプレー'],['異','言葉または行動による異議'],['繰','繰り返し競技規則に違反する'],
+      ['遅','プレーの再開を遅らせる'],['距','規定の距離を守らない'],['入','主審の承認を得ず、競技のフィールドに入る・復帰する'],['去','主審の承認を得ず、意図的に競技のフィールドから離れる']
+    ];
+  }else if(kind==='sendoff'){
+    values=[
+      ['不正','著しく不正なプレー'],['乱暴','乱暴な行為'],['つば','人をかむ、または人につばを吐く'],
+      ['阻止(手)','ボールを手や腕で扱い、得点・決定的な得点の機会を阻止'],['阻止(他)','FKとなる反則で、決定的な得点の機会を阻止'],
+      ['暴言','攻撃的な、侮辱的な、または下品な発言や行動'],['警告2','同じ試合で2つ目の警告']
+    ];
+  }else{
+    const subtype=card.querySelector('.eventSubtype')?.value||'警告';
+    values=subtype==='警告'
+      ?[['反','反スポーツ的行為'],['異','異議'],['遅','プレー再開を遅らせる'],['その他','その他']]
+      :[['乱暴','乱暴な行為'],['つば','人をかむ、または人につばを吐く'],['暴言','攻撃的な、侮辱的な、または下品な発言や行動'],['警告2','同じ試合で2つ目の警告'],['その他','その他']];
+  }
+
+  reason.innerHTML=
+    '<option value="">選択してください</option>'+
+    values.map(x=>`<option value="${esc(x[0])}">${esc(x[0]+'｜'+x[1])}</option>`).join('');
+
+  if(hasOption(reason,keep))reason.value=keep;
+  setDetailOptions(card);
+}
+
+/*
+ * 具体的事由の例文（競技規則 第12条「ファウルと不正行為」の文言にそろえた文例）
+ * 理由（大まかな区分）を選ぶと、当てはまる文が選べる。選んだ文は具体的事由の欄に入り、そのあと書き足せる。
+ */
+const DFK_RECKLESS=[
+  '相手競技者に対して、無謀にチャージした。',
+  '相手競技者に対して、無謀に飛びかかった。',
+  '相手競技者に対して、無謀にけった（けろうとした）。',
+  '相手競技者を、無謀に押した。',
+  '相手競技者を、無謀に打った（打とうとした）。',
+  '相手競技者に対して、無謀にタックルした（チャレンジした）。',
+  '相手競技者を、無謀につまずかせた（つまずかせようとした）。'
+];
+const DETAIL_TEMPLATES={
+  // ── 警告（競技者・交代要員・交代して退いた競技者） ──
+  '反':[
+    '負傷を装う、またはファウルをされたふりをして（シミュレーション）、主審を騙そうとした。',
+    '相手の大きなチャンスとなる攻撃を妨害（阻止）するために、ボールを手や腕で扱った。',
+    '相手の大きなチャンスとなる攻撃を妨害（阻止）するために、相手競技者を押さえた。',
+    '相手の大きなチャンスとなる攻撃を妨害（阻止）するために、反則を行った。',
+    'ボールをプレーしようと試みて反則を行い、相手競技者の決定的な得点の機会を阻止した（ペナルティーキック）。',
+    '意図的でないハンドの反則を行い、相手チームの得点（決定的な得点の機会）を阻止した（ペナルティーキック）。',
+    'ボールを手や腕で扱って、得点をしようと試みた。',
+    'ボールを手や腕で扱って得点を阻止しようと試みたが、失敗した。',
+    'プレー中（主審の承認を得ずに）、ゴールキーパーと入れ替わった。',
+    '競技のフィールドに認められないマークを描いた。',
+    '競技のフィールドから離れる承認を得たのち、出る途中でボールをプレーした。',
+    '競技規則の裏をかいて、頭や胸などを用いてゴールキーパーにボールをパスする意図的なトリックを企てた。',
+    'プレー中（再開のとき）に、言葉で相手競技者を惑わした。',
+    '試合にとってリスペクトに欠ける行為を行った。',
+    'ボール（物）を、相手競技者に向かって無謀に投げた。',
+    '得点の喜びで、挑発する、嘲笑する、または相手の感情を刺激するように行動した。',
+    '得点の喜びで、シャツを脱いだ（シャツを頭に被った）。',
+    '得点の喜びで、マスクや同様のものを顔や頭に被った。',
+    '得点の喜びで、安全や警備に問題が生じるような方法で、ピッチ外周フェンスによじ登った（観客に近づいた）。'
+  ],
+  'ラ':DFK_RECKLESS,
+  '異':[
+    '主審の判定に対し、言葉により異議を示した。',
+    '主審の判定に対し、行動により異議を示した。'
+  ],
+  '繰':[
+    '繰り返し反則した。'
+  ],
+  '遅':[
+    'スローインを行おうとしたが、急に味方競技者の1人にスローインを任せ、プレーの再開を遅らせた。',
+    '交代が行われるとき、競技のフィールドから離れることを遅らせた。',
+    '過度にプレーの再開を遅らせた。',
+    '主審がプレーを停止したのち、ボールを遠くへけった。',
+    '主審がプレーを停止したのち、ボールを手で持ち去った。',
+    '主審がプレーを停止したのち、意図的にボールに触れて対立を引き起こした。',
+    'フリーキックをやり直させるようにするため、違った場所からフリーキックを行った。'
+  ],
+  '距':[
+    'ドロップボールでプレーが再開されるときに、規定の距離を守らなかった。',
+    'コーナーキックでプレーが再開されるときに、規定の距離を守らなかった。',
+    'フリーキックでプレーが再開されるときに、規定の距離を守らなかった。',
+    'スローインでプレーが再開されるときに、規定の距離を守らなかった。'
+  ],
+  '入':[
+    '主審の承認を得ず、競技のフィールドに入った。',
+    '主審の承認を得ず、競技のフィールドに復帰した。'
+  ],
+  '去':[
+    '主審の承認を得ず、意図的に競技のフィールドから離れた。'
+  ],
+  // ── 退場（競技者・交代要員・交代して退いた競技者） ──
+  '不正':[
+    '相手競技者の安全を脅かすタックル（チャレンジ）をした。',
+    '過剰な力を用いて、相手競技者にチャレンジした。',
+    'ボールに向かうことでチャレンジするときに、過剰な力で、相手競技者に対し片足（両足）を使って前から突進した。',
+    'ボールに向かうことでチャレンジするときに、相手競技者の安全を脅かす方法で、片足（両足）を使って横（後ろ）から突進した。',
+    '相手競技者に対して、過剰な力でチャージした（飛びかかった・けった・押した・打った・つまずかせた）。'
+  ],
+  '乱暴':[
+    'ボールに向かうことでチャレンジしていないときに、相手競技者に対して過剰な力を用いた（粗暴な行為を行った）。',
+    'ボールに向かうことでチャレンジしていないときに、味方競技者（チーム役員・審判員・観客など）に対して過剰な力を用いた。',
+    'ボールに向かうことでチャレンジしていないときに、意図的に相手競技者の頭や顔を手や腕で打った。',
+    'ボール（物）を、過剰な力で人に向かって投げた。'
+  ],
+  'つば':[
+    '相手競技者をかんだ。',
+    '相手競技者に向かってつばを吐いた。',
+    '人（チームリストに記載されている者・審判員など）をかんだ（につばを吐いた）。'
+  ],
+  '阻止(手)':[
+    '意図的なハンドの反則を行い、相手チームの得点を阻止した。',
+    '意図的なハンドの反則を行い、相手チームの決定的な得点の機会を阻止した。',
+    '自分たちのペナルティーエリア外で意図的でないハンドの反則を行い、相手チームの得点（決定的な得点の機会）を阻止した。'
+  ],
+  '阻止(他)':[
+    'フリーキックで罰せられる反則を行い、ゴールに向かっている相手競技者の決定的な得点の機会を阻止した。',
+    '自分のペナルティーエリア内で相手競技者を押さえて（引っぱって・押して）、決定的な得点の機会を阻止した。',
+    'ボールをプレーする可能性がない反則を行い、相手競技者の決定的な得点の機会を阻止した。',
+    '主審の承認を得ずに競技のフィールドに入り、プレー（相手競技者）を妨害して、相手チームの得点（決定的な得点の機会）を阻止した。'
+  ],
+  '暴言':[
+    '攻撃的な、侮辱的な、もしくは下品な発言をした。',
+    '攻撃的な、侮辱的な、もしくは下品な行動をとった。'
+  ],
+  '警告2':[
+    '同じ試合の中で2つ目の警告を受けた（1つ目・2つ目の理由は、それぞれの警告に記載）。'
+  ]
+};
+/* チーム役員（監督・コーチなど）用。「その他」は警告と退場で文が違う */
+const DETAIL_TEMPLATES_OFFICIAL={
+  '反':[
+    '挑発するような、または相手の感情を刺激するような行動をとった。',
+    '過度に（繰り返し）、レッドカードやイエローカードを求める身振りをした。',
+    '容認できない行為を繰り返し行った（注意となる反則の繰り返しを含む）。',
+    '試合にとってリスペクトに欠ける行為を行った。'
+  ],
+  '異':[
+    '言葉により異議を示した。',
+    '行動により異議を示した。',
+    'ドリンクボトル（その他の物）を投げて（けって）、異議を示した。',
+    '皮肉な拍手などで、審判員に対するリスペクトを明らかに欠いた行動をとった。'
+  ],
+  '遅':[
+    '自分のチームのプレーの再開を遅らせた。'
+  ],
+  '警告:その他':[
+    '明らかに（繰り返して）自分のチームのテクニカルエリアから出た。',
+    '意図的に相手チームのテクニカルエリアに入った（対立的ではなく）。'
+  ],
+  '乱暴':[
+    '乱暴な行為を行った。',
+    '相手競技者（交代要員・チーム役員・審判員・観客など）に対して、身体的または攻撃的な行動をとった。',
+    '競技のフィールドに物を意図的に投げ入れた（けり込んだ）。'
+  ],
+  'つば':[
+    '相手競技者（チーム役員・審判員など）につばを吐いた。',
+    '相手競技者（チーム役員・審判員など）にかみついた。'
+  ],
+  '暴言':[
+    '攻撃的な、侮辱的な、もしくは下品な発言をした。',
+    '攻撃的な、侮辱的な、もしくは下品な行動をとった。'
+  ],
+  '警告2':[
+    '同じ試合の中で2つ目の警告を受けた（1つ目・2つ目の理由は、それぞれの警告に記載）。'
+  ],
+  '退場:その他':[
+    'ボールを放さない（ボールを遠くへける・競技者の動きをさえぎる）などで、相手チームのプレーの再開を遅らせた。',
+    '意図的にテクニカルエリアを出て、審判員に対して異議を示した（抗議した）。',
+    '意図的にテクニカルエリアを出て、挑発するような（相手の感情を刺激するような）行動をとった。',
+    '攻撃的または対立的な態度で、相手チームのテクニカルエリアに入った。',
+    '競技のフィールドに入り、審判員と対立した。',
+    '競技のフィールドに入り、プレー（相手競技者・審判員）を妨害した。',
+    '認められていない電子機器や通信機器を使用した（不適切な行動をとった）。'
+  ]
+};
+
+function setDetailOptions(card){
+  const pick=card.querySelector('.detailPick');
+  if(!pick)return;
+  const code=card.querySelector('.reason').value;
+  let list;
+  if(card.dataset.kind==='official'){
+    const sub=card.querySelector('.eventSubtype')?.value||'警告';
+    list=DETAIL_TEMPLATES_OFFICIAL[code==='その他'?sub+':その他':code]||[];
+  }else{
+    list=DETAIL_TEMPLATES[code]||[];
+  }
+  pick.innerHTML=list.length
+    ?'<option value="">例文から選ぶ（'+list.length+'件）</option>'+list.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')
+    :`<option value="">${code?'この理由の例文はありません（直接記入）':'理由を選ぶと、例文から選べます'}</option>`;
+  pick.disabled=!list.length;
+  const hint=card.querySelector('.reasonHint');
+  if(hint)hint.innerHTML=REASON_HINTS[code]&&card.dataset.kind!=='official'?REASON_HINTS[code]:'';
+}
+
+/* 理由の取り違えを防ぐ注意（審判報告書の記入上の注意） */
+const REASON_HINTS={
+  '反':'無謀なチャージ・タックル・押す・けるなど、直接フリーキックとなる反則を無謀に行ったものは「ラ｜ラフプレー」です（日本では独立した警告の項目）。',
+  'ラ':'直接フリーキックとなる反則を、無謀に行ったもの。過剰な力を用いた場合は退場（著しく不正なプレー）です。',
+  '警告2':'2度の警告による退場は、重要事項は不要です。具体的事由に2つ目の警告の内容を書いてください。',
+  '阻止(他)':'ペナルティーエリア内で、ボールにプレーしようとした反則による阻止は、退場ではなく警告です。'
+};
+
+/* 例文を具体的事由の欄に入れる（空なら入れ、書いてあれば後ろに足す） */
+function pickDetail(sel){
+  const t=sel.value;
+  if(!t)return;
+  const card=sel.closest('.eventCard');
+  const ta=card.querySelector('.detail');
+  ta.value=ta.value.trim()?ta.value.trim()+'\n'+t:t;
+  sel.value='';
+  eventChanged(ta);
+  if(typeof markEdited==='function')markEdited();
+  ta.focus();
+}
+
+function eventTeamChanged(input){
+  const card=input.closest('.eventCard');
+  const kind=card.dataset.kind;
+  const tid=input.value;
+  const person=card.querySelector('.person');
+  const keep=person.value;
+
+  const team=tid===DETAIL.home.id?DETAIL.home:tid===DETAIL.away.id?DETAIL.away:null;
+
+  if(!team){
+    person.innerHTML='<option value="">チームを先に選択</option>';
+  }else{
+    const people=(kind==='official'?team.officials:team.players)||[];
+    person.innerHTML=
+      '<option value="">選択してください</option>'+
+      people.map(p=>{
+        const label=p.targetType==='player'
+          ?`${p.number?'No.'+p.number+' ':''}${p.name}（${p.status||'選手'}）`
+          :`${p.name}（${p.role||''}）`;
+        return `<option value="${esc(p.id)}"
+          data-target-type="${esc(p.targetType)}"
+          data-role="${esc(p.role||'')}"
+          data-number="${esc(p.number||'')}"
+          data-name="${esc(p.name||'')}">${esc(label)}</option>`;
+      }).join('');
+    if(hasOption(person,keep))person.value=keep;
+  }
+
+  updatePersonMeta(card);
+  syncImportantRequirement();
+}
+
+function updatePersonMeta(card){
+  const opt=card.querySelector('.person').selectedOptions[0];
+  const meta=card.querySelector('.personMeta');
+  if(opt && opt.value){
+    meta.textContent=opt.dataset.targetType==='player'
+      ?(opt.dataset.number?`番号：No.${opt.dataset.number}`:'')
+      :(opt.dataset.role?`役職：${opt.dataset.role}`:'');
+  }else{
+    meta.textContent='';
+  }
+}
+
+function eventChanged(el){
+  const card=el.closest('.eventCard');
+  if(!card)return;
+  updatePersonMeta(card);
+  syncImportantRequirement();
+}
+
+function eventTimePreview(card){
+  const t=formatMatchMinute(card.querySelector('.period').value,card.querySelector('.minute').value);
+  card.querySelector('.timePreview').textContent=t?`報告書表示：${t}分`:'';
+  syncImportantRequirement();
+}
+
+function formatMatchMinute(period,raw){
+  const n=Number(raw);
+  if(!raw || !Number.isFinite(n) || n<1)return '';
+  if(period==='前半')return n<=45?String(n):`45+${n-45}`;
+  if(period==='後半')return n<=45?String(45+n):`90+${n-45}`;
+  if(period==='延長前半')return n<=15?String(90+n):`105+${n-15}`;
+  if(period==='延長後半')return n<=15?String(105+n):`120+${n-15}`;
+  return String(n);
+}
+
+function collectEvent(card){
+  const kind=card.dataset.kind;
+  const personSel=card.querySelector('.person');
+  const opt=personSel.selectedOptions[0];
+  const hasPerson=!!(opt && opt.value);
+  const teamBtn=card.querySelector('.teamPick button.active');
+  const period=card.querySelector('.period').value;
+  const minute=card.querySelector('.minute').value;
+
+  return{
+    kind,
+    subtype:kind==='official'?card.querySelector('.eventSubtype').value:kind==='warning'?'警告':'退場',
+    period,
+    minute,
+    displayTime:formatMatchMinute(period,minute),
+    teamId:card.querySelector('.team').value,
+    teamShort:teamBtn?teamBtn.textContent:'',
+    targetType:hasPerson?opt.dataset.targetType||'':'',
+    targetId:personSel.value,
+    role:hasPerson?opt.dataset.role||'':'',
+    number:hasPerson?opt.dataset.number||'':'',
+    name:hasPerson?opt.dataset.name||'':'',
+    reason:card.querySelector('.reason').value,
+    detail:card.querySelector('.detail').value.trim()
+  };
+}
+
+function collectEventCards(){
+  return [...document.querySelectorAll('.eventCard')].map(collectEvent);
+}
+
+function validateEvent(e){
+  return !!(e.minute && e.teamId && e.targetId && e.reason && e.detail);
+}
+
+function firstEventMissing(card,e){
+  if(!e.minute)return{label:'時間',el:card.querySelector('.minute')};
+  if(!e.teamId)return{label:'チーム',el:card.querySelector('.teamPick')};
+  if(!e.targetId)return{label:'氏名',el:card.querySelector('.person')};
+  if(!e.reason)return{label:'理由',el:card.querySelector('.reason')};
+  if(!e.detail)return{label:'具体的事由',el:card.querySelector('.detail')};
+  return null;
+}
+
+function requiresImportant(e){
+  if(e.kind==='sendoff')return !!e.reason && e.reason!=='警告2';
+  if(e.kind==='official' && e.subtype==='退場')return !!e.reason && e.reason!=='警告2';
+  return false;
+}
+
+/* =========================================================
+   重要事項
+   ========================================================= */
+function syncImportantRequirement(){
+  if(!DETAIL)return;
+
+  const events=collectEventCards();
+  const required=events.some(requiresImportant);
+  const cb=$('importantEnabled');
+
+  $('importantRequiredMessage').classList.toggle('hidden',!required);
+
+  if(required){
+    cb.checked=true;
+    cb.disabled=true;
+  }else{
+    cb.disabled=false;
+  }
+
+  $('importantFields').classList.toggle('hidden',!(required || cb.checked));
+  applyImportantMode(required);
+
+  if(required){
+    prefillImportant(events.find(requiresImportant));
+  }
+
+  refreshStatus();
+}
+
+/* 一発退場＝①〜⑧の質問形式／それ以外＝自由記述 */
+function isImportantGuided(){
+  return collectEventCards().some(requiresImportant);
+}
+
+function applyImportantMode(guided){
+  $('impGuided').classList.toggle('hidden',!guided);
+  $('impFreeNote').classList.toggle('hidden',guided);
+  $('impFree').classList.toggle('hidden',guided);
+  $('importantFinalLabel').textContent=guided?'最終提出文（必要に応じて修正）':'重要事項の報告内容';
+  $('importantFinal').placeholder=guided
+    ?''
+    :'タイトル、いつ・どこで・誰が（誰に）・どのように・どうした、主審の対応、その後の行動・態度の順に書きます。';
+}
+
+function importantToggleChanged(){
+  if($('importantEnabled').checked && IMPORTANT_SOURCE_KEY===null){
+    IMPORTANT_SOURCE_KEY='';
+    resetImportantCandidateOptions('');
+  }
+  syncImportantRequirement();
+}
+
+function addShi(text){
+  const s=String(text||'').trim();
+  if(!s)return '';
+  return /氏$/.test(s)?s:s+'氏';
+}
+
+function prefillImportant(e){
+  if(!e)return;
+
+  /* 候補の作り直しは退場理由が変わったときだけ（入力済みの回答を消さない） */
+  const key=e.reason||'';
+  const kind=e.kind==='official'?'official':'player';
+  if(key!==IMPORTANT_SOURCE_KEY || kind!==IMPORTANT_AUTO.kind){
+    IMPORTANT_SOURCE_KEY=key;
+    IMPORTANT_AUTO.kind=kind;
+    resetImportantCandidateOptions(key);
+  }
+
+  if(e.name){
+    const no=e.number?`No.${e.number} `:'';
+    const who=`${e.teamShort} ${no}${addShi(e.name)}`.trim();
+    const cur=val('impWho').trim();
+    if(!cur || cur===IMPORTANT_AUTO.who){
+      setVal('impWho',who);
+      IMPORTANT_AUTO.who=who;
+    }
+  }
+
+  if(e.minute){
+    const curMin=val('impMinute');
+    const auto=curMin===IMPORTANT_AUTO.minute && val('impPeriod')===IMPORTANT_AUTO.period;
+    if(!curMin || auto){
+      setVal('impPeriod',e.period);
+      setVal('impMinute',e.minute);
+      IMPORTANT_AUTO.minute=e.minute;
+      IMPORTANT_AUTO.period=e.period;
+      importantTimePreview();
+    }
+  }
+}
+
+function refreshImportantTargetOptions(){
+  const sel=$('impTarget');
+  if(!sel)return;
+
+  let html='<option value="">選手を選択してください</option>';
+  if(DETAIL){
+    [DETAIL.home,DETAIL.away].forEach(team=>{
+      html+=`<optgroup label="${esc(team.shortName)}">`;
+      (team.players||[]).forEach(p=>{
+        const no=p.number?`No.${p.number} `:'';
+        const clean=`${team.shortName} ${no}${addShi(p.name)}`.trim();
+        html+=`<option value="${esc(clean)}">${esc(`${clean}（${p.status||'選手'}）`)}</option>`;
+      });
+      html+='</optgroup>';
+    });
+  }
+  html+='<optgroup label="審判員・その他">'+IMP_TARGET_GENERIC.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')+'</optgroup>';
+  html+='<option value="__custom__">その他（手入力）</option>';
+  const keep=sel.value;
+  sel.innerHTML=html;
+  if(keep && hasOption(sel,keep))sel.value=keep;
+  importantCandidateChanged('impTarget');
+}
+
+function setImportantSelectOptions(id,items,autoValue){
+  const sel=$(id);
+  if(!sel)return;
+  const keep=sel.value;
+
+  sel.innerHTML=
+    '<option value="">選択してください</option>'+
+    items.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')+
+    '<option value="__custom__">その他（手入力）</option>';
+
+  if(autoValue && hasOption(sel,autoValue))sel.value=autoValue;
+  else if(keep && hasOption(sel,keep))sel.value=keep;
+  else sel.value='';
+
+  importantCandidateChanged(id);
+}
+
+/* ── 重要事項の候補（審判報告書の記入上の注意に沿って、客観的な表現にそろえる） ── */
+const IMP_TARGET_GENERIC=['相手競技者','主審','副審','第4の審判員','相手チームの役員','（特定の相手なし）'];
+const IMP_NO_TARGET='（特定の相手なし）';
+
+/* 適用した競技規則（第12条の文言） */
+const IMP_RULES={
+  '不正':'著しく不正なプレー',
+  '乱暴':'乱暴な行為',
+  'つば':'人をかむ、または人につばを吐く',
+  '阻止(手)':'意図的にボールを手または腕で扱って、相手チームの得点または決定的な得点の機会を阻止する',
+  '阻止(他)':'フリーキックとなる反則で、ゴールに向かっている相手競技者の決定的な得点の機会を阻止する',
+  '暴言':'攻撃的な、侮辱的な、または下品な発言や行動をする'
+};
+/* タイトル用の短い呼び方 */
+const IMP_TITLE_REASON={
+  '不正':'著しく不正なプレー','乱暴':'乱暴な行為','つば':'つばを吐く行為',
+  '阻止(手)':'ハンドの反則による決定的な得点の機会の阻止',
+  '阻止(他)':'反則による決定的な得点の機会の阻止',
+  '暴言':'攻撃的、侮辱的な発言'
+};
+/* 規則の意味と、書くときのコツ */
+const IMP_RULE_HINT={
+  '不正':'著しく不正なプレー：ボールに挑むときに、相手競技者の安全を脅かす、または過剰な力や残忍さを用いたタックルやチャレンジ。<br>書き方：足裏の向き・勢い・当たった場所・接触の強さを書くと、悪質さが伝わります（例：足裏を上げて、勢いよく、激しく衝突した）。',
+  '乱暴':'乱暴な行為：ボールに挑んでいないときに、相手競技者・味方・審判員・観客などに対して過剰な力や残忍さを用いる、または用いようとする。<br>書き方：ボールとの関係（ボールのない場面か）、体のどこで・どこを・どのくらいの強さで、を書きます。',
+  'つば':'人をかむ、または人につばを吐く。<br>書き方：誰に向けて、体のどこに当たったか（当たらなかったか）を書きます。',
+  '阻止(手)':'意図的にボールを手や腕で扱って、得点または決定的な得点の機会を阻止する（自分のペナルティーエリア内のゴールキーパーを除く）。<br>書き方：ボールがどこに向かっていたか、手や腕のどこで触れたかを書きます。',
+  '阻止(他)':'フリーキックとなる反則で、ゴールに向かっている相手競技者の決定的な得点の機会を阻止する。<br>書き方：ゴールまでの距離・プレーの方向・ボールをコントロールできていたか・守備側の位置を書きます。ペナルティーエリア内でボールにプレーしようとした反則は警告になるので注意。',
+  '暴言':'攻撃的な、侮辱的な、または下品な発言や行動をする。<br>書き方：声の大きさ（独り言か、周囲にも聞こえるような声量か）、誰に向けて、どんな言葉・身振りだったかを書きます。言葉はそのまま「　」で書いて構いません。'
+};
+const IMP_OFFICIAL_HINT='チーム役員：「意図的にテクニカルエリアの外に出て、審判員に異議を示す、または抗議する」で退場とした場合は、本当に審判員への異議・抗議だったかを確かめ、その根拠（言葉・身振り・向かった先）を書きます。';
+
+function reasonDescriptionFromCode(code){
+  return IMP_RULES[String(code||'')]||'';
+}
+
+/* 「どこで」 */
+function whereCandidates(kind){
+  if(kind==='official')return['自チームのテクニカルエリア内','テクニカルエリアの外','相手チームのテクニカルエリア付近','競技のフィールド内','ハーフタイム中の通路'];
+  return['自陣ペナルティーエリア内','自陣ペナルティーエリア付近','自陣内','ハーフウェーライン付近','相手陣内','相手ペナルティーエリア付近','相手ペナルティーエリア内','タッチライン付近','競技のフィールドの外'];
+}
+
+/* 「どんな場面で」 */
+function situationCandidates(code,kind){
+  const common=['プレーが停止した後に','主審が反則を判定した直後に'];
+  const map={
+    '不正':['ルーズボールを奪い合う場面で','相手競技者がドリブルで前進してきた場面で','相手競技者がパスを出した直後に','空中のボールを競り合う場面で'],
+    '乱暴':['ボールとは関係のない場面で','ボールを競り合った直後に','競り合いの後、両チームの競技者がもみ合った際に'].concat(common),
+    'つば':['ボールとは関係のない場面で'].concat(common),
+    '阻止(手)':['相手競技者が打ったシュートがゴールに向かっていた場面で','ゴールに向かうボールに対して'],
+    '阻止(他)':['相手競技者がゴールに向かってドリブルで抜け出した場面で','相手競技者に決定的なパスが出た場面で','ゴールキーパーと1対1になった場面で'],
+    '暴言':common.concat(['警告を示した直後に','判定に不満を示した際に'])
+  };
+  if(kind==='official')return['主審が反則を判定した直後に','プレーが停止した後に','判定に不満を示した際に','ハーフタイム中に'];
+  return map[String(code||'')]||common;
+}
+
+/* 「どのように・どうした」（「〇〇に対して、」に続く。主観語を避け、事実で書く） */
+function actionCandidatesForReason(code,kind){
+  const map={
+    '不正':[
+      '足裏を上げた状態で、勢いよくスライディングタックルを行い、足首付近に激しく接触した',
+      '両足をそろえて飛び込むようにタックルを行い、すね付近に激しく接触した',
+      'ボールに触れることができない状況で、後方から勢いよくタックルを行い、激しく衝突した',
+      'ボールを競り合う際に、足を高く上げ、足裏で顔面付近をけった',
+      'ジャンプしてボールを競り合う際に、肘を大きく振り、顔面に強く当てた'
+    ],
+    '乱暴':[
+      '拳で顔面をなぐった','平手で顔をなぐった','足で腹部を強くけった','両手で胸を強く突き飛ばし、転倒させた',
+      '頭部を顔面に打ちつけた','肘を振り上げ、顔面に強く当てた','倒れている相手競技者の体を踏みつけた'
+    ],
+    'つば':['顔に向けてつばを吐き、顔に当たった','体に向けてつばを吐き、胸に当たった','つばを吐きかけたが、体には当たらなかった'],
+    '阻止(手)':['ゴールラインを越えようとしていたボールを、手で払いのけて得点を阻止した','腕を大きく広げ、ゴールに向かうボールに腕で触れて止めた'],
+    '阻止(他)':['後方から足をかけて転倒させ、決定的な得点の機会を阻止した','ユニフォームを手で引っ張り、前進を止めて決定的な得点の機会を阻止した','体を押して転倒させ、決定的な得点の機会を阻止した'],
+    '暴言':[
+      '周囲にも聞こえるような声量で、「［言葉］」と侮辱的な発言をした',
+      '顔を近づけ、周囲にも聞こえるような声量で「［言葉］」と攻撃的な発言をした',
+      '［身振り］という侮辱的な身振りをした'
+    ]
+  };
+  if(kind==='official'){
+    const off={
+      '乱暴':['両手で胸を強く突き飛ばした','拳で顔面をなぐった','足で強くけった'],
+      'つば':['顔に向けてつばを吐き、顔に当たった'],
+      '暴言':['テクニカルエリアから出て主審に詰め寄り、周囲にも聞こえるような声量で「［言葉］」と発言した','周囲にも聞こえるような声量で、「［言葉］」と侮辱的な発言をした','［身振り］という侮辱的な身振りをした']
+    };
+    return off[String(code||'')]||['テクニカルエリアから出て、［どのように］異議を示した'];
+  }
+  return map[String(code||'')]||['［どのように・どうしたかを記入］'];
+}
+
+/* 反則の判定 → 再開方法の初期値 */
+const IMP_DECISIONS=['直接フリーキック','ペナルティーキック','間接フリーキック','プレー停止中のため、反則の判定なし'];
+const IMP_RESTART_BY_DECISION={'直接フリーキック':'直接フリーキック','ペナルティーキック':'ペナルティーキック','間接フリーキック':'間接フリーキック'};
+
+function resetImportantCandidateOptions(reasonCode){
+  const reason=String(reasonCode||'');
+  const kind=IMPORTANT_AUTO.kind||'player';
+
+  setImportantSelectOptions('impWhere',whereCandidates(kind));
+  setImportantSelectOptions('impSituation',situationCandidates(reason,kind));
+  setImportantSelectOptions('impAction',actionCandidatesForReason(reason,kind));
+
+  const rule=reasonDescriptionFromCode(reason);
+  setImportantSelectOptions('impReason',rule?[rule]:Object.values(IMP_RULES),rule);
+
+  const hint=IMP_RULE_HINT[reason]||'';
+  $('impReasonHint').innerHTML=(rule?'起きた事象と、この規則の内容が一致しているか確かめてください。<br>':'退場の理由に当てはまる規則を選んでください。<br>')+hint
+    +(kind==='official'?'<br>'+IMP_OFFICIAL_HINT:'');
+  $('impActionHint').innerHTML='感想（悪質な・ひどい等）ではなく、見たままの事実で。［　］は書き換えてください。'
+    +(reason==='暴言'?'<br>発言は「声の大きさ」がポイント。独り言か、周囲にも聞こえるような声量かを書きます。':'')
+    +(reason==='不正'?'<br>足裏・勢い・当たった場所・接触の強さで、悪質さを表します。':'');
+
+  setImportantSelectOptions('impDecision',IMP_DECISIONS);
+
+  setImportantSelectOptions('impReaction',kind==='official'?[
+    '素直にテクニカルエリアから退き、観客席へ移動した',
+    '主審の指示に従い、速やかに競技のフィールド周辺から離れた',
+    '判定に不満を示す言葉を発しながら、テクニカルエリアから退いた',
+    'すぐには従わず、チームの関係者に促されてテクニカルエリアから退いた'
+  ]:[
+    '素直に競技のフィールドから出ていった',
+    '主審の指示に従い、速やかに競技のフィールドおよびその周辺から離れた',
+    '判定に不満を示す言葉を発しながら、競技のフィールドから出ていった',
+    'すぐには従わず、味方競技者に促されて競技のフィールドから出ていった',
+    '主審に詰め寄って異議を示した後、競技のフィールドから出ていった'
+  ]);
+
+  setImportantSelectOptions('impRestart',[
+    '直接フリーキック','ペナルティーキック','間接フリーキック','ドロップボール',
+    'スローイン','ゴールキック','コーナーキック','キックオフ'
+  ]);
+}
+
+/* 反則の判定を選んだら、再開方法が空なら合わせる */
+function importantDecisionChanged(){
+  const r=IMP_RESTART_BY_DECISION[val('impDecision')];
+  if(r && !importantAnswer('impRestart')){ $('impRestart').value=r; importantCandidateChanged('impRestart'); }
+}
+
+function importantCandidateChanged(id){
+  const sel=$(id);
+  const custom=$(id+'Custom');
+  if(!sel || !custom)return;
+  custom.classList.toggle('hidden',sel.value!=='__custom__');
+}
+
+function importantAnswer(id){
+  const sel=$(id);
+  if(!sel)return '';
+  if(sel.value==='__custom__')return val(id+'Custom').trim();
+  return String(sel.value||'').trim();
+}
+
+function importantMissing(){
+  if(!isImportantGuided()){
+    return val('importantFinal').trim()?null:{label:'報告内容',id:'importantFinal'};
+  }
+  const checks=[
+    ['誰が','impWho',val('impWho').trim()],
+    ['いつ（何分に）','impMinute',val('impMinute').trim()],
+    ['どこで','impWhere',importantAnswer('impWhere')],
+    ['誰に対して','impTarget',importantAnswer('impTarget')],
+    ['どのように・どうした','impAction',importantAnswer('impAction')],
+    ['適用した競技規則','impReason',importantAnswer('impReason')],
+    ['反則の判定','impDecision',importantAnswer('impDecision')],
+    ['退場後の行動・態度','impReaction',importantAnswer('impReaction')],
+    ['試合の再開方法','impRestart',importantAnswer('impRestart')]
+  ];
+  const m=checks.find(c=>!c[2]);
+  if(!m)return null;
+  const id=val(m[1])==='__custom__'?m[1]+'Custom':m[1];
+  return{label:m[0],id};
+}
+
+function importantTimePreview(){
+  const t=formatMatchMinute(val('impPeriod'),val('impMinute'));
+  $('impTimePreview').textContent=t?`報告書表示：${t}分`:'';
+}
+
+/* 「北大 No.10 山田　太郎氏」→ タイトル用「北大10番 山田　太郎選手」 */
+function impTitleWho(who,kind){
+  const m=String(who||'').match(/^(.*?)\s*No\.?\s*(\d+)\s+(.+?)氏?$/);
+  if(m)return `${m[1].trim()}${m[2]}番 ${m[3].trim()}選手`;
+  const w=String(who||'').trim();
+  if(!w)return '';
+  if(kind==='official')return /氏$/.test(w)?w:w+'氏';
+  return w.replace(/氏$/,'')+'選手';
+}
+
+/* 重要事項の文：タイトル → 客観的な事象 → 主審の決定（適用した規則） → 退場後の行動・態度 → 再開 */
+function buildImportantDraft(silent){
+  const kind=IMPORTANT_AUTO.kind||'player';
+  const who=val('impWho').trim();
+  const time=formatMatchMinute(val('impPeriod'),val('impMinute'));
+  const where=importantAnswer('impWhere');
+  const situation=importantAnswer('impSituation');
+  const target=importantAnswer('impTarget');
+  const action=importantAnswer('impAction');
+  const decision=importantAnswer('impDecision');
+  const rule=importantAnswer('impReason');
+  const reaction=importantAnswer('impReaction');
+  const restart=importantAnswer('impRestart');
+  const W=who||'［誰が］';
+  const same=kind==='official'?'同氏':'同選手';
+  const titleReason=IMP_TITLE_REASON[IMPORTANT_SOURCE_KEY]||rule||'［理由］';
+  const tw=impTitleWho(who,kind)||'［チーム・番号・氏名］';
+
+  const title=`${time?time+'分 ':''}${tw}による${titleReason}、退場について`;
+
+  const tgt=(!target||target===IMP_NO_TARGET)?'':`${target}に対して、`;
+  const act=(action||'［どのように・どうした］').replace(/[。．]$/,'');
+  const fact=
+    `${time?time+'分、':'［何分］、'}${where?where+'において、':''}${situation?situation.replace(/[、,]$/,'')+'、':''}`+
+    `${W}が、${tgt}${act}。`;
+
+  let dec;
+  if(!decision)dec='［反則の判定］とし、';
+  else if(/判定なし/.test(decision))dec='プレーが停止中の行為であったため反則の判定はせず、';
+  else dec=`${decision}の反則とし、`;
+  const ruleTxt=rule?`「${rule}」に該当すると判断して`:'［適用した競技規則］に該当すると判断して';
+  const judge=`主審は、${same}のこの行為について、${dec}${ruleTxt}、レッドカードを示し退場を命じた。`;
+
+  const after=`退場を命じられた${same}は、${(reaction||'［退場後の行動・態度］').replace(/[。．]$/,'')}。`;
+  const re=`試合は${restart||'［再開方法］'}で再開した。`;
+
+  const draft=`【${title}】\n${fact}\n${judge}\n${after}\n${re}`;
+
+  const final=val('importantFinal').trim();
+  if(!silent && final && final!==LAST_DRAFT && !confirm('最終提出文を修正済みです。下書きで上書きしますか？')){
+    return final;
+  }
+
+  LAST_DRAFT=draft;
+  $('importantDraft').textContent=draft;
+  setVal('importantFinal',draft);
+  if(!silent)markEdited();
+  return draft;
+}
+
+/* 一発退場以外の重要事項：書き方の型 */
+function insertFreeTemplate(){
+  const t=val('impFreeType');
+  const T={
+    time:'【［何分／試合終了後］ ［チーム］［番号］番 ［氏名］選手による［行為］について】\n［試合終了後／ハーフタイム中］、［どこで］において、［チーム］［番号］番 ［氏名］選手が、［誰に対して］、［どのように・どうした］。\n主審は、懲戒罰を運用できない時間帯であったため、カードは示していない。この行為は「［競技規則の文言］」に相当すると判断した。\nその後、同選手は［行動・態度］。',
+    ref:'【［副審／第4の審判員］ ［氏名］氏の［問題の内容］について】\n［いつ］、［どこで］、［副審／第4の審判員］ ［氏名］氏が、［どのように・どうした］。\nこれにより、［試合にどのような影響があったか］。\n主審は、［どう対応したか］。',
+    law5:'【［何分］ ［問題の内容］について】\n［いつ］、［どこで］、［誰が］、［どのように・どうした］。\n主審は、規則第5条の［権限／職権と任務］にもとづき、［どう判断し、どう対応したか］。\nその後、［試合がどうなったか］。',
+    other:'【［何分］ ［報告の内容］について】\n［いつ］、［どこで］、［誰が（誰に）］、［どのように・どうした］。\n主審は、［どう判断し、どう対応したか］。\nその後、［関係者の行動・態度、試合がどうなったか］。'
+  }[t];
+  const cur=val('importantFinal').trim();
+  if(cur && !confirm('いま書いてある内容を、書き方の型で置き換えますか？'))return;
+  setVal('importantFinal',T);
+  markEdited();
+  $('importantFinal').focus();
+}
+
+/* その他の報告事項 */
+const OTHER_SAMPLES={
+  '1':'［試合終了後／ハーフタイム中］、［チーム］［番号］番 ［氏名］選手が、［どのように・どうした］。懲戒罰を運用できない時間帯のため、カードは示していない。詳細は重要事項に記載。',
+  '2':'［チーム］のユニフォームが［どのような問題］であったため、［どう対応した］。',
+  '3':'キックオフ時刻が［予定時刻］から［何分］遅れた。理由：［理由］。',
+  '4':'［副審／第4の審判員］ ［氏名］氏に［問題の内容］があった。詳細は重要事項に記載。',
+  '5':'［運営面の問題の内容］があった。［どう対応した］。',
+  '6':'主審の［権限／職権と任務］に関して、［問題の内容］が生じた。詳細は重要事項に記載。'
+};
+function setOtherNone(){
+  const cur=val('otherReport').trim();
+  if(cur && cur!=='特になし' && !confirm('書いてある内容を「特になし」に置き換えますか？'))return;
+  setVal('otherReport','特になし');
+  $('otherNeedImp').classList.add('hidden');
+  markEdited();
+}
+function pickOther(sel){
+  const k=sel.value; sel.value='';
+  if(!k)return;
+  const t=OTHER_SAMPLES[k];
+  const cur=val('otherReport').trim();
+  setVal('otherReport',(cur && cur!=='特になし')?cur+'\n'+t:t);
+  if(['1','4','6'].includes(k)){
+    const cb=$('importantEnabled');
+    if(!cb.disabled && !cb.checked){ cb.checked=true; importantToggleChanged(); }
+    $('otherNeedImp').classList.remove('hidden');
+  }
+  markEdited();
+  $('otherReport').focus();
+}
+
+function clearImportant(){
+  IMPORTANT_SOURCE_KEY=null;
+  IMPORTANT_AUTO={who:'',minute:'',period:'',kind:''};
+  LAST_DRAFT='';
+
+  ['impWho','impMinute','importantFinal'].forEach(id=>setVal(id,''));
+  setVal('impPeriod','前半');
+  IMP_SELECT.forEach(id=>{
+    const s=$(id);
+    if(s)s.value='';
+    setVal(id+'Custom','');
+  });
+
+  resetImportantCandidateOptions('');
+  importantCandidateChanged('impTarget');
+
+  $('impTimePreview').textContent='';
+  $('importantDraft').textContent=DRAFT_PLACEHOLDER;
+  $('importantFields').classList.add('hidden');
+  if($('otherNeedImp'))$('otherNeedImp').classList.add('hidden');
+}
+
+/* =========================================================
+   提出
+   ========================================================= */
+function fail(msg,mode,target){
+  const el=typeof target==='string'?$(target):target;
+  if(!isWide())setMode(mode);
+  if(el){
+    const mark=(el.type==='hidden' && el.previousElementSibling)?el.previousElementSibling:el;
+    mark.classList.add('invalid');
+    const det=mark.closest('details');
+    if(det)det.open=true;
+    setTimeout(()=>mark.scrollIntoView({behavior:'smooth',block:'center'}),80);
+  }
+  $('result').innerHTML=`<div class="error">${esc(msg)}</div>`;
+  toast(msg,'err');
+  return false;
+}
+
+function submitReport(){
+  if(!DETAIL){
+    toast('試合を選択してください。','err');
+    return;
+  }
+
+  document.querySelectorAll('.invalid').forEach(el=>el.classList.remove('invalid'));
+  document.querySelectorAll('.eventCard.need').forEach(el=>el.classList.remove('need'));
+  $('result').innerHTML='';
+
+  const infoMiss=[
+    ['matchTime','試合時間'],['extraTime','延長戦'],['venue','会場'],['matchDate','日付'],
+    ['kickoff','キックオフ時刻'],['groundState','競技場の状態'],['equipmentState','用具の状態']
+  ].find(([id])=>!val(id));
+  if(infoMiss)return fail(`「${infoMiss[1]}」を入力してください。`,'match',infoMiss[0]);
+
+  const main=collectOfficial('main');
+  const offMiss=officialMissing();
+  if(offMiss)return fail(`「${offMiss.label}」を入力してください。`,'officials',offMiss.id);
+
+  const cards=[...document.querySelectorAll('.eventCard')];
+  for(const card of cards){
+    const e=collectEvent(card);
+    const m=firstEventMissing(card,e);
+    if(m){
+      setEventMode(e.kind);
+      card.classList.add('need');
+      const no=card.querySelector('.evNo').textContent;
+      return fail(`${KIND_LABEL[e.kind]}${no}：「${m.label}」を入力してください。`,'events',m.el);
+    }
+  }
+
+  const events=cards.map(collectEvent);
+  const importantRequired=events.some(requiresImportant);
+  const importantEnabled=importantRequired || $('importantEnabled').checked;
+
+  let important=null;
+  if(importantEnabled){
+    const miss=importantMissing();
+    if(miss)return fail(`重要事項の「${miss.label}」を入力してください。`,'important',miss.id);
+
+    if(importantRequired){
+      if(!val('importantFinal').trim())buildImportantDraft(true);
+
+      important={
+        required:true,
+        mode:'guided',
+        who:val('impWho').trim(),
+        period:val('impPeriod'),
+        minute:val('impMinute'),
+        displayTime:formatMatchMinute(val('impPeriod'),val('impMinute')),
+        target:importantAnswer('impTarget'),
+        action:[importantAnswer('impWhere'),importantAnswer('impSituation'),importantAnswer('impAction')].filter(Boolean).join('／'),
+        decision:importantAnswer('impDecision'),
+        reason:importantAnswer('impReason'),
+        reaction:importantAnswer('impReaction'),
+        restart:importantAnswer('impRestart'),
+        generated:LAST_DRAFT||$('importantDraft').textContent,
+        finalText:val('importantFinal').trim()
+      };
+    }else{
+      /* 一発退場以外：自由記述のみ（質問項目は空で送る） */
+      important={
+        required:false,
+        mode:'free',
+        who:'',period:'',minute:'',displayTime:'',target:'',
+        action:'',decision:'',reason:'',reaction:'',restart:'',
+        generated:'',
+        finalText:val('importantFinal').trim()
+      };
+    }
+  }
+
+  if(!confirm('審判報告書を提出します。よろしいですか？'))return;
+
+  // 送信キー：通信が切れて押し直しても、同じ報告書が2回入らないようにする（届いたかの確認にも使う）
+  const keyName=STORE_PREFIX+'key:'+DETAIL.matchId;
+  let clientKey=storeGet(keyName);
+  if(!clientKey){clientKey=Date.now().toString(36)+Math.random().toString(36).slice(2,10);storeSet(keyName,clientKey);}
+
+  const payload={
+    clientKey,
+    matchId:DETAIL.matchId,
+    competitionId:DETAIL.competitionId,
+    competitionName:DETAIL.competitionName,
+    matchTime:val('matchTime'),
+    extraTime:val('extraTime'),
+    venue:val('venue'),
+    date:val('matchDate'),
+    kickoff:val('kickoff'),
+    score:DETAIL.score,
+    officials:{
+      main:{...main,phone:val('mainPhone').trim()},
+      ar1:collectOfficial('ar1'),
+      ar2:collectOfficial('ar2'),
+      fourth:collectOfficial('fourth')
+    },
+    conditions:{
+      ground:val('groundState'),
+      equipment:val('equipmentState'),
+      detail:val('conditionDetail').trim(),
+      text:buildConditionText()
+    },
+    events,
+    otherReport:val('otherReport').trim()||'特になし',
+    important,
+    hostAssociation:DETAIL.hostAssociation,
+    recipient:DETAIL.recipient
+  };
+
+  saveDraft();
+
+  const btn=$('submitBtn');
+  btn.disabled=true;
+  btn.textContent='提出・PDF作成中…';
+  $('submitStatus').textContent='画面を閉じずにお待ちください。';
+
+  const done=res=>{
+    btn.disabled=false;
+    btn.textContent='審判報告書を提出';
+    $('submitStatus').textContent='';
+    storeDel(STORE_PREFIX+payload.matchId);
+    storeDel(keyName);
+    DIRTY=false;
+    setSaveState('提出済み');
+    $('result').innerHTML=
+      `<div class="success">
+        審判報告書を提出しました。<br>
+        報告書ID：${esc(res&&res.reportId)}
+        ${res&&res.pdfUrl?`<br><a href="${esc(res.pdfUrl)}" target="_blank">PDFを開く</a>`:'<br>PDFは数分のうちに作られ、事務局へ届きます。'}
+      </div>`;
+    toast('提出しました','ok');
+    $('result').scrollIntoView({behavior:'smooth',block:'center'});
+  };
+  const fail=msg=>{
+    btn.disabled=false;
+    btn.textContent='審判報告書を提出';
+    $('submitStatus').textContent='入力内容は端末に保存されています。';
+    $('result').innerHTML=`<div class="error">${esc(msg)}</div>`;
+    toast(msg,'err');
+  };
+  // 通信が切れたとき（NetworkError・HTTP 0）：サーバーでは提出が進んでいることがあるので、届いたかを確かめる
+  const check=(n)=>{
+    $('submitStatus').textContent='通信が切れました。報告書が届いたか確かめています…（'+n+'回目）';
+    google.script.run
+      .withSuccessHandler(r=>{
+        if(r&&r.found)return done(r);
+        if(n<8)return setTimeout(()=>check(n+1),10000);
+        fail('報告書はまだ届いていません。電波のよい場所で、もう一度「審判報告書を提出」を押してください（2回入ることはありません）。');
+      })
+      .withFailureHandler(()=>{
+        if(n<8)return setTimeout(()=>check(n+1),10000);
+        fail('通信できませんでした。電波のよい場所で、もう一度「審判報告書を提出」を押してください（2回入ることはありません）。');
+      })
+      .refereeReportCheck(payload.matchId,clientKey);
+  };
+
+  google.script.run
+    .withSuccessHandler(done)
+    .withFailureHandler(err=>{
+      const msg=err&&err.message||String(err);
+      if(/NetworkError|HTTP 0|接続できません/i.test(msg))return setTimeout(()=>check(1),5000);
+      fail(msg);
+    })
+    .submitRefereeReport(payload);
+}
+
+function showFatal(err){
+  document.body.innerHTML=
+    `<div style="padding:20px;color:#991b1b;font-weight:800">${esc(err&&err.message||String(err))}</div>`;
+}
+
+/* =========================================================
+   端末内の自動保存
+   ========================================================= */
+function storeGet(k){
+  try{const s=localStorage.getItem(k);return s?JSON.parse(s):null;}catch(e){return null;}
+}
+function storeSet(k,v){
+  try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}
+}
+function storeDel(k){
+  try{localStorage.removeItem(k);}catch(e){}
+}
+
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(saveDraft,600);
+}
+
+function collectDraft(){
+  const f={};
+  DRAFT_SIMPLE.forEach(id=>{f[id]=val(id);});
+  OFFICIALS.forEach(p=>{
+    ['Last','First','Grade','Assoc','AssocCustom'].forEach(s=>{f[p+s]=val(p+s);});
+  });
+  f.mainPhone=val('mainPhone');
+  f.impPeriod=val('impPeriod');
+  IMP_TEXT.concat(IMP_SELECT).forEach(id=>{f[id]=val(id);});
+
+  return{
+    v:1,
+    savedAt:Date.now(),
+    f,
+    impOn:$('importantEnabled').checked,
+    draft:LAST_DRAFT,
+    auto:IMPORTANT_AUTO,
+    sourceKey:IMPORTANT_SOURCE_KEY,
+    events:collectEventCards().map(e=>({
+      kind:e.kind,subtype:e.subtype,period:e.period,minute:e.minute,
+      teamId:e.teamId,targetId:e.targetId,reason:e.reason,detail:e.detail
+    }))
+  };
+}
+
+function saveDraft(){
+  clearTimeout(saveTimer);
+  if(!DETAIL)return;
+  const ok=storeSet(STORE_PREFIX+DETAIL.matchId,collectDraft());
+  storeSet(MAIN_REF_KEY,{
+    last:val('mainLast'),first:val('mainFirst'),phone:val('mainPhone'),
+    grade:val('mainGrade'),assoc:val('mainAssoc'),assocCustom:val('mainAssocCustom')
+  });
+  setSaveState(ok?`自動保存 ${hhmm(new Date())}`:'この端末では自動保存できません');
+}
+
+function restoreMainRefFromStore(){
+  const m=storeGet(MAIN_REF_KEY);
+  if(m && BOOT)restoreOfficial('main',m);
+}
+
+function restoreDraft(matchId){
+  const s=storeGet(STORE_PREFIX+matchId);
+  if(!s || !s.f)return false;
+  const f=s.f;
+
+  DRAFT_SIMPLE.forEach(id=>{
+    if(f[id]==null)return;
+    if(id==='venue')ensureOption('venue',f.venue);
+    setVal(id,f[id]);
+  });
+  applyExtraTime();
+
+  OFFICIALS.forEach(p=>{
+    restoreOfficial(p,{
+      last:f[p+'Last'],first:f[p+'First'],grade:f[p+'Grade'],
+      assoc:f[p+'Assoc'],assocCustom:f[p+'AssocCustom'],
+      phone:p==='main'?f.mainPhone:undefined
+    });
+    if(p!=='main' && (f[p+'Last']||f[p+'First']))$(p+'Details').open=true;
+  });
+
+  (s.events||[]).forEach(e=>addEvent(e.kind,e));
+
+  $('importantEnabled').checked=!!s.impOn;
+  IMPORTANT_SOURCE_KEY=null;
+  syncImportantRequirement();
+  if(IMPORTANT_SOURCE_KEY===null && s.impOn){
+    IMPORTANT_SOURCE_KEY=s.sourceKey||'';
+    resetImportantCandidateOptions(IMPORTANT_SOURCE_KEY);
+  }
+
+  setVal('impPeriod',f.impPeriod||'前半');
+  IMP_TEXT.forEach(id=>setVal(id,f[id]||''));
+  IMP_SELECT.forEach(id=>{
+    const sel=$(id);
+    const v=f[id]||'';
+    if(v && !hasOption(sel,v)){
+      sel.value='__custom__';
+      setVal(id+'Custom',v);
+    }else{
+      sel.value=v;
+    }
+    importantCandidateChanged(id);
+  });
+
+  IMPORTANT_AUTO=Object.assign({who:'',minute:'',period:'',kind:''},s.auto||{});
+  LAST_DRAFT=s.draft||'';
+  $('importantDraft').textContent=LAST_DRAFT||DRAFT_PLACEHOLDER;
+  importantTimePreview();
+
+  $('restoreText').textContent=`${fmtSaved(s.savedAt)} に保存した入力途中の内容を復元しました。`;
+  $('restoreBanner').classList.remove('hidden');
+  return true;
+}
+
+function discardDraft(){
+  if(!DETAIL)return;
+  if(!confirm('保存されている入力途中の内容を破棄して、最初から入力しますか？'))return;
+  storeDel(STORE_PREFIX+DETAIL.matchId);
+  DIRTY=false;
+  renderMatch(DETAIL,{skipRestore:true});
+}
+
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden' && DIRTY)saveDraft();
+});
+window.addEventListener('pagehide',()=>{
+  if(DIRTY)saveDraft();
+});
+
+/* =========================================================
+   時間入力テンキー
+   ========================================================= */
+function periodFor(input){
+  const card=input.closest('.eventCard');
+  return card?card.querySelector('.period').value:val('impPeriod');
+}
+
+function updateKeypad(){
+  $('keyDisplay').textContent=keypadValue||'0';
+  const t=formatMatchMinute(periodFor(keypadTarget),keypadValue);
+  $('keyPreview').textContent=t?`報告書表示：${t}分`:'時間帯の開始からの経過分を入力';
+}
+
+function openMinuteKeypad(input){
+  keypadTarget=input;
+  keypadValue=input.value||'';
+  $('keyHead').textContent=`${periodFor(input)}の経過分`;
+  updateKeypad();
+  $('keypadBackdrop').classList.add('open');
+}
+
+function keyPress(v){
+  const next=(keypadValue+v).replace(/^0+(?=\d)/,'');
+  if(next.length>2 || Number(next)>99)return;
+  keypadValue=next;
+  updateKeypad();
+}
+
+function keyBack(){
+  keypadValue=keypadValue.slice(0,-1);
+  updateKeypad();
+}
+
+function keyClear(){
+  keypadValue='';
+  updateKeypad();
+}
+
+function keyOk(){
+  if(!keypadTarget)return closeKeypad();
+  if(keypadValue){
+    const n=Number(keypadValue);
+    if(!Number.isInteger(n) || n<1 || n>99){
+      toast('1〜99分で入力してください。','err');
+      return;
+    }
+  }
+
+  const target=keypadTarget;
+  target.value=keypadValue;
+  closeKeypad();
+
+  const card=target.closest('.eventCard');
+  if(card)eventTimePreview(card);
+  if(target.id==='impMinute')importantTimePreview();
+
+  target.dispatchEvent(new Event('change',{bubbles:true}));
+}
+
+function closeKeypad(){
+  $('keypadBackdrop').classList.remove('open');
+  keypadTarget=null;
+  keypadValue='';
+}
+
+function backdropClose(e){
+  if(e.target.id==='keypadBackdrop')closeKeypad();
+}
+</script>
+
+<script>
+/* 貼り付けミスの検知：ファイルの内容が二重に入っていると、見出しが2つ以上になる */
+window.addEventListener('load',function(){
+  var n=document.querySelectorAll('.appHeader').length;
+  if(n>1){
+    var b=document.createElement('div');
+    b.style.cssText='position:fixed;left:0;right:0;top:0;z-index:9999;background:#991b1b;color:#fff;padding:14px 16px;font:700 15px/1.6 sans-serif';
+    b.textContent='⚠ このページのファイルが二重に貼り付けられています（見出しが'+n+'個）。Apps Scriptでこのファイルの中身をすべて削除してから、もう一度貼り付けてデプロイしてください。';
+    document.body.appendChild(b);
+  }
+});
+</script>
+
+<div style="text-align:center;font-size:11px;color:#94a3b8;padding:8px 0 90px">審判報告書 v13（2026-09-27版）</div>
+</body>
+</html>

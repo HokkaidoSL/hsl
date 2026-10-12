@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta name="robots" content="noindex,nofollow">
+<script src="./data.js"></script>
+<script src="./demo-gas.js"></script>
+
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<title>【体験版】公式記録入力</title>
+<!--
+  OfficialRecord.html v37（スマホ最適化・全面書き直し）
+  v37：出場停止中の選手を表示し、先発・ベンチに入れられないようにした
+  v38：会場・キックオフを試合マスターから初期表示
+  サーバー関数：
+    getMatchList / getInputOptionsV2 / getMatchDetail / submitOfficialRecordV2
+  タブ：試合｜メンバー｜記録｜シュート・スタッツ｜提出
+  入力中のデータは試合ごとに端末へ自動保存
+-->
+<script>
+(function(){
+  var d=document.documentElement,ua=navigator.userAgent||'';
+  var touch=(navigator.maxTouchPoints||0)>1;
+  var shortSide=Math.min(Number(screen.width)||9999,Number(screen.height)||9999);
+  var phone=/iPhone|iPod|Android.+Mobile/i.test(ua)||(touch&&shortSide<=700);
+  if(phone)d.classList.add('phone');
+  function apply(){d.classList.toggle('wide',!phone&&window.innerWidth>=760);}
+  apply();
+  window.addEventListener('resize',apply);
+})();
+</script>
+<style>
+:root{
+  --blue:#174ea6;--blueL:#eaf2ff;--ink:#172033;--sub:#64748b;--line:#d9e0e7;
+  --bg:#f3f5f7;--red:#b91c1c;--redL:#fee2e2;--green:#15803d;--greenL:#dcfce7;
+  --yellow:#facc15;--tabH:60px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+.hidden{display:none!important}
+
+/* ---------- ヘッダー ---------- */
+.appHeader{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--line);padding:calc(6px + env(safe-area-inset-top)) 10px 6px}
+.appTitle{font-size:14px;font-weight:900;letter-spacing:.18em;text-align:center}
+.scoreBar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;margin-top:2px}
+.scoreBar .tn{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scoreBar .tn.h{text-align:right}
+.scoreBar .sc{font-size:22px;font-weight:900;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.scoreBar .pk{display:block;font-size:11px;color:var(--sub);text-align:center;letter-spacing:0}
+.saveState{font-size:11px;color:var(--sub);text-align:center}
+.saveState:empty{display:none}
+
+/* 時間帯バー */
+.periodBar{display:flex;gap:4px;margin-top:6px}
+.periodBar button{flex:1 1 0;min-height:40px;padding:4px 2px;font-size:14px;border-radius:9px;color:#334155}
+.periodBar button.active{background:var(--ink);border-color:var(--ink);color:#fff}
+body:not([data-tab="record"]):not([data-tab="stats"]) .periodBar{display:none}
+
+/* ---------- レイアウト ---------- */
+.wrap{max-width:980px;margin:0 auto;padding:8px 8px calc(var(--tabH) + 28px + env(safe-area-inset-bottom))}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 12px 4px;margin:0 0 10px;scroll-margin-top:120px}
+.card h2{font-size:18px;line-height:1.3;margin:0 0 12px;padding-left:9px;border-left:5px solid #315b72}
+.card h2 small{font-size:13px;color:var(--sub);font-weight:700;margin-left:6px}
+.sub{font-size:13px;color:var(--sub);margin:-4px 0 12px;line-height:1.55}
+.field{margin-bottom:12px;min-width:0}
+.grid{display:grid;grid-template-columns:1fr;column-gap:10px}
+.grid.two{grid-template-columns:1fr 1fr}
+.grid.three{grid-template-columns:1fr 1fr 1fr}
+.wide .grid.cols2{grid-template-columns:1fr 1fr}
+
+/* ---------- 入力 ---------- */
+.lbl{display:block;font-size:14px;font-weight:800;color:#475569;margin-bottom:5px}
+.req::after{content:"必須";margin-left:6px;padding:1px 5px;border-radius:4px;background:var(--redL);color:var(--red);font-size:10px;vertical-align:2px}
+input,select,textarea,button{font:inherit;color:inherit}
+input,select,textarea{
+  width:100%;min-height:50px;padding:10px 12px;font-size:17px;
+  border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827;
+  -webkit-appearance:none;appearance:none;
+}
+select{
+  padding-right:32px;text-overflow:ellipsis;
+  background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2364758b' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 11px center;
+}
+textarea{min-height:90px;line-height:1.6;resize:vertical}
+input[readonly]{background:#f8fafc}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,78,166,.18)}
+input[type=date],input[type=time]{display:block;text-align:left}
+.invalid,.pick.invalid button{border-color:#dc2626!important;background-color:#fff7f7!important}
+
+button{min-height:46px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;font-weight:800;cursor:pointer;touch-action:manipulation}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btnPrimary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btnAdd{width:100%;min-height:58px;margin:4px 0 12px;border-style:dashed;color:var(--blue);background:#f8fbff;font-size:17px}
+.btnDanger{color:#be123c;background:#fff1f2;border-color:#fecdd3}
+.btnGhost{color:var(--blue);border-color:#bfd3f2;background:#f8fbff}
+.btnNext{width:100%;min-height:54px;margin:2px 0 12px;color:var(--blue);border-color:#bfd3f2;font-size:16px}
+
+.pick{display:flex;gap:6px}
+.pick button{flex:1 1 0;min-width:0;min-height:48px;padding:6px 4px;font-size:16px;line-height:1.2;color:#334155;white-space:normal}
+.pick button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.pick.small button{min-height:40px;font-size:14px}
+.pick.pick4{display:grid;grid-template-columns:repeat(4,1fr)}.pick.pick4 button{min-height:44px}
+.noET .et{display:none!important}
+.noPK .pkOnly{display:none!important}
+
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 10px}
+.seg.two{grid-template-columns:1fr 1fr}
+.seg button{min-height:50px;padding:4px;font-size:15px;color:var(--blue);display:flex;align-items:center;justify-content:center;gap:6px}
+.seg button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.cnt{min-width:22px;height:22px;line-height:22px;border-radius:11px;background:var(--blueL);color:var(--blue);font-size:12px;text-align:center}
+.seg button.active .cnt{background:#fff}
+
+.notice{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between;background:#fffbeb;border:1px solid #fde68a;color:#854d0e;border-radius:12px;padding:10px 12px;margin:0 0 10px;font-size:14px;font-weight:700}
+.notice button{min-height:38px;padding:4px 12px;font-size:13px}
+
+/* ---------- 試合 ---------- */
+.matchBox{background:#f8fafc;border:1px solid #dbe3ec;border-radius:10px;padding:12px 10px;margin-bottom:12px;text-align:center}
+.matchBox .teams{font-weight:900;font-size:18px;line-height:1.35}
+.matchBox .meta{font-size:13px;color:var(--sub);margin-top:4px}
+
+/* ---------- メンバー ---------- */
+.memberHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.counts{font-size:14px;font-weight:800}
+.counts b{font-size:17px}
+.counts .ng{color:var(--red)}
+.mRow{display:grid;grid-template-columns:42px minmax(0,1fr) 66px 138px;align-items:center;gap:6px;padding:7px 0;border-top:1px solid #eef2f6}
+.mRow:first-child{border-top:0}
+.mRow .no{min-height:40px;padding:4px 2px;font-weight:900;font-size:16px;text-align:center;font-variant-numeric:tabular-nums}
+.mRow .nm{font-weight:700;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mRow .nm small{display:block;font-size:11px;color:var(--sub);font-weight:600}
+.mRow select{min-height:40px;padding:4px 20px 4px 6px;font-size:15px;background-position:right 6px center}
+.mRow .st{display:flex;gap:3px}
+.mRow .st button{flex:1;min-height:40px;padding:2px;font-size:13px;border-radius:8px}
+.mRow .st button.on.s{background:var(--blue);border-color:var(--blue);color:#fff}
+.mRow .st button.on.b{background:#0f766e;border-color:#0f766e;color:#fff}
+.mRow .st button.on.o{background:#94a3b8;border-color:#94a3b8;color:#fff}
+.mRow.isOut .nm,.mRow.isOut .no{color:#94a3b8}
+.tag{display:inline-block;padding:1px 6px;border-radius:5px;font-size:11px;font-weight:900;vertical-align:1px}
+.tag.red{background:#dc2626;color:#fff}
+.tag.yel{background:var(--yellow);color:#422006}
+.tag.gray{background:#e2e8f0;color:#475569}
+.tag.on{background:var(--greenL);color:var(--green)}
+.tag.bl{background:var(--blueL);color:var(--blue)}
+.mRow.susp .nm{color:#991b1b}
+.mRow.susp .st button.s,.mRow.susp .st button.b{opacity:.3}
+.suspNote{margin:8px 0 4px;padding:10px 12px;border:1px solid #fecaca;border-radius:10px;background:#fef2f2;color:#991b1b;font-size:13px;font-weight:700;line-height:1.5}
+.suspNote b{font-weight:900}
+#result .error{white-space:pre-line}
+
+/* ---------- 記録 ---------- */
+.scoreTable{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:12px;font-variant-numeric:tabular-nums}
+.scoreTable th,.scoreTable td{border:1px solid #e2e8f0;padding:6px 4px;text-align:center}
+.scoreTable th{background:#f8fafc;font-weight:800;color:#475569}
+.scoreTable td.tot{font-weight:900;font-size:17px}
+.evList{margin-bottom:6px}
+.ev{display:flex;align-items:center;gap:10px;width:100%;min-height:58px;padding:8px 10px;margin-bottom:6px;text-align:left;font-weight:600;background:#fff}
+.ev .tm{min-width:48px;font-weight:900;font-size:17px;font-variant-numeric:tabular-nums}
+.ev .bd{flex:1;min-width:0;line-height:1.35}
+.ev .bd small{display:block;font-size:12px;color:var(--sub);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.cur{border-left:4px solid var(--blue)}
+.ev.bad{border-color:#dc2626;background:#fffafa}
+.ev.auto{background:#f8fafc;border-style:dashed;cursor:default}
+.ev .warn{color:#dc2626;font-size:12px;font-weight:900}
+.empty{font-size:14px;color:var(--sub);text-align:center;padding:4px 0 10px}
+
+/* ---------- シュート ---------- */
+.sRow{display:grid;grid-template-columns:40px 28px 30px minmax(0,1fr) 30px 30px 44px 40px;align-items:center;gap:4px;padding:5px 0;border-top:1px solid #eef2f6;font-size:15px}
+.sRow.head{border-top:0;font-size:11px;color:var(--sub);font-weight:800;padding-top:0}
+.sRow .c{text-align:center;font-variant-numeric:tabular-nums}
+.sRow .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sRow .num{text-align:center;font-weight:900;font-size:17px;font-variant-numeric:tabular-nums}
+.sRow .num.dim{color:#cbd5e1;font-weight:700}
+.sRow .num.act{color:var(--blue)}
+.sRow button{min-height:42px;padding:0;font-size:22px;line-height:1}
+.sRow button.plus{background:var(--blue);border-color:var(--blue);color:#fff}
+.sRow.np{opacity:.55}
+.et4 .sRow{grid-template-columns:40px 26px minmax(0,1fr) 26px 26px 30px 30px 44px 40px;gap:3px}
+.et4 .sRow .pos{display:none}
+.et4 .sRow.head span{font-size:10px}
+
+/* チーム記録 */
+.stRow{display:grid;grid-template-columns:minmax(0,1fr) 124px 124px;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #eef2f6}
+.stRow.head{border-top:0;font-size:12px;color:var(--sub);font-weight:800;text-align:center;padding-top:0}
+.stRow.head div:first-child{text-align:left}
+.stRow .it{font-weight:800}
+.stRow .it small{display:block;font-size:11px;color:var(--sub);font-weight:600}
+.ctr{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:3px}
+.ctr button{min-height:42px;padding:0;font-size:20px}
+.ctr button.plus{background:var(--blue);border-color:var(--blue);color:#fff}
+.ctr .v{text-align:center;font-weight:900;font-size:18px;line-height:1.1;font-variant-numeric:tabular-nums}
+.ctr .v small{display:block;font-size:10px;color:var(--sub);font-weight:700}
+.ctr.ro{grid-template-columns:1fr}
+
+/* ---------- PK ---------- */
+.pkScore{text-align:center;font-size:30px;font-weight:900;margin:2px 0 10px;font-variant-numeric:tabular-nums}
+.pkScore small{display:block;font-size:13px;color:var(--sub);font-weight:700}
+.pkGrid{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:12px}
+.pkGrid th,.pkGrid td{border:1px solid #e2e8f0;padding:6px 4px;text-align:center}
+.pkGrid th{background:#f8fafc;color:#475569}
+.pkGrid .o{color:var(--green);font-weight:900}
+.pkGrid .x{color:var(--red);font-weight:900}
+.pkNext{background:#f8fafc;border:1px solid #dbe3ec;border-radius:12px;padding:12px;margin-bottom:12px}
+.pkNext .who{font-weight:900;font-size:16px;margin-bottom:8px;text-align:center}
+.pkBtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.pkBtns button{min-height:64px;font-size:20px}
+.pkBtns .ok{background:var(--green);border-color:var(--green);color:#fff}
+.pkBtns .ng{background:var(--red);border-color:var(--red);color:#fff}
+.pkKickers{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.pkKickers button{min-height:56px;padding:2px;font-size:20px;line-height:1.1}
+.pkKickers button small{display:block;font-size:10px;color:var(--sub);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pkKickers button.sel{background:var(--blue);border-color:var(--blue);color:#fff}
+.pkKickers button.sel small{color:#dbeafe}
+.pkDone{background:var(--greenL);color:#166534;border-radius:12px;padding:12px;text-align:center;font-weight:900;margin-bottom:12px}
+
+/* ---------- 提出 ---------- */
+.checks{list-style:none;margin:0 0 12px;padding:0}
+.checks li{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-top:1px solid #eef2f6;font-size:14px;line-height:1.5}
+.checks li:first-child{border-top:0}
+.checks li button{margin-left:auto;min-height:34px;padding:2px 10px;font-size:12px;flex:0 0 auto}
+.checks .ic{flex:0 0 20px;font-weight:900}
+.checks .ng .ic{color:#dc2626}
+.checks .wn .ic{color:#b45309}
+.allOk{background:var(--greenL);color:#166534;border-radius:10px;padding:10px 12px;font-weight:800;margin-bottom:12px}
+.success,.error{padding:12px;border-radius:10px;font-weight:800;margin-bottom:12px;line-height:1.6}
+.success{background:var(--greenL);color:#166534}
+.error{background:var(--redL);color:#991b1b}
+#submitBtn{width:100%;min-height:62px;font-size:18px;border-radius:12px;margin-bottom:12px}
+
+/* ---------- 下部タブ ---------- */
+.tabBar{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;grid-template-columns:repeat(5,1fr);gap:2px;
+  background:rgba(255,255,255,.98);border-top:1px solid var(--line);padding:3px 3px calc(3px + env(safe-area-inset-bottom));
+}
+body.loaded .tabBar{display:grid}
+.tabBar button{position:relative;min-height:var(--tabH);padding:4px 1px;border:0;border-radius:10px;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--sub);font-size:12px}
+.tabBar button.active{background:var(--blueL);color:var(--blue)}
+.tabBar svg{width:23px;height:23px}
+.badge{position:absolute;top:3px;left:calc(50% + 5px);min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#dc2626;color:#fff;font-size:10px;line-height:17px;font-weight:900}
+.badge:empty{display:none}
+
+body:not(.loaded) [data-tab]:not(#selectCard){display:none}
+body[data-tab="match"] section[data-tab]:not([data-tab="match"]),
+body[data-tab="members"] section[data-tab]:not([data-tab="members"]),
+body[data-tab="record"] section[data-tab]:not([data-tab="record"]),
+body[data-tab="stats"] section[data-tab]:not([data-tab="stats"]),
+body[data-tab="submit"] section[data-tab]:not([data-tab="submit"]){display:none}
+
+/* ---------- シート（事象入力・テンキー） ---------- */
+.sheetBackdrop{position:fixed;inset:0;z-index:100;display:none;align-items:flex-end;justify-content:center;background:rgba(15,23,42,.5)}
+.sheetBackdrop.open{display:flex}
+.sheet{width:min(560px,100%);max-height:92vh;max-height:92dvh;overflow:auto;-webkit-overflow-scrolling:touch;background:#fff;border-radius:18px 18px 0 0;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}
+.sheetTitle{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:18px;font-weight:900}
+.sheetTitle button{min-height:38px;padding:4px 12px;font-size:14px}
+.sheetActions{position:sticky;bottom:calc(-12px - env(safe-area-inset-bottom));display:grid;grid-template-columns:auto 1fr;gap:8px;background:#fff;padding:10px 0 calc(4px + env(safe-area-inset-bottom));border-top:1px solid #eef2f6}
+.sheetActions .btnPrimary{min-height:54px;font-size:17px}
+.seqWrap{display:flex;flex-wrap:wrap;gap:6px;min-height:44px;padding:6px;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc;margin-bottom:8px}
+.seqTok{display:inline-flex;align-items:center;gap:4px;padding:4px 4px 4px 10px;min-height:34px;border-radius:8px;background:#fff;border:1px solid #cbd5e1;font-weight:900;font-size:16px}
+.seqTok button{min-height:28px;min-width:28px;padding:0;border:0;background:none;color:#be123c;font-size:16px}
+.seqText{font-weight:900;font-size:18px;padding:4px 6px;letter-spacing:.02em}
+.seqNums{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:5px;margin-bottom:6px}
+.seqNums button{min-height:50px;padding:2px;font-size:18px;line-height:1.1}
+.seqNums button.sel{background:var(--blue);border-color:var(--blue);color:#fff}.seqNums button.sel small{color:#fff}
+.seqNums button small{display:block;font-size:10px;color:var(--sub);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seqSyms{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:6px}
+.seqSyms button{min-height:50px;padding:2px;font-size:20px;line-height:1.05}
+.seqSyms button small{display:block;font-size:10px;color:var(--sub);font-weight:700}
+.keySheet .sheetHead{text-align:center;font-weight:900;font-size:15px;color:#475569}
+.keyDisplay{font-size:42px;font-weight:900;text-align:center;line-height:1.2;margin:4px 0}
+.keyPreview{text-align:center;font-size:14px;font-weight:800;color:var(--blue);min-height:22px;margin-bottom:10px}
+.keyGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keyGrid button{min-height:58px;font-size:24px}
+.keyActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.keyActions button{min-height:54px;font-size:17px}
+#keyHT{width:100%;margin-top:8px;min-height:50px;font-size:16px}
+
+.toast{position:fixed;left:12px;right:12px;z-index:120;display:none;bottom:calc(var(--tabH) + 18px + env(safe-area-inset-bottom));padding:12px 14px;border-radius:12px;font-size:15px;font-weight:800;line-height:1.5;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.toast.show{display:block}
+.toast.err{background:#991b1b;color:#fff}
+.toast.ok{background:#166534;color:#fff}
+
+/* ---------- 記録タブ：追加ボタンを一覧の上に ---------- */
+.btnAdd.top{margin:0 0 10px}
+
+/* ---------- 試合中（1画面で完結） ---------- */
+.card.live{padding:6px 6px 4px;margin-bottom:0}
+.qa{display:grid;grid-template-columns:1fr 1fr 1.3fr .9fr;gap:5px;margin-bottom:4px}
+.qa button{min-height:40px;padding:2px;font-size:14px;font-weight:800;color:var(--blue)}
+.qa button.undo{color:#991b1b}
+.qa button.undo.on{background:#991b1b;border-color:#991b1b;color:#fff}
+.liveHead{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--sub);font-weight:800;margin:0 2px 4px}
+.linkBtn{border:0;background:none;color:var(--blue);font-size:12px;font-weight:700;padding:2px 0;min-height:0}
+.liveCols{display:grid;grid-template-columns:1fr;gap:8px}
+.lteam{border:1px solid var(--line);border-radius:10px;padding:5px}
+.lteam .th{display:flex;justify-content:space-between;align-items:baseline;gap:6px;padding:0 3px 4px;font-weight:900;font-size:14px}
+.lteam .th .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lteam .th .t{color:var(--blue);white-space:nowrap;font-variant-numeric:tabular-nums}
+.lteam .th .t small{color:var(--sub);font-weight:700;margin-left:2px}
+.nbGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.nb{position:relative;min-height:62px;padding:2px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border-radius:9px;background:#fff;border:1.5px solid var(--blue);color:var(--ink)}
+.nb .no{font-size:25px;font-weight:900;line-height:1.05;font-variant-numeric:tabular-nums}
+.nb .ct{font-size:14px;font-weight:800;color:#94a3b8;line-height:1.1;font-variant-numeric:tabular-nums}
+.nb .ct small{font-size:11px}
+.nb.has .ct{color:var(--blue)}
+.nb .pos{position:absolute;top:1px;left:3px;font-size:8px;font-weight:800;color:var(--sub)}
+.nb:active{background:#e8f4fb}
+.nb.off{border-color:var(--line);background:#f8fafc}
+.nb.off .no{color:#94a3b8}
+.nb:disabled{opacity:.45}
+.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:5px}
+.tile{min-height:52px;padding:1px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;background:#f1f7fd;border:1px solid #cfe3f6;color:var(--ink)}
+.tile .l{font-size:11px;color:var(--sub);font-weight:800;white-space:nowrap;line-height:1.1}
+.tile .v{font-size:20px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile .v small{font-size:9px;color:var(--sub);font-weight:700}
+.tile:active{background:#dbeafe}
+.undoMode .nb:not(:disabled),.undoMode .tile:not(:disabled){border-color:#991b1b;background:#fff5f5}
+.undoMode .nb:not(:disabled) .no{color:#991b1b}
+.wide .nbGrid{grid-template-columns:repeat(9,1fr)}
+.wide .nb{min-height:72px}
+.wide .nb .no{font-size:24px}
+
+/* ---------- タブレット・PC ---------- */
+.wide .wrap{padding:12px 16px 40px}
+.wide .tabBar{position:static;display:none;max-width:980px;margin:0 auto;border:1px solid var(--line);border-radius:12px;padding:3px}
+.wide body.loaded .tabBar{display:grid}
+.wide .tabBar button{min-height:48px;flex-direction:row;gap:6px;font-size:14px}
+.wide .tabWrapWide{padding:8px 16px 0}
+.wide .sheetBackdrop{align-items:center}
+.wide .sheet{border-radius:18px}
+.wide .toast{bottom:24px;max-width:560px;margin:0 auto}
+.wide .sRow{grid-template-columns:52px 36px 40px minmax(0,1fr) 44px 44px 56px 52px}
+.wide .et4 .sRow{grid-template-columns:52px 36px minmax(0,1fr) 44px 44px 44px 44px 56px 52px}
+.wide .stRow{grid-template-columns:minmax(0,1fr) 160px 160px}
+
+/* ===== 見た目 v2（2026-10）：連盟の色・カードの影・両チームのチームカラー ===== */
+:root{--blue:#1976D2;--blueL:#E8F4FB;--ink:#222222;--sub:#888888;--red:#D84315;--canvas:#F3F7FB;--tcH:#E0E0E0;--tcA:#E0E0E0;
+  --shadow:0 1px 2px rgba(34,34,34,.06),0 2px 8px rgba(34,34,34,.05)}
+body{background:var(--canvas);font-family:"Noto Sans JP",-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.appHeader{border-bottom:0;box-shadow:0 1px 0 var(--line),0 2px 12px rgba(34,34,34,.06)}
+.appHeader::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;box-shadow:inset 0 -1px 0 rgba(0,0,0,.1);background:linear-gradient(90deg,var(--tcH) 0 50%,var(--tcA) 50% 100%)}
+.appTitle{color:var(--blue);font-size:12px;letter-spacing:.24em;margin-top:2px}
+.scoreBar .tn{display:flex;align-items:center;gap:6px;min-width:0}
+.scoreBar .tn.h{justify-content:flex-end}
+.scoreBar .tn::before{content:"";flex:none;width:10px;height:10px;border-radius:3px;background:var(--tcH);box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.scoreBar .tn:not(.h)::before{background:var(--tcA)}
+.scoreBar .tn.h::before{order:2}
+.scoreBar .sc{background:var(--ink);color:#fff;border-radius:10px;padding:2px 12px;min-width:84px;text-align:center}
+.scoreBar .pk{color:#ddd}
+.periodBar button.active{background:var(--blue);border-color:var(--blue)}
+.card{border:0;box-shadow:var(--shadow);border-radius:14px;padding:16px 14px 6px}
+.card h2{border-left:0;padding-left:12px;position:relative}
+.card h2::before{content:"";position:absolute;left:0;top:2px;bottom:2px;width:4px;border-radius:2px;background:var(--blue)}
+.matchBox{background:#fff;border:0;box-shadow:inset 0 0 0 1px var(--line);position:relative;overflow:hidden;padding:16px 12px 12px}
+.matchBox::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;box-shadow:inset 0 -1px 0 rgba(0,0,0,.12);background:linear-gradient(90deg,var(--tcH) 0 50%,var(--tcA) 50% 100%)}
+.matchBox .teams{font-size:19px}
+.seg button .tcd{width:10px;height:10px;border-radius:3px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.lteam{border:0;box-shadow:var(--shadow);background:#fff;position:relative;overflow:hidden;padding-top:9px}
+.lteam::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;box-shadow:inset 0 -1px 0 rgba(0,0,0,.12);background:var(--tcH)}
+.lteam.away::before{background:var(--tcA)}
+.tabBar{box-shadow:0 -2px 12px rgba(34,34,34,.06);border-top:0}
+.tabBar button.active{font-weight:900}
+.wide .tabBar{border:0;box-shadow:var(--shadow);background:#fff}
+.notice{border-radius:14px}
+.ev{border-radius:12px}
+</style>
+<!-- UiTheme.html：運営の画面で共通に使う部品（チームカラーと、その色の上の文字色）。各画面の head で uiInclude_('UiTheme') を読み込む -->
+<script>
+window.JUFA_TC = {};
+/* チームID・クラブ名・チーム名・略称から色（なければ ''） */
+function tcOf() {
+  const T = window.JUFA_TC || {};
+  for (const k of arguments) {
+    const s = String(k == null ? '' : k).trim();
+    if (!s) continue;
+    const c = (T.team || {})[s] || (T.univ || {})[s] || (T.name || {})[s];
+    if (c) return c;
+  }
+  return '';
+}
+/* 色の上に置く文字の色（明るい色なら黒、暗い色なら白） */
+function tcInk(c) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(c || ''));
+  if (!m) return '#fff';
+  const n = parseInt(m[1], 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const L = [r, g, b].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); });
+  return (0.2126 * L[0] + 0.7152 * L[1] + 0.0722 * L[2]) > 0.45 ? '#222' : '#fff';
+}
+/* チーム名の前に付ける色の丸（色がなければ何も出さない） */
+function tcDot() {
+  const c = tcOf.apply(null, arguments);
+  return c ? '<i class="tc-dot" style="--tc:' + c + '"></i>' : '';
+}
+</script>
+<style>
+.tc-dot{display:inline-block;width:.72em;height:.72em;border-radius:50%;background:var(--tc);box-shadow:0 0 0 1px rgba(0,0,0,.18);margin-right:.35em;vertical-align:.02em;flex:none}
+</style>
+
+</head>
+<body data-tab="match" data-kind="goal" class="noET noPK">
+
+<header class="appHeader">
+  <div class="appTitle">北海道社会人サッカー連盟 公式記録</div>
+  <div class="scoreBar hidden" id="scoreBar">
+    <span class="tn h" id="sbHome"></span>
+    <span class="sc"><span id="sbScore">0 - 0</span><span class="pk" id="sbPk"></span></span>
+    <span class="tn" id="sbAway"></span>
+  </div>
+  <div class="saveState" id="saveState">読み込み中…</div>
+  <div class="periodBar" id="periodBar">
+    <button type="button" data-p="前半" class="active">前半</button>
+    <button type="button" data-p="後半">後半</button>
+    <button type="button" data-p="延長前半" class="et">延長前半</button>
+    <button type="button" data-p="延長後半" class="et">延長後半</button>
+    <button type="button" data-p="PK戦" class="pkOnly">PK戦</button>
+  </div>
+</header>
+
+<div class="tabWrapWide">
+<nav class="tabBar" id="tabBar" aria-label="入力セクション">
+  <button type="button" data-tab="match" class="active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5l3.8 2.8-1.4 4.5H9.6l-1.4-4.5z"/></svg>
+    <span>試合</span><span class="badge" id="bd-match"></span>
+  </button>
+  <button type="button" data-tab="members">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.8c2.2.6 3.5 2.4 3.5 5.2"/></svg>
+    <span>メンバー</span><span class="badge" id="bd-members"></span>
+  </button>
+  <button type="button" data-tab="record">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>
+    <span>記録</span><span class="badge" id="bd-record"></span>
+  </button>
+  <button type="button" data-tab="stats">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+    <span>試合中</span><span class="badge" id="bd-stats"></span>
+  </button>
+  <button type="button" data-tab="submit">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4 10-10"/></svg>
+    <span>提出</span><span class="badge" id="bd-submit"></span>
+  </button>
+</nav>
+</div>
+
+<main class="wrap">
+
+  <!-- ================= 試合 ================= -->
+  <section class="card" id="selectCard" data-tab="match">
+    <h2>試合を選択</h2>
+    <div class="field">
+      <label class="lbl" for="selComp">大会</label>
+      <select id="selComp" onchange="compChanged()"></select>
+    </div>
+    <div class="grid two">
+      <div class="field">
+        <label class="lbl" for="selRound">節／ラウンド</label>
+        <select id="selRound" onchange="roundChanged()"></select>
+      </div>
+      <div class="field">
+        <label class="lbl" for="selMatch">試合</label>
+        <select id="selMatch" onchange="matchChanged()"></select>
+      </div>
+    </div>
+    <div id="loadingNote" class="sub hidden">試合情報を読み込んでいます…</div>
+    <div id="incBanner" class="hidden" style="margin-top:8px;padding:8px 12px;border-radius:8px;border:1px solid #D84315;color:#D84315;font-weight:700;font-size:14px"></div>
+    <div id="matchBox" class="matchBox hidden">
+      <div class="teams" id="mbTeams"></div>
+      <div class="meta" id="mbMeta"></div>
+    </div>
+  </section>
+
+  <section id="recordBanner" class="notice hidden" data-tab="match"></section>
+
+  <section id="restoreBanner" class="notice hidden" data-tab="match">
+    <span id="restoreText"></span>
+    <button type="button" id="btnLoadServer" class="hidden" onclick="loadServerVersion()">提出済みの内容を読み込む</button>
+    <button type="button" onclick="discardDraft()">破棄して最初から</button>
+  </section>
+
+  <section class="card" id="formatCard" data-tab="match">
+    <h2>試合方式<small>試合開始前に選択</small></h2>
+    <div class="grid two">
+      <div class="field">
+        <label class="lbl req">延長戦</label>
+        <div class="pick" id="pkExtra">
+          <button type="button" data-v="あり">あり</button>
+          <button type="button" data-v="なし">なし</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl req">PK戦</label>
+        <div class="pick" id="pkPk">
+          <button type="button" data-v="あり">あり</button>
+          <button type="button" data-v="なし">なし</button>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="lbl req">前半キックオフ</label>
+      <div class="pick" id="pkKickoff"></div>
+    </div>
+    <div class="field">
+      <label class="lbl req">後半キックオフ</label>
+      <div class="pick" id="pkKickoff2"></div>
+      <div class="sub" style="margin:6px 0 0">前半を選ぶと、後半は相手チームが自動で入ります（変更可）。</div>
+    </div>
+  </section>
+
+  <section class="card" id="infoCard" data-tab="match">
+    <h2>試合情報</h2>
+    <div class="grid two">
+      <div class="field"><label class="lbl req" for="fDate">日付</label><input id="fDate" type="date"></div>
+      <div class="field"><label class="lbl req" for="fTime">キックオフ</label><input id="fTime" type="time"></div>
+    </div>
+    <div class="field">
+      <label class="lbl req" for="fVenue">会場</label>
+      <select id="fVenue"></select>
+    </div>
+    <div class="grid two">
+      <div class="field"><label class="lbl" for="fPitch">ピッチ</label><select id="fPitch"></select></div>
+      <div class="field"><label class="lbl" for="fPitchCond">ピッチ状態</label><select id="fPitchCond"></select></div>
+      <div class="field"><label class="lbl" for="fWeather">天候</label><select id="fWeather"></select></div>
+      <div class="field"><label class="lbl" for="fWind">風</label><select id="fWind"></select></div>
+      <div class="field"><label class="lbl" for="fWbgt">WBGT</label><input id="fWbgt" inputmode="decimal" placeholder="例：25.4"></div>
+      <div class="field"><label class="lbl" for="fDuration">試合時間</label><select id="fDuration"></select></div>
+    </div>
+    <div class="grid two">
+      <div class="field"><label class="lbl" for="fRecorder">記録担当者</label><input id="fRecorder" autocomplete="name"></div>
+      <div class="field"><label class="lbl" for="fRecorderUniv">記録担当クラブ</label><select id="fRecorderUniv"></select></div>
+      <div class="field"><label class="lbl" for="fRecorderMail">記録担当者メール<small>修正依頼が届きます</small></label><input id="fRecorderMail" type="email" inputmode="email" autocomplete="email" placeholder="任意"></div>
+    </div>
+  </section>
+
+  <section class="card" id="officialsCard" data-tab="match">
+    <h2>審判員</h2>
+    <div class="sub">主審のメールアドレスへ承認依頼が届きます。</div>
+    <div class="grid cols2">
+      <div class="field"><label class="lbl req" for="fRef">主審</label><input id="fRef" placeholder="山田　太郎"></div>
+      <div class="field"><label class="lbl req" for="fRefMail">主審メール</label><input id="fRefMail" type="email" inputmode="email" autocomplete="email" autocapitalize="off">
+        <button type="button" class="btnGhost" id="btnTestMail" style="width:100%;margin-top:6px" onclick="sendTestMail()">✉ テストメールを送信</button>
+        <div class="sub" id="testMailStatus" style="margin:6px 0 0"></div>
+      </div>
+      <div class="field"><label class="lbl" for="fAr1">副審1</label><input id="fAr1"></div>
+      <div class="field"><label class="lbl" for="fAr2">副審2</label><input id="fAr2"></div>
+      <div class="field"><label class="lbl" for="fFourth">第4の審判員</label><input id="fFourth"></div>
+    </div>
+  </section>
+
+  <section data-tab="match"><button type="button" class="btnNext" onclick="setTab('members')">次へ：メンバー →</button></section>
+
+  <!-- ================= メンバー ================= -->
+  <section class="card" id="membersCard" data-tab="members">
+    <div class="seg two" id="memberTeamSeg"></div>
+    <div class="memberHead">
+      <div class="counts" id="memberCounts"></div>
+      <div style="display:flex;gap:6px">
+        <button type="button" class="btnGhost" style="min-height:38px;font-size:13px" onclick="renderMembers()">並べ替え</button>
+        <button type="button" class="btnGhost" style="min-height:38px;font-size:13px" id="btnHideOut" onclick="toggleHideOut()">メンバー確定</button>
+      </div>
+    </div>
+    <div class="sub">状態は「先発／控え（ベンチ）／外（メンバー外）」をタップ。背番号はこの試合用に修正できます。「メンバー確定」でメンバー外を隠せます。「並べ替え」で先発→ベンチ、GK→DF→MF→FW→背番号順に並びます。</div>
+    <div id="suspNote"></div>
+    <div id="memberList"></div>
+    <h3 style="margin:16px 0 4px;font-size:15px">ベンチ入りスタッフ</h3>
+    <div class="sub">スタメン提出で届いた内容が入ります。直すこともできます（公式記録のPDFには出ません）。</div>
+    <div id="staffList"></div>
+  </section>
+
+  <section data-tab="members"><button type="button" class="btnNext" onclick="setTab('record')">次へ：記録 →</button></section>
+
+  <!-- ================= 記録 ================= -->
+  <section class="card" id="scoreCard" data-tab="record">
+    <table class="scoreTable" id="scoreTable"></table>
+  </section>
+
+  <section id="recordPanel" data-tab="record">
+    <div class="card hidden" id="liveBox" style="border-color:#1976D2"></div>
+    <div class="seg" id="kindSeg">
+      <button type="button" data-kind="goal" class="active">得点<span class="cnt" id="cnt-goal">0</span></button>
+      <button type="button" data-kind="sub">交代<span class="cnt" id="cnt-sub">0</span></button>
+      <button type="button" data-kind="card">警告・退場<span class="cnt" id="cnt-card">0</span></button>
+    </div>
+    <div class="card">
+      <button type="button" class="btnAdd top" id="btnAddEv" onclick="openEvent(null)">＋ 追加</button>
+      <div class="evList" id="evList"></div>
+    </div>
+  </section>
+
+  <section id="pkPanel" class="card hidden" data-tab="record">
+    <h2>PK戦</h2>
+    <div id="pkBody"></div>
+  </section>
+
+  <!-- ================= 試合中（シュート・スタッツ） ================= -->
+  <section class="card live" id="shotsCard" data-tab="stats">
+    <div class="qa">
+      <button type="button" onclick="quickEvent('goal')">＋得点</button>
+      <button type="button" onclick="quickEvent('sub')">＋交代</button>
+      <button type="button" onclick="quickEvent('card')">＋警告・退場</button>
+      <button type="button" id="undoBtn" class="undo" onclick="toggleUndo()">－取消</button>
+    </div>
+    <div class="liveHead"><span id="shotHalfLabel"></span><button type="button" class="linkBtn" id="showAllBtn" onclick="toggleShowAll()">控え・退いた選手も表示</button></div>
+    <div class="liveCols" id="shotList"></div>
+    <div class="hidden"><div class="seg two" id="shotTeamSeg"></div><div class="pick small" id="halfPick"><button type="button" data-v="前半">前半</button><button type="button" data-v="後半">後半</button><button type="button" data-v="延長前半">延長前半</button><button type="button" data-v="延長後半">延長後半</button></div><span id="statHalfLabel"></span><div id="teamStats"></div></div>
+  </section>
+
+  <!-- ================= 提出 ================= -->
+  <section class="card" id="submitCard" data-tab="submit">
+    <h2>提出前の確認</h2>
+    <div id="checkArea"></div>
+ <div id="correctionBox" class="hidden" style="margin:10px 0">
+      <div class="notice" style="display:block">この試合の公式記録は確定済みです。訂正版を提出すると、両チームの承認者・主審に再承認を依頼します（運営のみ）。</div>
+      <div class="grid two">
+        <div class="field"><label class="lbl req" for="fCorrCode">運営パスコード</label><input id="fCorrCode" type="password" autocomplete="off"></div>
+        <div class="field"><label class="lbl req" for="fCorrReason">訂正理由</label><input id="fCorrReason" placeholder="例：得点者の背番号の誤り"></div>
+      </div>
+    </div>
+ <div id="incBox"></div>
+    <div id="result"></div>
+    <button id="submitBtn" type="button" class="btnPrimary" onclick="submitRecord()" disabled>公式記録を提出</button>
+    <div class="sub" id="submitNote">提出すると承認依頼（両チームの承認者〈スタメン提出で指定〉・主審）が送信されます。</div>
+  </section>
+</main>
+
+<!-- 事象入力シート -->
+<div id="evBackdrop" class="sheetBackdrop" onclick="if(event.target===this)closeEvent()">
+  <div class="sheet" role="dialog" aria-label="事象入力">
+    <div class="sheetTitle"><span id="evTitle"></span><button type="button" onclick="closeEvent()">閉じる</button></div>
+    <div id="evForm"></div>
+    <div class="sheetActions">
+      <button type="button" class="btnDanger" id="evDelete" onclick="deleteEvent()">削除</button>
+      <button type="button" class="btnPrimary" onclick="saveEvent()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 試合中のPK -->
+<div id="pkkBackdrop" class="sheetBackdrop" onclick="if(event.target===this)closePkKick()">
+  <div class="sheet" role="dialog" aria-label="PK">
+    <div class="sheetTitle"><span id="pkkTitle">PK</span><button type="button" onclick="closePkKick()">閉じる</button></div>
+    <div id="pkkForm"></div>
+    <div class="grid two" style="margin-top:8px"><button type="button" class="btnPrimary" id="pkkOk" style="min-height:56px;font-size:18px" onclick="pkInGame(true)">成功（得点）</button><button type="button" class="btnDanger" id="pkkNg" style="min-height:56px;font-size:18px" onclick="pkInGame(false)">失敗</button></div>
+  </div>
+</div>
+
+<!-- 時間テンキー -->
+<div id="keyBackdrop" class="sheetBackdrop" onclick="if(event.target===this)closeKeypad()">
+  <div class="sheet keySheet" role="dialog" aria-label="時間入力">
+    <div class="sheetHead" id="keyHead"></div>
+    <div id="keyDisplay" class="keyDisplay">0</div>
+    <div id="keyPreview" class="keyPreview"></div>
+    <div class="keyGrid">
+      <button type="button" onclick="keyPress('1')">1</button><button type="button" onclick="keyPress('2')">2</button><button type="button" onclick="keyPress('3')">3</button>
+      <button type="button" onclick="keyPress('4')">4</button><button type="button" onclick="keyPress('5')">5</button><button type="button" onclick="keyPress('6')">6</button>
+      <button type="button" onclick="keyPress('7')">7</button><button type="button" onclick="keyPress('8')">8</button><button type="button" onclick="keyPress('9')">9</button>
+      <button type="button" onclick="keyBack()">⌫</button><button type="button" onclick="keyPress('0')">0</button><button type="button" onclick="keyClear()">クリア</button>
+    </div>
+    <button type="button" id="keyHT" class="btnGhost hidden" onclick="keyHT()">HT（ハーフタイム交代）</button>
+    <div class="keyActions">
+      <button type="button" onclick="closeKeypad()">キャンセル</button>
+      <button type="button" class="btnPrimary" onclick="keyOk()">決定</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" onclick="this.className='toast'"></div>
+
+<script>
+/* =========================================================
+   定数
+   ========================================================= */
+const PERIODS=['前半','後半','延長前半','延長後半'];
+const PERIOD_IDX={'前半':0,'後半':1,'延長前半':2,'延長後半':3};
+const POSITIONS=['GK','DF','MF','FW'];
+const POS_ORDER={GK:0,DF:1,MF:2,FW:3,'':9};
+const DURATIONS=['90分','80分','70分'];
+const GOAL_TYPES=['シュート','ヘディング','PK','オウンゴール','その他'];
+const START_TYPES=['流れの中','CK','直接FK','間接FK','PK','スローイン','その他'];
+const PK_MAX_PER_TEAM=18; /* 公式記録PDFは1チーム18本目まで */
+const SEQ_SYMS=[['→','ゴロ'],['↑','浮き球'],['〜','ドリブル'],['×','混戦'],['S','シュート'],['H','ヘッド']];
+/* 公式記録の理由コード（PDFの「理由」欄へそのまま記載） */
+const REASONS={
+  '警告':[
+    ['C1','反スポーツ的行為'],['C2','ラフプレー'],['C3','異議'],['C4','繰り返し違反'],
+    ['C5','プレー再開を遅らせる'],['C6','規定距離を守らない'],['C7','無許可で入る'],['C8','無許可で出る']
+  ],
+  '一発退場':[
+    ['S1','著しく不正なプレー'],['S2','乱暴な行為'],['S3','つばを吐く'],
+    ['S4','得点機会阻止（ハンド）'],['S5','得点機会阻止（その他）'],['S6','侮辱・攻撃的発言等']
+  ]
+};
+const HALF_IDX={'前半':1,'後半':2,'延長前半':3,'延長後半':4};
+const HALF_SHORT={1:'前',2:'後',3:'延前',4:'延後'};
+const STAT_ITEMS=[['gk','GK','ゴールキック'],['ck','CK','コーナーキック'],['dfk','直接FK',''],['ifk','間接FK',''],['off','オフサイド',''],['pk','PK','ペナルティーキック']];
+const STORE_PREFIX='officialRecordDraft:v1:';
+const RECORDER_KEY='officialRecordRecorder:v1';
+
+/* =========================================================
+   状態
+   ========================================================= */
+let PICKER=null,OPTIONS=null,DETAIL=null;
+let SUSP={}; // 出場停止：playerId → {label,...}
+let PLAYERS={};          // playerId -> {id,name,number,grade,teamId,side}
+let S=null;              // 入力データ（自動保存対象）
+let TAB='match',KIND='goal',MEMBER_SIDE='home',SHOT_SIDE='home';
+let EDIT=null;           // 編集中の事象 {kind,isNew,data}
+let keyTarget=null,keyValue='';
+let saveTimer=null,toastTimer=null,DIRTY=false;
+let PK_SEL='';
+
+/* =========================================================
+   共通
+   ========================================================= */
+const $=id=>document.getElementById(id);
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function uid(){return Math.random().toString(36).slice(2,10);}
+function isWide(){return document.documentElement.classList.contains('wide');}
+function pad2(n){return String(n).padStart(2,'0');}
+function hhmm(d){return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;}
+
+function fillSelect(id,items,placeholder,keep){
+  const el=$(id);if(!el)return;
+  const cur=keep?el.value:'';
+  el.innerHTML=`<option value="">${esc(placeholder||'選択してください')}</option>`+
+    (items||[]).map(x=>{
+      const v=typeof x==='string'?x:x.value,l=typeof x==='string'?x:x.label;
+      return `<option value="${esc(v)}">${esc(l)}</option>`;
+    }).join('');
+  if(cur)setSelect(id,cur);
+}
+let REC_UNIV='';
+/** クラブ名を、記録担当クラブの選択肢（入力候補マスターの正式表記）に合わせる */
+function recUnivOption(name){
+  const n=x=>String(x||'').normalize('NFKC').replace(/[\s　]/g,'');
+  const opts=((OPTIONS||{}).universities||[]).map(x=>typeof x==='string'?x:x.value);
+  const t=n(name);if(!t)return '';
+  return opts.find(o=>n(o)===t)||opts.find(o=>n(o).indexOf(t)>=0||t.indexOf(n(o))>=0)||name;
+}
+function setSelect(id,v){
+  const el=$(id);if(!el)return;
+  v=v??'';
+  if(v && ![...el.options].some(o=>o.value===String(v))){
+    const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o);
+  }
+  el.value=v;
+}
+function setPickValue(el,v){
+  if(!el)return;
+  el.querySelectorAll('button[data-v]').forEach(b=>b.classList.toggle('active',b.dataset.v===String(v??'')));
+  el.classList.remove('invalid');
+}
+
+function toast(msg,type){
+  const t=$('toast');t.textContent=msg;t.className='toast show '+(type||'ok');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='toast';},type==='err'?5000:2200);
+}
+
+function sideTeamId(side){return side==='home'?DETAIL.match.homeId:DETAIL.match.awayId;}
+function sideName(side){return side==='home'?DETAIL.match.home:DETAIL.match.away;}
+function sideOfTeam(tid){return String(tid)===String(DETAIL.match.homeId)?'home':String(tid)===String(DETAIL.match.awayId)?'away':'';}
+function teamName(tid){const s=sideOfTeam(tid);return s?sideName(s):'';}
+/** 略称（得点の欄などで使う） */
+function teamShort(tid){const s=sideOfTeam(tid);if(!s)return '';return (s==='home'?DETAIL.match.homeShort:DETAIL.match.awayShort)||sideName(s);}
+function pName(pid){const p=PLAYERS[pid];return p?p.name:'';}
+function pNo(pid){const p=PLAYERS[pid];if(!p)return '';const o=S&&S.players[pid];return String(o&&o.number!=null&&o.number!==''?o.number:(p.number||''));}
+function pLabel(pid){const p=PLAYERS[pid];if(!p)return '';const n=pNo(pid);return `${n?'No.'+n+' ':''}${p.name}`;}
+
+/* 時間帯内の経過分 → 報告書表記 */
+function formatMinute(period,raw){
+  const s=String(raw??'').trim();
+  if(!s)return '';
+  if(s==='HT')return 'HT';
+  const n=Number(s);
+  if(!Number.isFinite(n)||n<1)return '';
+  if(period==='前半')return n<=45?String(n):`45+${n-45}`;
+  if(period==='後半')return n<=45?String(45+n):`90+${n-45}`;
+  if(period==='延長前半')return n<=15?String(90+n):`105+${n-15}`;
+  if(period==='延長後半')return n<=15?String(105+n):`120+${n-15}`;
+  return s;
+}
+function evKey(period,time){
+  const pi=PERIOD_IDX[period]??0;
+  const t=String(time)==='HT'?0:(Number(time)||0);
+  return pi*1000+t;
+}
+
+/* =========================================================
+   起動・試合選択
+   ========================================================= */
+window.addEventListener('load',()=>{
+  let pending=2;
+  const done=()=>{if(--pending===0)initPicker();};
+  /* 現行版と同じく、必ず存在する getMatchList() から大会一覧も作る */
+  google.script.run.withSuccessHandler(ms=>{
+    const matches=Array.isArray(ms)?ms:[];
+    const seen={},competitions=[];
+    matches.forEach(m=>{
+      const id=String(m.competitionId||'').trim();
+      if(!id||seen[id])return;
+      seen[id]=true;
+      competitions.push({id,name:String(m.competitionName||id),order:competitions.length});
+    });
+    PICKER={competitions,matches};
+    done();
+  }).withFailureHandler(showFatal).getMatchList();
+  google.script.run.withSuccessHandler(d=>{OPTIONS=d;done();}).withFailureHandler(()=>{OPTIONS={};done();}).getInputOptionsV2();
+});
+
+function initPicker(){
+  const comps=(PICKER.competitions||[]).slice().sort((a,b)=>a.order-b.order);
+  fillSelect('selComp',comps.map(c=>({value:c.id,label:c.name})),'大会を選択');
+  fillSelect('selRound',[],'先に大会を選択');
+  fillSelect('selMatch',[],'先に節を選択');
+
+  const o=OPTIONS||{};
+  fillSelect('fVenue',o.venues||[],'選択');
+  fillSelect('fPitch',o.pitches||[],'選択');
+  fillSelect('fPitchCond',o.pitchConditions||[],'選択');
+  fillSelect('fWeather',o.weather||[],'選択');
+  fillSelect('fWind',o.wind||[],'選択');
+  fillSelect('fRecorderUniv',o.universities||[],'選択');
+  fillSelect('fDuration',DURATIONS,'選択');
+
+  $('saveState').textContent='';
+  if(comps.length===1){$('selComp').value=comps[0].id;compChanged();}
+  // メールのリンク（?match=試合ID）から開いたときは、その試合を選んだ状態にする
+  try{
+    google.script.url.getLocation(loc=>{
+      const mid=loc&&loc.parameter&&loc.parameter.match;
+      REC_UNIV=(loc&&loc.parameter&&loc.parameter.ru)||''; // チームページから開いたときの記録担当クラブ
+      if(!mid)return;
+      const m=(PICKER.matches||[]).find(x=>String(x.matchId)===String(mid));
+      if(!m){toast('リンクの試合が見つかりません：'+mid,'err');return;}
+      $('selComp').value=m.competitionId;compChanged();
+      $('selRound').value=m.round;roundChanged();
+      $('selMatch').value=m.matchId;matchChanged();
+    });
+  }catch(e){}
+}
+
+function compChanged(){
+  const cid=$('selComp').value;
+  const rounds=[...new Set((PICKER.matches||[]).filter(m=>m.competitionId===cid).map(m=>m.round))];
+  fillSelect('selRound',rounds,cid?'節を選択':'先に大会を選択');
+  fillSelect('selMatch',[],'先に節を選択');
+  if(rounds.length===1){$('selRound').value=rounds[0];roundChanged();}
+  unloadMatch();
+}
+
+function roundChanged(){
+  const cid=$('selComp').value,rd=$('selRound').value;
+  const ms=(PICKER.matches||[]).filter(m=>m.competitionId===cid&&m.round===rd);
+  fillSelect('selMatch',ms.map(m=>({value:m.matchId,label:`${m.date}｜${m.home} vs ${m.away}`})),rd?'試合を選択':'先に節を選択');
+  unloadMatch();
+}
+
+function unloadMatch(){
+  if(DIRTY)saveDraft();
+  DETAIL=null;S=null;DIRTY=false;SUSP={};document.documentElement.style.removeProperty('--tcH');document.documentElement.style.removeProperty('--tcA');
+  document.body.classList.remove('loaded');
+  if($('incBanner'))$('incBanner').classList.add('hidden');
+  $('matchBox').classList.add('hidden');
+  $('scoreBar').classList.add('hidden');
+  $('restoreBanner').classList.add('hidden');
+  $('saveState').textContent='';
+  closeEvent();closeKeypad();
+}
+
+/* 問題事項報告書が出ている試合は「問題事項あり」と表示（Incident.gs） */
+/* =========================================================
+   問題事項（提出ページ）：「問題事項はありましたか？」→「あり」なら報告書を書く
+   運営クラブのページで試合前に出した報告書も、ここに出る
+   ========================================================= */
+let INCD=null,INCF=null;
+function loadIncidents(mid){
+  INCD=null;
+  google.script.run.withFailureHandler(()=>{}).withSuccessHandler(d=>{
+    if(!DETAIL||DETAIL.match.matchId!==mid)return;
+    INCD=d;
+    if(S&&d.list.length&&S.incidentAnswer!=='あり'){S.incidentAnswer='あり';touched();}
+    renderIncBox();
+  }).officialIncidentContext(mid);
+}
+function setIncAnswer(v){if(!S)return;S.incidentAnswer=v;touched();if(v==='あり'&&INCD&&!INCD.list.length&&!INCF)incNew();renderChecks();}
+function incNew(){INCF={kinds:[],party:'',detail:'',writer:S.info.recorder||''};renderIncBox();}
+function incKind(k){
+  const i=INCF.kinds.indexOf(k);if(i>=0)INCF.kinds.splice(i,1);else INCF.kinds.push(k);
+  if(!INCF.detail.trim()){const t=(INCD.kinds.find(x=>x.name===k)||{}).template||'';INCF.detail=INCF.party?t.replace(/〇〇クラブ/g,INCF.party):t;}
+  renderIncBox();
+}
+function incParty(v){INCF.party=v;if(v)INCF.detail=INCF.detail.replace(/〇〇クラブ/g,v);renderIncBox();}
+function renderIncBox(){
+  const box=$('incBox');if(!box)return;
+  if(!S||!DETAIL){box.innerHTML='';return;}
+  const a=S.incidentAnswer||'',L=(INCD&&INCD.list)||[];
+  let h=`<div class="card" style="margin:0 0 12px;padding:12px"><label class="lbl req">この試合で問題事項はありましたか？</label>
+    <div class="pick"><button type="button" class="${a==='なし'?'active':''}" onclick="setIncAnswer('なし')" ${L.length?'disabled':''}>なし</button><button type="button" class="${a==='あり'?'active':''}" onclick="setIncAnswer('あり')">あり</button></div>
+    <div class="sub" style="margin-top:6px">帯同副審が来ない・チームの遅刻・審判着の忘れ・背番号の違いなど、運営上の問題があったら「あり」を選んで報告書を書いてください。運営クラブのページで試合前に出した報告書も、ここに表示されます。</div>`;
+  if(L.length)h+=L.map(x=>`<div style="border-top:1px solid #e2e8f0;margin-top:10px;padding-top:8px">
+      <div><b>${esc(x.kinds||'その他')}</b>　当該クラブ：${esc(x.party)}　<span class="sub">${x.status==='弁明待ち'?'当該クラブの弁明待ち（締切 '+esc(x.deadline)+'）':esc(x.status)}</span></div>
+      <div class="sub" style="white-space:pre-wrap;margin-top:2px">${esc(x.detail)}</div><div class="sub">記入：${esc(x.writer)}（${esc(x.writerUniv)}）</div></div>`).join('');
+  if(a==='あり'){
+    if(INCF){
+      h+=`<div style="border-top:1px solid #e2e8f0;margin-top:10px;padding-top:10px"><label class="lbl req">種類（当てはまるものすべて）</label>
+        <div class="pick" style="flex-wrap:wrap">${(INCD?INCD.kinds:[]).map(k=>`<button type="button" style="flex:1 1 30%" class="${INCF.kinds.includes(k.name)?'active':''}" onclick="incKind('${esc(k.name)}')">${esc(k.name)}</button>`).join('')}</div>
+        <div class="field" style="margin-top:10px"><label class="lbl req">当該クラブ</label><select onchange="incParty(this.value)"><option value="">選択してください</option>${univOpts((INCD?INCD.univs:[]).concat(INCF.party&&INCD&&!INCD.univs.includes(INCF.party)?[INCF.party]:[]),INCD&&INCD.matchUnivs,INCF.party)}</select></div>
+        <div class="field"><label class="lbl req">問題事項についての詳細</label><textarea rows="5" oninput="INCF.detail=this.value">${esc(INCF.detail)}</textarea><div class="sub">〇〇や［　］の部分は書き換えてください。</div></div>
+        <div class="field"><label class="lbl req">記入者</label><input value="${esc(INCF.writer)}" oninput="INCF.writer=this.value"></div>
+        <div class="grid two"><button type="button" class="btnGhost" onclick="INCF=null;renderIncBox()">やめる</button><button type="button" class="btnPrimary" id="incSend" onclick="incSend()">問題事項報告書を提出</button></div>
+        <div class="sub" style="margin-top:6px">提出すると当該クラブへメールが届き、その日のうちに弁明が書かれます。弁明が出るか締切を過ぎると、規律委員会へ送られます。</div></div>`;
+    }else h+=`<button type="button" class="btnGhost" style="margin-top:10px;width:100%" onclick="incNew()">＋ 問題事項報告書を${L.length?'追加で':''}書く</button>`;
+  }
+  box.innerHTML=h+'</div>';
+}
+function incSend(){
+  if(!INCF.kinds.length)return toast('種類を選んでください','err');
+  if(!INCF.party)return toast('当該クラブを選んでください','err');
+  if(!INCF.detail.trim())return toast('詳細を書いてください','err');
+  if(/〇〇|［/.test(INCF.detail))return toast('詳細に〇〇や［　］が残っています。書き換えてください','err');
+  if(!INCF.writer.trim())return toast('記入者を入力してください','err');
+  if(!S.info.recorderUniversity)return toast('試合のタブで「記録担当クラブ」を入力してください','err');
+  const b=$('incSend');b.disabled=true;b.textContent='送信中…';
+  const mid=DETAIL.match.matchId;
+  google.script.run.withSuccessHandler(r=>{toast(r.message||'提出しました');INCF=null;loadIncidents(mid);showIncidents(mid);})
+    .withFailureHandler(e=>{toast(e.message||String(e),'err');b.disabled=false;b.textContent='問題事項報告書を提出';})
+    .officialIncidentSave(mid,{kinds:INCF.kinds.join('・'),party:INCF.party,detail:INCF.detail,writer:INCF.writer,writerUniv:S.info.recorderUniversity});
+}
+
+function showIncidents(mid){
+  const b=$('incBanner');b.classList.add('hidden');
+  google.script.run.withFailureHandler(()=>{}).withSuccessHandler(r=>{
+    if(!r||!r.count||!DETAIL||DETAIL.match.matchId!==mid)return;
+    b.textContent=`問題事項あり（${r.count}件：${r.kinds}）　この試合には問題事項報告書が出ています。`;
+    b.classList.remove('hidden');
+  }).incidentSummary(mid);
+}
+
+function matchChanged(){
+  const id=$('selMatch').value;
+  unloadMatch();
+  if(!id)return;
+  $('loadingNote').classList.remove('hidden');
+  google.script.run
+    .withSuccessHandler(d=>{$('loadingNote').classList.add('hidden');loadMatch(d);})
+    .withFailureHandler(err=>{$('loadingNote').classList.add('hidden');toast(err.message||String(err),'err');})
+    .getMatchDetail(id);
+}
+
+/* 問題事項報告書の当該クラブ：対戦チームを先に、ほかのクラブも選べる */
+const univOpts=(list,mu,v)=>{const o=u=>`<option${u===v?' selected':''}>${esc(u)}</option>`;mu=(mu||list).filter(u=>list.includes(u));const rest=list.filter(u=>!mu.includes(u));return rest.length?`<optgroup label="対戦チーム">${mu.map(o).join('')}</optgroup><optgroup label="ほかのクラブ（帯同副審など）">${rest.map(o).join('')}</optgroup>`:list.map(o).join('');};
+function newState(d){
+  const players={};
+  (d.homePlayers||[]).concat(d.awayPlayers||[]).forEach(p=>{
+    players[p.playerId]={status:'out',position:'',shots1:0,shots2:0,shots3:0,shots4:0};
+  });
+  const rec=storeGet(RECORDER_KEY)||{};
+  const emptyStats=()=>{const o={};STAT_ITEMS.forEach(([k])=>{[1,2,3,4].forEach(h=>{o[k+h]=0;});});return o;};
+  return{
+    v:1,matchId:d.match.matchId,
+    format:{extraTime:'',pk:''},
+    firstKickoff:'',secondKickoff:'',
+    info:{date:d.match.date||'',time:d.match.kickoff||'',venue:d.match.venue||'',duration:'90分',pitch:'',pitchCondition:'',wbgt:'',weather:'',wind:'',recorder:rec.recorder||'',recorderUniversity:rec.recorderUniversity||'',recorderEmail:rec.recorderEmail||''},
+    officials:{referee:'',refereeEmail:'',ar1:'',ar2:'',fourth:''},
+    period:'前半',statHalf:'前半',hideOut:false,
+    players,
+    goals:[],subs:[],cards:[],
+    stats:{home:emptyStats(),away:emptyStats()},
+    pk:{firstTeamId:'',kicks:[]},
+    staff:{home:[],away:[]},
+    submitted:null
+  };
+}
+
+/* 運営クラブが確認したスタメン（スタメン提出）と審判団を、最初の状態に入れる */
+function applyLineup(st,d){
+  const L=d.lineup;if(!L)return false;
+  let used=false;
+  ['home','away'].forEach(side=>{
+    const x=L[side];if(!x)return;
+    (x.starters||[]).forEach(p=>{if(st.players[p.pid]){Object.assign(st.players[p.pid],{status:'starter',position:p.pos||'',number:p.no||''});used=true;}});
+    (x.bench||[]).forEach(p=>{if(st.players[p.pid]){Object.assign(st.players[p.pid],{status:'bench',position:p.pos||'',number:p.no||''});used=true;}});
+    if((x.staff||[]).length){st.staff=st.staff||{home:[],away:[]};st.staff[side]=x.staff.map(s=>({role:s.role||'',name:s.name||''}));used=true;}
+  });
+  if(L.refs){Object.keys(st.officials).forEach(k=>{if(L.refs[k])st.officials[k]=L.refs[k];});used=true;}
+  return used;
+}
+
+function loadMatch(d,opts){
+  opts=opts||{};
+  DETAIL=d;
+  showIncidents(d.match.matchId);
+  INCF=null;loadIncidents(d.match.matchId);
+  PLAYERS={};
+  [['home',d.homePlayers,d.match.homeId],['away',d.awayPlayers,d.match.awayId]].forEach(([side,list,tid])=>{
+    (list||[]).forEach(p=>{PLAYERS[p.playerId]={id:p.playerId,name:p.name,number:p.number,grade:p.grade,teamId:tid,side};});
+  });
+
+  SUSP={};
+  (d.suspended||[]).forEach(x=>{if(PLAYERS[x.playerId])SUSP[x.playerId]=x;});
+
+  S=newState(d);
+  let restored=false,fromServer=false;
+  const R=d.record||null;
+  const saved0=opts.fresh?null:storeGet(STORE_PREFIX+d.match.matchId);
+  // 提出済みの内容（サーバー）の方が新しければ、そちらを使う（別の端末・運営が修正する場合）
+  // サーバーに自動保存されていた入力途中の内容が一番新しければ、それを使う
+  const D=d.draft||null;
+  const localTs=saved0&&saved0.v===1?Number(saved0.savedAt||0):0;
+  const draftNewer=!opts.fresh&&!opts.server&&!!(D&&D.state&&D.state.v===1)&&
+    D.savedAtMs>localTs+1000&&D.savedAtMs>(R?Number(R.submittedAtMs||0):0);
+  const serverNewer=!draftNewer&&!!(R&&R.state&&R.state.v===1)&&(
+    opts.server||!saved0||saved0.v!==1||
+    (saved0.submitted?Number(saved0.submitted.version||0)<R.version:Number(saved0.savedAt||0)<R.submittedAtMs)
+  );
+  let fromDraft=false;
+  if(draftNewer){
+    const base=S;
+    S=Object.assign(base,D.state,{matchId:d.match.matchId});
+    Object.keys(base.players).forEach(pid=>{if(!S.players[pid])S.players[pid]={status:'out',position:'',shots1:0,shots2:0};});
+    restored=true;fromDraft=true;
+  }else if(serverNewer&&!opts.fresh){
+    const base=S;
+    S=Object.assign(base,R.state,{matchId:d.match.matchId});
+    Object.keys(base.players).forEach(pid=>{if(!S.players[pid])S.players[pid]={status:'out',position:'',shots1:0,shots2:0};});
+    S.submitted={version:R.version,recordId:R.recordId,at:R.submittedAt};
+    restored=true;fromServer=true;
+  }else if(!opts.fresh){
+    const saved=saved0;
+    if(saved && saved.v===1){
+      restored=true;
+      if(saved.firstKickoff&&!saved.secondKickoff)saved.secondKickoff=String(saved.firstKickoff)===String(d.match.homeId)?d.match.awayId:d.match.homeId;
+      const base=S;
+      S=Object.assign(base,saved);
+      Object.keys(base.players).forEach(pid=>{if(!S.players[pid])S.players[pid]={status:'out',position:'',shots1:0,shots2:0};});
+    }
+  }
+
+  // 新しく入力を始めるときは、スタメン提出（運営クラブ確認済み）の内容を入れておく
+  if(!restored&&applyLineup(S,d)){
+    const st=['home','away'].map(s=>d.lineup[s]?`${s==='home'?d.match.home:d.match.away}：${d.lineup[s].status==='運営クラブOK'?'運営クラブ確認済み':'運営クラブの確認前'}`:'').filter(Boolean).join('／');
+    setTimeout(()=>toast('提出されたスタメンを反映しました（'+st+'）。メンバーのタブで確認してください。'),300);
+  }
+
+  // 途中から再開した場合も、ベンチ入りスタッフが空ならスタメン提出の内容を入れる
+  if(restored&&d.lineup){
+    S.staff=S.staff||{home:[],away:[]};
+    ['home','away'].forEach(sd=>{const x=d.lineup[sd];if(x&&(x.staff||[]).length&&!(S.staff[sd]||[]).length)S.staff[sd]=x.staff.map(s=>({role:s.role||'',name:s.name||''}));});
+  }
+  // 審判団：運営クラブがスタメン承認ページで入れた名前を、空いている欄に入れる（途中から再開した場合も）
+  if(restored&&d.lineup&&d.lineup.refs){
+    S.officials=S.officials||{};
+    Object.keys(d.lineup.refs).forEach(k=>{const v=d.lineup.refs[k];if(v&&!String(S.officials[k]||'').trim())S.officials[k]=v;});
+  }
+
+  // チームページ（運営クラブ）から開いたときは、記録担当クラブをそのクラブにする（提出済みの記録はそのまま）
+  if(REC_UNIV&&!fromServer){
+    const v=recUnivOption(REC_UNIV);
+    if(v&&S.info.recorderUniversity!==v){S.info.recorderUniversity=v;storeSet(RECORDER_KEY,{recorder:S.info.recorder,recorderUniversity:v,recorderEmail:S.info.recorderEmail});}
+  }
+
+  // 保存済みの入力に出場停止の選手が入っていたら「外」に戻す
+  const forcedOut=Object.keys(SUSP).filter(pid=>S.players[pid]&&S.players[pid].status!=='out');
+  forcedOut.forEach(pid=>{S.players[pid].status='out';});
+
+  $('mbTeams').textContent=`${d.match.home} vs ${d.match.away}`;
+  $('mbMeta').textContent=[d.match.round,d.match.date,d.match.matchId].filter(Boolean).join('｜');
+  $('matchBox').classList.remove('hidden');
+  $('sbHome').textContent=d.match.home;
+  $('sbAway').textContent=d.match.away;
+  paintTeams(d.match);
+  $('scoreBar').classList.remove('hidden');
+
+  ['pkKickoff','pkKickoff2'].forEach(id=>{$(id).innerHTML=
+    `<button type="button" data-v="${esc(d.match.homeId)}">${esc(d.match.home)}</button>`+
+    `<button type="button" data-v="${esc(d.match.awayId)}">${esc(d.match.away)}</button>`;});
+  $('memberTeamSeg').innerHTML=teamSegHTML('member');
+  $('shotTeamSeg').innerHTML=teamSegHTML('shot');
+
+  writeForm();
+
+  if(restored){
+    $('restoreText').textContent=fromDraft
+      ?`サーバーに自動保存されていた入力途中の内容（${D.savedAt}）を復元しました。`
+      :fromServer
+      ?`提出済み（版${R.version}・${R.submittedAt}）の内容を読み込みました。修正して再提出できます。`
+      :S.submitted
+        ?`提出済み（版${S.submitted.version}）の入力内容を表示しています。修正して再提出できます。`
+        :'この端末に保存されていた入力途中の内容を復元しました。';
+    $('restoreBanner').classList.remove('hidden');
+  }
+  $('btnLoadServer').classList.toggle('hidden',!(R&&R.state&&!fromServer));
+  renderRecordBanner(R);
+  if(fromServer||fromDraft)saveDraft();
+  $('saveState').textContent=restored?'入力内容を復元しました':'入力内容はこの端末に自動保存されます';
+
+  document.body.classList.add('loaded');
+  MEMBER_SIDE='home';SHOT_SIDE='home';
+  renderAll();
+  renderMembers();
+  setTab('match');
+  $('submitBtn').disabled=false;
+  DIRTY=false;
+  if(forcedOut.length){
+    touched();
+    toast(`出場停止のため ${forcedOut.map(pName).join('、')} をメンバー外にしました`,'err');
+  }
+}
+
+function teamSegHTML(kind){
+  return ['home','away'].map(s=>`<button type="button" data-side="${s}" data-seg="${kind}" class="${s==='home'?'active':''}">${tcSide(s)?`<i class="tcd" style="background:${tcSide(s)}"></i>`:''}${esc(sideName(s))}</button>`).join('');
+}
+/* チームカラー（UiTheme.html）。色がないときは灰色 */
+function tcSide(s){const m=DETAIL&&DETAIL.match;if(!m||typeof tcOf!=='function')return '';return s==='home'?tcOf(m.homeId,m.home):tcOf(m.awayId,m.away);}
+function paintTeams(m){
+  if(typeof tcOf!=='function')return;
+  const r=document.documentElement.style;
+  r.setProperty('--tcH',tcOf(m.homeId,m.home)||'#E0E0E0');r.setProperty('--tcA',tcOf(m.awayId,m.away)||'#E0E0E0');
+}
+
+function showFatal(err){
+  document.body.innerHTML=`<div style="padding:20px;color:#991b1b;font-weight:800">${esc(err&&err.message||String(err))}</div>`;
+}
+
+/* =========================================================
+   フォーム ⇔ 状態
+   ========================================================= */
+const INFO_MAP=[['fDate','date'],['fTime','time'],['fVenue','venue'],['fPitch','pitch'],['fPitchCond','pitchCondition'],['fWeather','weather'],['fWind','wind'],['fWbgt','wbgt'],['fDuration','duration'],['fRecorder','recorder'],['fRecorderUniv','recorderUniversity'],['fRecorderMail','recorderEmail']];
+const OFF_MAP=[['fRef','referee'],['fRefMail','refereeEmail'],['fAr1','ar1'],['fAr2','ar2'],['fFourth','fourth']];
+
+function writeForm(){
+  INFO_MAP.forEach(([id,k])=>{const el=$(id);if(el.tagName==='SELECT')setSelect(id,S.info[k]);else el.value=S.info[k]||'';});
+  OFF_MAP.forEach(([id,k])=>{$(id).value=S.officials[k]||'';});
+  setPickValue($('pkExtra'),S.format.extraTime);
+  setPickValue($('pkPk'),S.format.pk);
+  setPickValue($('pkKickoff'),S.firstKickoff);
+  setPickValue($('pkKickoff2'),S.secondKickoff);
+  applyFormat();
+  renderTestMailStatus();
+}
+
+document.addEventListener('input',e=>readField(e.target));
+document.addEventListener('change',e=>readField(e.target));
+function readField(el){
+  if(!S||!el||!el.id)return;
+  el.classList.remove('invalid');
+  const i=INFO_MAP.find(x=>x[0]===el.id);
+  if(i){S.info[i[1]]=el.value;if(['recorder','recorderUniversity','recorderEmail'].includes(i[1]))storeSet(RECORDER_KEY,{recorder:S.info.recorder,recorderUniversity:S.info.recorderUniversity,recorderEmail:S.info.recorderEmail});return touched();}
+  const o=OFF_MAP.find(x=>x[0]===el.id);
+  if(o){S.officials[o[1]]=el.value.trim();if(o[1]==='refereeEmail')renderTestMailStatus();return touched();}
+}
+
+let badgeTimer=null;
+function touched(){
+  if(!S)return;
+  DIRTY=true;SERVER_DIRTY=true;
+  clearTimeout(saveTimer);saveTimer=setTimeout(saveDraft,500);
+  scheduleServerSave();
+  // 未入力チェック（タブの「!」）は、押し終わってからまとめて行う（連打しても重くならないように）
+  clearTimeout(badgeTimer);badgeTimer=setTimeout(refreshBadges,350);
+}
+
+/* ---------- サーバーへの自動保存（端末の保存が消えても続きから入力できるように） ---------- */
+let SERVER_DIRTY=false,SERVER_BUSY=false,serverTimer=null,LAST_SERVER_SAVE=0;
+const DEVICE_ID=(()=>{let d=storeGet('officialRecordDevice:v1');if(!d){d='D'+Math.random().toString(36).slice(2,8);storeSet('officialRecordDevice:v1',d);}return d;})();
+function scheduleServerSave(){
+  clearTimeout(serverTimer);
+  // 押し終わって5秒たったら保存。押し続けている間も、最低20秒に1回は保存する（通信を減らして軽くする）
+  const wait=Date.now()-LAST_SERVER_SAVE>20000?1500:5000;
+  serverTimer=setTimeout(serverSave,wait);
+}
+function serverSave(){
+  clearTimeout(serverTimer);
+  if(!S||!SERVER_DIRTY)return;
+  if(SERVER_BUSY){serverTimer=setTimeout(serverSave,2000);return;}
+  SERVER_BUSY=true;SERVER_DIRTY=false;LAST_SERVER_SAVE=Date.now();
+  S.savedAt=Date.now();
+  const mid=S.matchId,json=JSON.stringify(S);
+  google.script.run
+    .withSuccessHandler(r=>{SERVER_BUSY=false;if(r&&r.ok){$('saveState').textContent=`自動保存 ${r.savedAt}（サーバーにも保存済み）`;}else{SERVER_DIRTY=true;}})
+    .withFailureHandler(()=>{SERVER_BUSY=false;SERVER_DIRTY=true;$('saveState').textContent=`自動保存 ${hhmm(new Date())}（この端末のみ・通信を確認してください）`;serverTimer=setTimeout(serverSave,10000);})
+    .saveRecordDraft(mid,json,DEVICE_ID);
+}
+
+/* クリック委譲 */
+document.addEventListener('click',e=>{
+  const t=e.target;
+  const tabBtn=t.closest('#tabBar button[data-tab]');
+  if(tabBtn)return setTab(tabBtn.dataset.tab);
+
+  const pb=t.closest('#periodBar button[data-p]');
+  if(pb)return setPeriod(pb.dataset.p);
+
+  const kb=t.closest('#kindSeg button[data-kind]');
+  if(kb)return setKind(kb.dataset.kind);
+
+  const sb=t.closest('button[data-seg]');
+  if(sb){
+    if(sb.dataset.seg==='member'){MEMBER_SIDE=sb.dataset.side;renderMembers();}
+    else{SHOT_SIDE=sb.dataset.side;renderShots();}
+    sb.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===sb));
+    return;
+  }
+
+  const fb=t.closest('.pick button[data-v]');
+  if(fb && S){
+    const pick=fb.parentElement;
+    if(pick.id==='pkExtra'){S.format.extraTime=fb.dataset.v;setPickValue(pick,fb.dataset.v);applyFormat();renderAll();return touched();}
+    if(pick.id==='pkPk'){S.format.pk=fb.dataset.v;setPickValue(pick,fb.dataset.v);applyFormat();renderAll();return touched();}
+    if(pick.id==='pkKickoff'){
+      S.firstKickoff=fb.dataset.v;setPickValue(pick,fb.dataset.v);
+      S.secondKickoff=String(fb.dataset.v)===String(DETAIL.match.homeId)?DETAIL.match.awayId:DETAIL.match.homeId;
+      setPickValue($('pkKickoff2'),S.secondKickoff);
+      return touched();
+    }
+    if(pick.id==='pkKickoff2'){S.secondKickoff=fb.dataset.v;setPickValue(pick,fb.dataset.v);return touched();}
+    if(pick.id==='halfPick'){S.statHalf=fb.dataset.v;setPickValue(pick,fb.dataset.v);renderStatsTab();return touched();}
+  }
+});
+
+function applyFormat(){
+  document.body.classList.toggle('noET',S.format.extraTime!=='あり');
+  document.body.classList.toggle('noPK',S.format.pk!=='あり');
+  if((S.period.startsWith('延長')&&S.format.extraTime!=='あり')||(S.period==='PK戦'&&S.format.pk!=='あり')){
+    S.period='後半';
+  }
+  if(String(S.statHalf).startsWith('延長')&&S.format.extraTime!=='あり')S.statHalf='後半';
+}
+
+/* =========================================================
+   タブ・時間帯
+   ========================================================= */
+function setTab(tab){
+  TAB=tab||'match';
+  document.body.dataset.tab=TAB;
+  document.querySelectorAll('#tabBar button').forEach(b=>b.classList.toggle('active',b.dataset.tab===TAB));
+  closeKeypad();
+  if(TAB==='members')renderMembers();
+  if(TAB==='stats')renderStatsTab();
+  if(TAB==='submit')renderChecks();
+  if(TAB==='record')renderRecord();
+  window.scrollTo(0,0);
+}
+
+function setPeriod(p){
+  if(!S)return;
+  S.period=p;
+  if(p!=='PK戦')S.statHalf=p;
+  document.querySelectorAll('#periodBar button').forEach(b=>b.classList.toggle('active',b.dataset.p===p));
+  renderRecord();renderStatsTab();
+  touched();
+}
+
+function setKind(k){
+  KIND=k;document.body.dataset.kind=k;
+  document.querySelectorAll('#kindSeg button').forEach(b=>b.classList.toggle('active',b.dataset.kind===k));
+  renderEvents();
+}
+
+/* =========================================================
+   派生データ（出場中・退場・得点）
+   ========================================================= */
+function sortedCards(){
+  return S.cards.slice().sort((a,b)=>evKey(a.period,a.time)-evKey(b.period,b.time));
+}
+
+/* 同一選手2枚目の警告（理由確定後）→「警告2枚による退場」を自動派生 */
+function secondCautions(){
+  const cnt={},out=[];
+  sortedCards().forEach(c=>{
+    if(c.type!=='警告'||!c.playerId||!c.reason)return;
+    cnt[c.playerId]=(cnt[c.playerId]||0)+1;
+    if(cnt[c.playerId]===2){
+      out.push({id:'cs_'+c.id,auto:true,period:c.period,time:c.time,teamId:c.teamId,playerId:c.playerId,type:'警告2枚による退場',reason:'CS'});
+    }
+  });
+  return out;
+}
+
+function sentOffKeys(){
+  const m={};
+  S.cards.filter(c=>c.type==='一発退場'&&c.playerId&&c.time).forEach(c=>{
+    const k=evKey(c.period,c.time);if(m[c.playerId]==null||k<m[c.playerId])m[c.playerId]=k;
+  });
+  secondCautions().forEach(c=>{
+    const k=evKey(c.period,c.time);if(m[c.playerId]==null||k<m[c.playerId])m[c.playerId]=k;
+  });
+  return m;
+}
+
+function members(side){
+  return Object.values(PLAYERS).filter(p=>p.side===side&&S.players[p.id]&&S.players[p.id].status!=='out');
+}
+function starters(side){return Object.values(PLAYERS).filter(p=>p.side===side&&S.players[p.id]?.status==='starter');}
+
+/* key時点で出場中の選手（excludeId の事象は計算から除外） */
+function onPitchAt(side,key,excludeId){
+  const set=new Set(starters(side).map(p=>p.id));
+  const tid=sideTeamId(side);
+  S.subs.filter(s=>s.id!==excludeId&&String(s.teamId)===String(tid)&&s.time!==''&&evKey(s.period,s.time)<=key)
+    .sort((a,b)=>evKey(a.period,a.time)-evKey(b.period,b.time))
+    .forEach(s=>{if(s.outId)set.delete(s.outId);if(s.inId)set.add(s.inId);});
+  const so=sentOffKeys();
+  Object.keys(so).forEach(pid=>{if(so[pid]<=key)set.delete(pid);});
+  return set;
+}
+
+function played(pid){
+  return S.players[pid]?.status==='starter'||S.subs.some(s=>s.inId===pid);
+}
+
+function playerState(pid){
+  const so=sentOffKeys();
+  if(so[pid]!=null)return{cls:'red',label:'退場'};
+  const out=S.subs.find(s=>s.outId===pid);
+  if(out)return{cls:'gray',label:'OUT'};
+  const side=PLAYERS[pid]?.side;
+  if(side && onPitchAt(side,Infinity).has(pid))return{cls:'on',label:'出場'};
+  if(S.players[pid]?.status==='bench')return{cls:'bl',label:'控え'};
+  return{cls:'gray',label:'外'};
+}
+
+function yellowCount(pid){return S.cards.filter(c=>c.playerId===pid&&c.type==='警告').length;}
+
+function scoreByPeriod(){
+  const r={home:[0,0,0,0],away:[0,0,0,0]};
+  S.goals.forEach(g=>{
+    const side=sideOfTeam(g.teamId);const pi=PERIOD_IDX[g.period];
+    if(side&&pi!=null)r[side][pi]++;
+  });
+  return r;
+}
+
+/* =========================================================
+   描画
+   ========================================================= */
+/* 第4の審判の記録（Live.gs）：まだ取り込んでいない記録があれば、取り込みボタンを出す */
+function liveNew(){
+  const L=DETAIL&&DETAIL.live;if(!L||!S)return null;
+  const done=new Set(S.liveImported||[]);
+  const pick=list=>(list||[]).filter(e=>!done.has(e.id));
+  const n={goals:pick(L.goals),subs:pick(L.subs),cards:pick(L.cards)};
+  return n.goals.length+n.subs.length+n.cards.length?n:null;
+}
+function renderLiveBox(){
+  const box=$('liveBox');if(!box)return;
+  const n=liveNew();
+  box.classList.toggle('hidden',!n);
+  if(!n)return;
+  box.innerHTML=`<div style="font-weight:700">第4の審判の記録があります</div>
+    <div class="sub" style="margin:4px 0 8px">得点 ${n.goals.length}・交代 ${n.subs.length}・警告退場 ${n.cards.length}（まだ取り込んでいない分）。取り込んだあと、内容を確認・修正してから提出してください。</div>
+    <button type="button" class="btnAdd" onclick="liveImport()">第4の審判の記録を取り込む</button>`;
+}
+function liveImport(){
+  const n=liveNew();if(!n)return;
+  const known=id=>!!PLAYERS[id];
+  let skip=0;
+  S.liveImported=S.liveImported||[];
+  n.goals.forEach(g=>{if(g.scorerId&&!known(g.scorerId)){skip++;}else{const x=JSON.parse(JSON.stringify(g));if(x.assistId&&!known(x.assistId))x.assistId='';S.goals.push(x);applyGoalShot(x);}S.liveImported.push(g.id);});
+  n.subs.forEach(x=>{if(!known(x.outId)||!known(x.inId)){skip++;}else{S.subs.push(JSON.parse(JSON.stringify(x)));if(S.players[x.inId]&&S.players[x.inId].status==='out')S.players[x.inId].status='bench';}S.liveImported.push(x.id);});
+  n.cards.forEach(x=>{if(!known(x.playerId)){skip++;}else S.cards.push(JSON.parse(JSON.stringify(x)));S.liveImported.push(x.id);});
+  renderAll();touched();
+  toast('第4の審判の記録を取り込みました'+(skip?`（選手が見つからない ${skip}件は入れていません）`:'')+'。時間・選手を確認してください。');
+}
+
+function renderAll(){
+  if(!S)return;
+  renderLiveBox();
+  document.querySelectorAll('#periodBar button').forEach(b=>b.classList.toggle('active',b.dataset.p===S.period));
+  setPickValue($('halfPick'),S.statHalf);
+  renderScore();
+  renderRecord();
+  if(TAB==='stats')renderShots();
+  refreshBadges();
+}
+
+function renderScore(){
+  const sc=scoreByPeriod();
+  const th=sc.home.reduce((a,b)=>a+b,0),ta=sc.away.reduce((a,b)=>a+b,0);
+  $('sbScore').textContent=`${th} - ${ta}`;
+  const pk=pkEval();
+  $('sbPk').textContent=S.format.pk==='あり'&&S.pk.kicks.length?`PK ${pk.home} - ${pk.away}`:'';
+
+  const et=S.format.extraTime==='あり';
+  const cols=[['前半',0],['後半',1]].concat(et?[['延前',2],['延後',3]]:[]);
+  const pkCol=S.format.pk==='あり';
+  $('scoreTable').innerHTML=
+    `<tr><th></th><th>計</th>${cols.map(c=>`<th>${c[0]}</th>`).join('')}${pkCol?'<th>PK</th>':''}</tr>`+
+    ['home','away'].map(s=>{
+      const tot=sc[s].reduce((a,b)=>a+b,0);
+      return `<tr><th style="text-align:left;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(sideName(s))}</th><td class="tot">${tot}</td>${cols.map(c=>`<td>${sc[s][c[1]]}</td>`).join('')}${pkCol?`<td>${S.pk.kicks.length?pk[s]:''}</td>`:''}</tr>`;
+    }).join('');
+}
+
+function renderRecord(){
+  if(!S)return;
+  const isPK=S.period==='PK戦';
+  $('pkPanel').classList.toggle('hidden',!isPK);
+  $('recordPanel').classList.toggle('hidden',isPK);
+  $('scoreCard').classList.toggle('hidden',false);
+  renderScore();
+  if(isPK)renderPK();else renderEvents();
+}
+
+function eventTitle(kind){return kind==='goal'?'得点':kind==='sub'?'交代':'警告・退場';}
+
+function listFor(kind){
+  if(kind==='goal')return S.goals;
+  if(kind==='sub')return S.subs;
+  return S.cards;
+}
+
+function eventMissing(kind,e){
+  if(!e.time)return '時間';
+  if(!e.teamId)return 'チーム';
+  if(kind==='goal'){if(!e.goalType)return '得点種別';if(e.goalType!=='オウンゴール'&&!e.scorerId)return '得点者';}
+  if(kind==='sub'){if(!e.outId)return 'OUT選手';if(!e.inId)return 'IN選手';}
+  if(kind==='card'){if(!e.playerId)return '選手';if(!e.type)return '種別';if(!e.reason)return '理由';}
+  if(S.format.extraTime!=='あり'&&String(e.period).startsWith('延長'))return '時間帯（延長なし）';
+  return '';
+}
+
+function renderEvents(){
+  const counts={goal:S.goals.length,sub:S.subs.length,card:S.cards.length};
+  Object.keys(counts).forEach(k=>{$('cnt-'+k).textContent=counts[k];});
+
+  let items=listFor(KIND).map(e=>Object.assign({kind:KIND},e));
+  if(KIND==='card')items=items.concat(secondCautions().map(e=>Object.assign({kind:'card'},e)));
+  items.sort((a,b)=>evKey(a.period,a.time)-evKey(b.period,b.time));
+
+  $('evList').innerHTML=items.length?items.map(e=>{
+    const t=formatMinute(e.period,e.time)||'--';
+    const miss=e.auto?'':eventMissing(KIND,e);
+    let body='',small='';
+    if(KIND==='goal'){
+      body=e.goalType==='オウンゴール'
+        ?`${esc(teamShort(e.teamId))}　オウンゴール`
+        :`${esc(teamShort(e.teamId))}　${esc(pLabel(e.scorerId)||'得点者未選択')}${e.goalType&&e.goalType!=='シュート'?` <span class="tag bl">${esc(e.goalType)}</span>`:''}`;
+      small=[e.startType&&e.startType!=='流れの中'?e.startType:'',e.assistId?`A: ${pLabel(e.assistId)}`:'',(e.seq||[]).join(' ')].filter(Boolean).join('　');
+    }else if(KIND==='sub'){
+      body=`${esc(teamName(e.teamId))}`;
+      small=`OUT ${pLabel(e.outId)||'—'} → IN ${pLabel(e.inId)||'—'}`;
+    }else{
+      const tag=e.type==='警告'?'<span class="tag yel">警告</span>':'<span class="tag red">'+esc(e.type==='一発退場'?'退場':'警告2')+'</span>';
+      body=`${tag} ${esc(pLabel(e.playerId)||'選手未選択')}`;
+      small=`${teamName(e.teamId)}${e.reason?'｜'+e.reason:''}${e.auto?'｜自動登録':''}`;
+    }
+    return `<button type="button" class="ev${e.period===S.period?' cur':''}${miss?' bad':''}${e.auto?' auto':''}" ${e.auto?'disabled':`onclick="openEvent('${e.id}')"`}>
+      <span class="tm">${esc(t)}</span>
+      <span class="bd">${body}<small>${esc(small)}</small>${miss?`<span class="warn">未入力：${esc(miss)}</span>`:''}</span>
+    </button>`;
+  }).join(''):`<div class="empty">${eventTitle(KIND)}の記録はありません</div>`;
+
+  $('btnAddEv').textContent=`＋ ${eventTitle(KIND)}を追加（${S.period}）`;
+}
+
+/* ---------- メンバー ---------- */
+function sortPlayers(list){
+  const st={starter:0,bench:1,out:2};
+  return list.slice().sort((a,b)=>{
+    const sa=S.players[a.id],sb=S.players[b.id];
+    return (st[sa.status]-st[sb.status])||((POS_ORDER[sa.position]??9)-(POS_ORDER[sb.position]??9))||((Number(pNo(a.id))||999)-(Number(pNo(b.id))||999));
+  });
+}
+
+function renderMembers(){
+  if(!S)return;
+  const list=sortPlayers(Object.values(PLAYERS).filter(p=>p.side===MEMBER_SIDE));
+  const susp=list.filter(p=>SUSP[p.id]);
+  $('suspNote').innerHTML=susp.length
+    ?`<div class="suspNote">この試合で出場停止の選手（先発・ベンチに入れられません）<br>${susp.map(p=>`<b>${esc(pLabel(p.id))}</b>　${esc(SUSP[p.id].label)}`).join('<br>')}</div>`
+    :'';
+  $('memberList').innerHTML=list.map(p=>memberRowHTML(p)).join('')||'<div class="empty">登録選手がいません</div>';
+  $('btnHideOut').textContent=S.hideOut?'メンバー外を表示':'メンバー確定';
+  updateMemberCounts();
+  renderStaff();
+}
+
+/* ベンチ入りスタッフ（スタメン提出の内容。公式記録のPDFには出さない） */
+const STAFF_ROLES=['監督','コーチ','GKコーチ','トレーナー','マネージャー','主務','部長','その他'];
+function renderStaff(){
+  if(!S)return;
+  S.staff=S.staff||{home:[],away:[]};
+  const list=S.staff[MEMBER_SIDE]=S.staff[MEMBER_SIDE]||[];
+  $('staffList').innerHTML=list.map((s,i)=>`<div style="display:flex;gap:6px;margin:6px 0">
+      <select style="max-width:130px" onchange="setStaff(${i},'role',this.value)">${STAFF_ROLES.concat(STAFF_ROLES.includes(s.role)||!s.role?[]:[s.role]).map(r=>`<option${r===s.role?' selected':''}>${esc(r)}</option>`).join('')}</select>
+      <input value="${esc(s.name)}" placeholder="氏名" onchange="setStaff(${i},'name',this.value)">
+      <button type="button" class="btnGhost" style="min-height:38px" onclick="delStaff(${i})">削除</button></div>`).join('')+
+    `<button type="button" class="btnGhost" style="min-height:38px;margin-top:4px" onclick="addStaff()">＋ スタッフを追加</button>`;
+}
+function setStaff(i,k,v){S.staff[MEMBER_SIDE][i][k]=String(v||'').trim();touched();}
+function addStaff(){S.staff[MEMBER_SIDE].push({role:'コーチ',name:''});renderStaff();}
+function delStaff(i){S.staff[MEMBER_SIDE].splice(i,1);renderStaff();touched();}
+
+function memberRowHTML(p){
+  const st=S.players[p.id];
+  const hide=S.hideOut&&st.status==='out';
+  const so=sentOffKeys()[p.id]!=null;
+  const yc=yellowCount(p.id);
+  const sp=SUSP[p.id];
+  const tags=(sp?'<span class="tag red">出場停止</span> ':'')+(so?'<span class="tag red">退場</span> ':'')+(yc&&!so?'<span class="tag yel">警告</span> ':'');
+  return `<div class="mRow${st.status==='out'?' isOut':''}${sp?' susp':''}${hide?' hidden':''}" data-pid="${esc(p.id)}">
+    <input class="no" inputmode="numeric" value="${esc(pNo(p.id))}" aria-label="背番号" onchange="setNumber('${esc(p.id)}',this.value)">
+    <span class="nm">${tags}${esc(p.name)}${p.grade?`<small>${esc(p.grade)}年</small>`:''}</span>
+    <select onchange="setPosition('${esc(p.id)}',this.value)">
+      <option value="">位置</option>${POSITIONS.map(x=>`<option${st.position===x?' selected':''}>${x}</option>`).join('')}
+    </select>
+    <span class="st">
+      <button type="button" class="s${st.status==='starter'?' on':''}" onclick="setStatus('${esc(p.id)}','starter')">先発</button>
+      <button type="button" class="b${st.status==='bench'?' on':''}" onclick="setStatus('${esc(p.id)}','bench')">控え</button>
+      <button type="button" class="o${st.status==='out'?' on':''}" onclick="setStatus('${esc(p.id)}','out')">外</button>
+    </span>
+  </div>`;
+}
+
+function updateMemberCounts(){
+  const all=Object.values(PLAYERS).filter(p=>p.side===MEMBER_SIDE);
+  const s=all.filter(p=>S.players[p.id].status==='starter').length;
+  const b=all.filter(p=>S.players[p.id].status==='bench').length;
+  $('memberCounts').innerHTML=`先発 <b class="${s===11?'':'ng'}">${s}</b>/11　ベンチ <b>${b}</b>`;
+}
+
+function setStatus(pid,status){
+  const st=S.players[pid];
+  if(SUSP[pid]&&status!=='out'){
+    alert(`${pLabel(pid)} はこの試合で出場停止です。\n${SUSP[pid].label}\n\n先発・ベンチに入れることはできません（出場すると没収試合になります）。\n処分内容に誤りがある場合は、運営に「処分管理」の確認を依頼してください。`);
+    return;
+  }
+  if(status!=='starter'&&st.status==='starter'&&S.subs.some(s=>s.outId===pid)){
+    if(!confirm('この選手は交代記録があります。先発から外しますか？'))return;
+  }
+  st.status=status;
+  if(status!=='out'&&!st.position){/* 位置は任意 */}
+  const row=[...document.querySelectorAll('#memberList .mRow')].find(r=>r.dataset.pid===String(pid));
+  if(row)row.outerHTML=memberRowHTML(PLAYERS[pid]);
+  updateMemberCounts();
+  touched();
+}
+
+function setPosition(pid,v){S.players[pid].position=v;touched();}
+function setNumber(pid,v){S.players[pid].number=String(v||'').trim();touched();}
+
+function toggleHideOut(){S.hideOut=!S.hideOut;renderMembers();touched();}
+
+/* ---------- シュート・チーム記録 ---------- */
+let SHOW_ALL=false,UNDO=false;
+function toggleShowAll(){SHOW_ALL=!SHOW_ALL;renderShots();}
+function toggleUndo(){UNDO=!UNDO;renderShots();}
+function quickEvent(kind){if(!S)return;if(S.period==='PK戦')setPeriod('後半');setKind(kind);openEvent(null);}
+
+function renderStatsTab(){
+  if(!S)return;
+  setPickValue($('halfPick'),S.statHalf);
+  renderShots();
+}
+
+function halfIdx(){return HALF_IDX[S.statHalf]||1;}
+function halves(){return S.format.extraTime==='あり'?[1,2,3,4]:[1,2];}
+
+/* 試合中の画面：両チームを上下に並べ、背番号のボタンを押してシュートを加算。
+   今ピッチにいる選手だけ（控え・交代で退いた選手・退場者は出さない） */
+function renderShots(){
+  if(!S)return;
+  const h=halfIdx(),hs=halves();
+  $('shotHalfLabel').textContent=`${S.statHalf}に加算${UNDO?'（取消モード：押すと1つ減ります）':''}`;
+  $('showAllBtn').textContent=SHOW_ALL?'出場中の選手だけ表示':'控え・退いた選手も表示';
+  $('undoBtn').classList.toggle('on',UNDO);
+  $('shotList').classList.toggle('undoMode',UNDO);
+  $('shotList').innerHTML=['home','away'].map(side=>{
+    const on=onPitchAt(side,Infinity);
+    const list=members(side).filter(p=>SHOW_ALL||on.has(p.id))
+      .sort((a,b)=>(on.has(b.id)-on.has(a.id))||((Number(pNo(a.id))||999)-(Number(pNo(b.id))||999)));
+    const half=teamShots(side,h),tot=hs.reduce((a,i)=>a+teamShots(side,i),0);
+    const cells=list.map(p=>{
+      const st=S.players[p.id],isOn=on.has(p.id),pl=played(p.id);
+      const cur=st['shots'+h]||0,sum=hs.reduce((a,i)=>a+(st['shots'+i]||0),0);
+      const can=UNDO?cur>0:(isOn||(SHOW_ALL&&pl));
+      const gk=String(st.position||'')==='GK'?'<span class="pos">GK</span>':'';
+      return `<button type="button" class="nb${isOn?'':' off'}${cur?' has':''}" ${can?'':'disabled'} onclick="shot('${esc(p.id)}',${UNDO?-1:1})" title="${esc(p.name)}">
+        ${gk}<span class="no">${esc(pNo(p.id)||'?')}</span><span class="ct">${cur}${sum!==cur?`<small>/${sum}</small>`:''}</span></button>`;
+    }).join('')||'<div class="sub" style="grid-column:1/-1;padding:6px">先発を設定してください</div>';
+    return `<div class="lteam ${side}"><div class="th"><span class="nm">${esc(sideName(side))}</span><span class="t">シュート ${half}<small>／計${tot}</small></span></div>
+      <div class="nbGrid">${cells}</div>${tilesHTML(side)}</div>`;
+  }).join('');
+}
+
+function tilesHTML(side){
+  const h=halfIdx(),hs=halves(),o=S.stats[side];
+  return `<div class="tiles">${STAT_ITEMS.map(([k,l])=>{
+    const v=o[k+h]||0,tot=hs.reduce((a,i)=>a+(o[k+i]||0),0);
+    const can=UNDO?v>0:true;
+    const fn=k==='pk'&&!UNDO?`openPkKick('${side}')`:`stat('${side}','${k}',${UNDO?-1:1})`;
+    return `<button type="button" class="tile" ${can?'':'disabled'} onclick="${fn}"><span class="l">${esc(l)}</span><span class="v">${v}${tot!==v?`<small>/${tot}</small>`:''}</span></button>`;
+  }).join('')}</div>`;
+}
+
+function shot(pid,d){
+  const k='shots'+halfIdx();
+  S.players[pid][k]=Math.max(0,(S.players[pid][k]||0)+d);
+  if(d<0)UNDO=false;
+  renderShots();touched();
+}
+
+function teamShots(side,h){
+  return Object.values(PLAYERS).filter(p=>p.side===side).reduce((a,p)=>a+(S.players[p.id]['shots'+h]||0),0);
+}
+
+function renderTeamStats(){renderShots();}
+
+function stat(side,k,d){
+  const h=halfIdx();
+  const o=S.stats[side];
+  o[k+h]=Math.max(0,(o[k+h]||0)+d);
+  // オフサイドを取られると、相手チームの間接FKが1つ増える
+  const opp=S.stats[side==='home'?'away':'home'];
+  if(k==='off'){opp['ifk'+h]=Math.max(0,(opp['ifk'+h]||0)+d);}
+  if(k==='ifk'&&(o['ifk'+h]||0)<(opp['off'+h]||0))o['ifk'+h]=opp['off'+h];
+  if(d<0)UNDO=false;
+  renderShots();touched();
+}
+
+/* 試合中のPK：キッカーを選んで、成功／失敗。PKの数を＋1、キッカーのシュートを＋1。成功なら得点を記録して時間を入れる */
+let PKK=null;
+function openPkKick(side){
+  if(!S)return;
+  PKK={side,pid:''};renderPkKick();$('pkkBackdrop').classList.add('open');
+}
+function closePkKick(){$('pkkBackdrop').classList.remove('open');PKK=null;}
+function renderPkKick(){
+  if(!PKK)return;
+  const on=[...onPitchAt(PKK.side,Infinity)].sort((a,b)=>(Number(pNo(a))||999)-(Number(pNo(b))||999));
+  $('pkkTitle').textContent='PK（'+sideName(PKK.side)+'・'+S.statHalf+'）';
+  $('pkkForm').innerHTML=`<div class="field"><label class="lbl req">キッカー</label>
+    <div class="seqNums">${on.length?on.map(pid=>`<button type="button" class="${PKK.pid===pid?'sel':''}" onclick="PKK.pid='${esc(pid)}';renderPkKick()">${esc(pNo(pid)||'--')}<small>${esc(pName(pid))}</small></button>`).join(''):'<span class="sub">出場中の選手がいません。先発・交代を確認してください。</span>'}</div></div>
+    <div class="sub" style="margin:0 0 4px">${PKK.pid?esc(pName(PKK.pid))+' のPKは？':'キッカーを選んでから、成功・失敗を押してください。'}</div>`;
+  $('pkkOk').disabled=$('pkkNg').disabled=!PKK.pid;
+}
+function pkInGame(ok){
+  if(!PKK||!PKK.pid)return;
+  const {side,pid}=PKK,h=halfIdx();
+  S.stats[side]['pk'+h]=(S.stats[side]['pk'+h]||0)+1;
+  closePkKick();
+  if(ok){
+    const g={id:uid(),period:S.statHalf,time:'',teamId:side==='home'?DETAIL.match.homeId:DETAIL.match.awayId,scorerId:pid,assistId:'',goalType:'PK',startType:'PK',seq:[]};
+    applyGoalShot(g);S.goals.push(g);
+    renderAll();touched();
+    setKind('goal');openEvent(g.id);openKeypad();
+    toast('PKの得点を記録しました。時間を入れてください。','ok');
+  }else{
+    S.players[pid]['shots'+h]=(S.players[pid]['shots'+h]||0)+1;
+    renderShots();touched();
+    toast('PK失敗を記録しました（PK・シュートに＋1）','ok');
+  }
+}
+
+/* =========================================================
+   事象入力シート
+   ========================================================= */
+function openEvent(id){
+  if(!S)return;
+  if(!id&&!starters('home').length&&!starters('away').length){
+    toast('先にメンバー（先発）を設定すると選手を選べます。','err');
+  }
+  const list=listFor(KIND);
+  const src=id?list.find(e=>e.id===id):null;
+  const base={id:uid(),period:S.period,time:'',teamId:''};
+  if(KIND==='goal')Object.assign(base,{scorerId:'',assistId:'',goalType:'シュート',startType:'流れの中',seq:[]});
+  if(KIND==='sub')Object.assign(base,{outId:'',inId:''});
+  if(KIND==='card')Object.assign(base,{playerId:'',type:'警告',reason:''});
+  EDIT={kind:KIND,isNew:!src,data:JSON.parse(JSON.stringify(src||base)),seqPid:''};
+  $('evTitle').textContent=`${eventTitle(KIND)}を${src?'編集':'追加'}`;
+  $('evDelete').classList.toggle('hidden',!src);
+  renderEventForm();
+  $('evBackdrop').classList.add('open');
+}
+
+function closeEvent(){$('evBackdrop').classList.remove('open');EDIT=null;}
+
+function periodPickHTML(v){
+  return `<div class="pick" data-f="period">${PERIODS.map(p=>`<button type="button" data-v="${p}" class="${p.startsWith('延長')?'et ':''}${p===v?'active':''}">${p}</button>`).join('')}</div>`;
+}
+function teamPickHTML(v){
+  return `<div class="pick" data-f="teamId">${['home','away'].map(s=>`<button type="button" data-v="${esc(sideTeamId(s))}" class="${String(v)===String(sideTeamId(s))?'active':''}">${esc(sideName(s))}</button>`).join('')}</div>`;
+}
+
+/* 選択肢：出場中を先頭、その他をまとめて表示 */
+function playerOptions(side,primaryIds,otherIds,selected,placeholder){
+  const opt=pid=>`<option value="${esc(pid)}"${pid===selected?' selected':''}>${esc(pLabel(pid))}</option>`;
+  const sortIds=ids=>ids.filter(id=>PLAYERS[id]).sort((a,b)=>(Number(pNo(a))||999)-(Number(pNo(b))||999));
+  const prim=sortIds([...primaryIds]);
+  const oth=sortIds([...otherIds].filter(id=>!primaryIds.has(id)));
+  if(selected&&!prim.includes(selected)&&!oth.includes(selected)&&PLAYERS[selected])oth.push(selected);
+  return `<option value="">${esc(placeholder||'選択してください')}</option>`+
+    (prim.length?`<optgroup label="出場中">${prim.map(opt).join('')}</optgroup>`:'')+
+    (oth.length?`<optgroup label="その他">${oth.map(opt).join('')}</optgroup>`:'');
+}
+
+function renderEventForm(){
+  const e=EDIT.data,k=EDIT.kind;
+  const side=sideOfTeam(e.teamId);
+  const key=e.time?evKey(e.period,e.time):Infinity;
+  let h=`
+    <div class="field"><label class="lbl req">時間帯</label>${periodPickHTML(e.period)}</div>
+    <div class="field"><label class="lbl req">時間（時間帯の経過分）</label>
+      <input id="evTime" readonly value="${esc(e.time)}" placeholder="タップして入力" onclick="openKeypad()">
+      <div class="sub" style="margin:4px 0 0;color:var(--blue);font-weight:800" id="evTimePrev">${e.time?'報告書表示：'+esc(formatMinute(e.period,e.time))+(e.time==='HT'?'':'分'):''}</div>
+    </div>
+    <div class="field"><label class="lbl req">チーム</label>${teamPickHTML(e.teamId)}</div>`;
+
+  if(k==='goal'){
+    const og=e.goalType==='オウンゴール';
+    const scorerSide=side;
+    h+=`<div class="field"><label class="lbl">開始状況</label>
+      <div class="pick small pick4" data-f="startType">${START_TYPES.map(t=>`<button type="button" data-v="${t}" class="${(e.startType||'流れの中')===t?'active':''}">${t}</button>`).join('')}</div></div>
+      <div class="field"><div class="pick small" data-f="og"><button type="button" data-v="0" class="${og?'':'active'}">通常の得点</button><button type="button" data-v="1" class="${og?'active':''}">オウンゴール</button></div></div>`;
+    if(og){
+      h+=`<div class="sub" style="margin-top:0">オウンゴールは得点者を選択しません。チームは「得点が入ったチーム」を選んでください。</div>`;
+    }
+    if(side){
+      if(!og){
+        const onS=onPitchAt(scorerSide,key);
+        const allS=new Set(members(scorerSide).map(p=>p.id));
+        h+=`<div class="field"><label class="lbl req">得点者</label>
+        <select data-f="scorerId">${playerOptions(scorerSide,onS,allS,e.scorerId,'得点者を選択')}</select></div>`;
+      }
+      if(!og&&e.goalType!=='PK'){
+        const onA=onPitchAt(side,key);
+        const allA=new Set(members(side).map(p=>p.id));
+        h+=`<div class="field"><label class="lbl">アシスト</label>
+          <select data-f="assistId">${playerOptions(side,onA,allA,e.assistId,'なし')}</select></div>`;
+      }
+      const onQ=[...onPitchAt(side,key)].sort((a,b)=>(Number(pNo(a))||999)-(Number(pNo(b))||999));
+      h+=`<div class="field"><label class="lbl">得点経過<small style="font-weight:600;color:var(--sub)">｜出場中の選手の背番号と記号をタップ</small></label>
+        <div class="seqWrap">${(e.seq||[]).length?`<span class="seqText">${esc(e.seq.join(' '))}</span>`:'<span class="sub" style="margin:6px 4px">例：7 → 10 ↑ 9 H</span>'}</div>
+        <div class="seqNums">${onQ.length?onQ.map(pid=>`<button type="button" onclick="seqAdd('${esc(pNo(pid))}')">${esc(pNo(pid)||'--')}<small>${esc(pName(pid))}</small></button>`).join(''):'<span class="sub">出場中の選手がいません。先発・交代を確認してください。</span>'}</div>
+        <div class="seqSyms">${SEQ_SYMS.map(([s,l])=>`<button type="button" onclick="seqAdd('${s}')">${s}<small>${l}</small></button>`).join('')}</div>
+        <div class="grid two" style="margin-top:6px"><button type="button" onclick="seqBack()">⌫ 1つ戻す</button><button type="button" onclick="seqClear()">クリア</button></div>
+      </div>`;
+    }else{
+      h+='<div class="sub">チームを選ぶと選手を選択できます。</div>';
+    }
+  }
+
+  if(k==='sub'){
+    if(side){
+      const onP=onPitchAt(side,key,e.id);
+      const outSel=new Set(onP);
+      const allM=members(side).map(p=>p.id);
+      const usedIn=new Set(S.subs.filter(s=>s.id!==e.id).map(s=>s.inId));
+      const benchAvail=new Set(allM.filter(pid=>S.players[pid].status==='bench'&&!usedIn.has(pid)&&!onP.has(pid)));
+      h+=`<div class="field"><label class="lbl req">OUT（退く選手）</label>
+        <select data-f="outId">${playerOptions(side,outSel,new Set(allM),e.outId,'選択してください')}</select></div>
+        <div class="field"><label class="lbl req">IN（入る選手）</label>
+        <select data-f="inId">${playerOptionsBench(benchAvail,new Set(allM),e.inId)}</select></div>
+        <div class="sub">ハーフタイムの交代は、時間帯「後半」で時間入力の「HT」を選びます。</div>`;
+    }else h+='<div class="sub">チームを選ぶと選手を選択できます。</div>';
+  }
+
+  if(k==='card'){
+    h+=`<div class="field"><label class="lbl req">種別</label>
+      <div class="pick" data-f="type"><button type="button" data-v="警告" class="${e.type==='警告'?'active':''}">警告</button><button type="button" data-v="一発退場" class="${e.type==='一発退場'?'active':''}">一発退場</button></div>
+      <div class="sub" style="margin:6px 0 0">2枚目の警告は「警告」で入力すると、理由の確定後に「警告2枚による退場」が自動登録されます。</div></div>`;
+    if(side){
+      const on=onPitchAt(side,key);
+      const all=new Set(members(side).map(p=>p.id));
+      h+=`<div class="field"><label class="lbl req">選手</label><select data-f="playerId">${playerOptions(side,on,all,e.playerId,'選択してください')}</select></div>`;
+    }else h+='<div class="sub">チームを選ぶと選手を選択できます。</div>';
+    const rs=REASONS[e.type]||[];
+    h+=`<div class="field"><label class="lbl req">理由</label><select data-f="reason"><option value="">選択してください</option>${rs.map(([c,l])=>`<option value="${c}"${e.reason===c?' selected':''}>${c}｜${esc(l)}</option>`).join('')}</select></div>`;
+  }
+
+  $('evForm').innerHTML=h;
+}
+
+function playerOptionsBench(avail,all,selected){
+  const opt=pid=>`<option value="${esc(pid)}"${pid===selected?' selected':''}>${esc(pLabel(pid))}</option>`;
+  const sortIds=ids=>[...ids].filter(id=>PLAYERS[id]).sort((a,b)=>(Number(pNo(a))||999)-(Number(pNo(b))||999));
+  const a=sortIds(avail);
+  const o=sortIds([...all].filter(id=>!avail.has(id)));
+  if(selected&&!a.includes(selected)&&!o.includes(selected)&&PLAYERS[selected])o.push(selected);
+  return `<option value="">選択してください</option>`+
+    (a.length?`<optgroup label="ベンチ（未出場）">${a.map(opt).join('')}</optgroup>`:'')+
+    (o.length?`<optgroup label="その他">${o.map(opt).join('')}</optgroup>`:'');
+}
+
+/* シート内の入力 */
+$('evForm').addEventListener('click',e=>{
+  const b=e.target.closest('.pick[data-f] button[data-v]');
+  if(!b||!EDIT)return;
+  e.stopPropagation();
+  const f=b.parentElement.dataset.f;
+  const v=b.dataset.v;
+  const d=EDIT.data;
+  if(f==='teamId'&&d.teamId!==v){
+    d.teamId=v;
+    ['scorerId','assistId','outId','inId','playerId'].forEach(x=>{if(x in d)d[x]='';});
+    if(d.seq)d.seq=[];
+    EDIT.seqPid='';
+  }else if(f==='og'){
+    // 得点種別は選ばない：オウンゴール／開始状況がPKならPK／それ以外はシュート
+    d.goalType=v==='1'?'オウンゴール':(d.startType==='PK'?'PK':(d.goalType&&d.goalType!=='オウンゴール'&&d.goalType!=='PK'?d.goalType:'シュート'));
+    if(v==='1'){d.scorerId='';d.assistId='';}
+  }else if(f==='startType'){
+    d.startType=v;
+    if(d.goalType!=='オウンゴール'){d.goalType=v==='PK'?'PK':(d.goalType==='PK'?'シュート':(d.goalType||'シュート'));}
+    if(v==='PK')d.assistId='';
+  }else if(f==='type'){
+    d.type=v;d.reason='';
+  }else{
+    d[f]=v;
+  }
+  renderEventForm();
+},true);
+
+$('evForm').addEventListener('change',e=>{
+  const f=e.target.dataset&&e.target.dataset.f;
+  if(!f||!EDIT)return;
+  EDIT.data[f]=e.target.value;
+  if(f==='outId'||f==='inId'||f==='playerId'||f==='scorerId')return;
+},true);
+
+/* 現行版と同じく、背番号と記号は別トークン（PDFでは空白区切り） */
+function seqAdd(tok){
+  if(!EDIT||!tok)return;
+  EDIT.data.seq=(EDIT.data.seq||[]).concat([tok]);
+  renderEventForm();
+}
+function seqBack(){if(!EDIT)return;(EDIT.data.seq||[]).pop();renderEventForm();}
+function seqClear(){if(!EDIT)return;EDIT.data.seq=[];renderEventForm();}
+
+function saveEvent(){
+  if(!EDIT)return;
+  const d=EDIT.data,k=EDIT.kind;
+  if(k==='sub'&&d.time==='HT'&&d.period!=='後半')d.period='後半';
+  if(k==='card'&&d.playerId&&d.type==='警告'){
+    const n=S.cards.filter(c=>c.id!==d.id&&c.playerId===d.playerId&&c.type==='警告').length;
+    if(n>=2){toast('この選手には既に警告が2件あります。','err');return;}
+  }
+  if(k==='sub'&&d.outId&&d.inId&&d.outId===d.inId){toast('OUTとINが同じ選手です。','err');return;}
+  const list=listFor(k);
+  const i=list.findIndex(e=>e.id===d.id);
+  // 得点者のシュートを自動で＋1（編集したときは前の分を戻してから付け直す）
+  if(k==='goal'){undoGoalShot(i>=0?list[i]:null);applyGoalShot(d);}
+  if(i>=0)list[i]=d;else list.push(d);
+  closeEvent();
+  renderAll();
+  if(TAB==='members')renderMembers();
+  touched();
+  const miss=eventMissing(k,d);
+  toast(miss?`保存しました（未入力：${miss}）`:'保存しました',miss?'err':'ok');
+}
+
+function deleteEvent(){
+  if(!EDIT||!confirm(`この${eventTitle(EDIT.kind)}を削除しますか？`))return;
+  const list=listFor(EDIT.kind);
+  const i=list.findIndex(e=>e.id===EDIT.data.id);
+  if(i>=0){if(EDIT.kind==='goal')undoGoalShot(list[i]);list.splice(i,1);}
+  closeEvent();renderAll();touched();
+}
+
+/* 得点 → 得点者のシュート＋1（オウンゴールとPK戦は除く） */
+function applyGoalShot(g){
+  delete g.autoShot;
+  if(!g||g.goalType==='オウンゴール'||!g.scorerId||!S.players[g.scorerId])return;
+  const h=HALF_IDX[g.period];
+  if(!h)return;
+  S.players[g.scorerId]['shots'+h]=(S.players[g.scorerId]['shots'+h]||0)+1;
+  g.autoShot={pid:g.scorerId,h};
+}
+function undoGoalShot(g){
+  if(!g||!g.autoShot)return;
+  const st=S.players[g.autoShot.pid];
+  if(st){const k='shots'+g.autoShot.h;st[k]=Math.max(0,(st[k]||0)-1);}
+}
+
+/* =========================================================
+   時間テンキー
+   ========================================================= */
+function openKeypad(){
+  if(!EDIT)return;
+  keyValue=EDIT.data.time==='HT'?'':String(EDIT.data.time||'');
+  $('keyHead').textContent=`${EDIT.data.period}の経過分`;
+  $('keyHT').classList.toggle('hidden',EDIT.kind!=='sub');
+  updateKeypad();
+  $('keyBackdrop').classList.add('open');
+}
+function updateKeypad(){
+  $('keyDisplay').textContent=keyValue||'0';
+  const t=formatMinute(EDIT?EDIT.data.period:'前半',keyValue);
+  $('keyPreview').textContent=t?`報告書表示：${t}分`:'時間帯の開始からの経過分を入力';
+}
+function keyPress(v){const n=(keyValue+v).replace(/^0+(?=\d)/,'');if(n.length>2)return;keyValue=n;updateKeypad();}
+function keyBack(){keyValue=keyValue.slice(0,-1);updateKeypad();}
+function keyClear(){keyValue='';updateKeypad();}
+function keyHT(){if(!EDIT)return;EDIT.data.time='HT';EDIT.data.period='後半';closeKeypad();renderEventForm();}
+function keyOk(){
+  if(!EDIT)return closeKeypad();
+  if(keyValue){const n=Number(keyValue);if(!Number.isInteger(n)||n<1||n>99){toast('1〜99分で入力してください。','err');return;}}
+  EDIT.data.time=keyValue;
+  closeKeypad();renderEventForm();
+}
+function closeKeypad(){$('keyBackdrop').classList.remove('open');}
+
+/* =========================================================
+   PK戦
+   ========================================================= */
+function pkEval(){
+  const f=S.pk.firstTeamId;
+  const r={finished:false,winnerId:'',home:0,away:0,firstKicks:0,secondKicks:0};
+  if(!f||!DETAIL)return r;
+  const second=String(f)===String(DETAIL.match.homeId)?DETAIL.match.awayId:DETAIL.match.homeId;
+  let fk=0,sk=0,fs=0,ss=0;
+  const check=()=>{
+    if(fk<=5&&sk<=5){
+      if(fs>ss+Math.max(0,5-sk)){r.finished=true;r.winnerId=f;return;}
+      if(ss>fs+Math.max(0,5-fk)){r.finished=true;r.winnerId=second;return;}
+    }
+    if(fk>=5&&sk>=5&&fk===sk&&fs!==ss){r.finished=true;r.winnerId=fs>ss?f:second;}
+  };
+  S.pk.kicks.forEach((k,i)=>{
+    if(r.finished)return;
+    if(i%2===0){fk++;if(k.result==='○')fs++;}else{sk++;if(k.result==='○')ss++;}
+    check();
+  });
+  r.firstKicks=fk;r.secondKicks=sk;
+  const fSide=sideOfTeam(f);
+  r[fSide]=fs;r[fSide==='home'?'away':'home']=ss;
+  return r;
+}
+
+function pkPool(side){
+  let pool=[...onPitchAt(side,Infinity)];
+  if(!pool.length){
+    const so=sentOffKeys();
+    pool=members(side).map(p=>p.id).filter(pid=>so[pid]==null);
+  }
+  return pool;
+}
+
+function renderPK(){
+  const m=DETAIL.match;
+  if(!S.pk.firstTeamId){
+    $('pkBody').innerHTML=`
+      <div class="sub" style="margin-top:0">最初に先攻チームを選択してください（推測では決めません）。</div>
+      <div class="pkBtns" style="grid-template-columns:1fr">
+        <button type="button" class="btnGhost" onclick="pkSetFirst('${esc(m.homeId)}')">${esc(m.home)} が先攻</button>
+        <button type="button" class="btnGhost" onclick="pkSetFirst('${esc(m.awayId)}')">${esc(m.away)} が先攻</button>
+      </div>`;
+    return;
+  }
+  const ev=pkEval();
+  const first=S.pk.firstTeamId;
+  const firstSide=sideOfTeam(first);
+  const secondSide=firstSide==='home'?'away':'home';
+  const rows={home:[],away:[]};
+  S.pk.kicks.forEach((k,i)=>{rows[sideOfTeam(k.teamId)].push(k);});
+  const rounds=Math.max(rows.home.length,rows.away.length,5);
+  const cell=k=>k?`<span class="${k.result==='○'?'o':'x'}">${k.result}</span> ${esc(pNo(k.playerId))}`:'';
+
+  let h=`<div class="pkScore">${esc(m.home)} ${ev.home} - ${ev.away} ${esc(m.away)}<small>先攻：${esc(teamName(first))}</small></div>
+    <table class="pkGrid"><tr><th>#</th><th>${esc(sideName(firstSide))}</th><th>${esc(sideName(secondSide))}</th></tr>
+    ${Array.from({length:rounds},(_,i)=>`<tr><th>${i+1}</th><td>${cell(rows[firstSide][i])}</td><td>${cell(rows[secondSide][i])}</td></tr>`).join('')}</table>`;
+
+  if(ev.finished){
+    h+=`<div class="pkDone">決着：${esc(teamName(ev.winnerId))} の勝利</div>`;
+  }else{
+    const nextSide=S.pk.kicks.length%2===0?firstSide:secondSide;
+    const tid=sideTeamId(nextSide);
+    const pool=pkPool(nextSide);
+    const kicked={};
+    S.pk.kicks.filter(k=>String(k.teamId)===String(tid)).forEach(k=>{kicked[k.playerId]=(kicked[k.playerId]||0)+1;});
+    const minC=pool.length?Math.min(...pool.map(pid=>kicked[pid]||0)):0;
+    const nth=rows[nextSide].length+1;
+    if(PK_SEL&&(!pool.includes(PK_SEL)||(kicked[PK_SEL]||0)>minC))PK_SEL='';
+    const opts=pool.slice().sort((a,b)=>(Number(pNo(a))||999)-(Number(pNo(b))||999)).map(pid=>{
+      const dis=(kicked[pid]||0)>minC;
+      return `<button type="button" class="${PK_SEL===pid?'sel':''}" ${dis?'disabled':''} onclick="pkSelect('${esc(pid)}')">${esc(pNo(pid)||'--')}<small>${esc(dis?'キック済み':pName(pid))}</small></button>`;
+    }).join('');
+    h+=`<div class="pkNext">
+      <div class="who">次：${esc(sideName(nextSide))}　${nth}人目${nth>5?'（サドンデス）':''}</div>
+      <div class="sub" style="margin:0 0 6px">キッカーをタップ（1巡目が終わるまで同じ選手は選べません）</div>
+      <div class="pkKickers">${opts||'<span class="sub">出場中の選手がいません。メンバー・交代を確認してください。</span>'}</div>
+      <div class="pkBtns">
+        <button type="button" class="ok" onclick="pkKick('○')">○ 成功</button>
+        <button type="button" class="ng" onclick="pkKick('×')">× 失敗</button>
+      </div>
+    </div>`;
+  }
+  h+=`<div class="grid two">
+    <button type="button" class="btnGhost" ${S.pk.kicks.length?'':'disabled'} onclick="pkUndo()">1本取り消す</button>
+    <button type="button" class="btnGhost" ${S.pk.kicks.length?'disabled':''} onclick="pkSetFirst('')">先攻を選び直す</button>
+  </div><div style="height:12px"></div>`;
+  $('pkBody').innerHTML=h;
+}
+
+function pkSetFirst(tid){S.pk.firstTeamId=tid;renderRecord();touched();}
+function pkSelect(pid){PK_SEL=pid;renderPK();}
+function pkKick(result){
+  const pid=PK_SEL;
+  if(!pid){toast('キッカーを選択してください。','err');return;}
+  {
+    const sd=S.pk.kicks.length%2===0?sideOfTeam(S.pk.firstTeamId):(sideOfTeam(S.pk.firstTeamId)==='home'?'away':'home');
+    const n=S.pk.kicks.filter(k=>String(k.teamId)===String(sideTeamId(sd))).length;
+    if(n>=PK_MAX_PER_TEAM){toast(`公式記録PDFは1チーム${PK_MAX_PER_TEAM}本目まで記録できます。`,'err');return;}
+  }
+  const side=S.pk.kicks.length%2===0?sideOfTeam(S.pk.firstTeamId):(sideOfTeam(S.pk.firstTeamId)==='home'?'away':'home');
+  S.pk.kicks.push({teamId:sideTeamId(side),playerId:pid,result});
+  PK_SEL='';
+  renderRecord();touched();
+}
+function pkUndo(){if(!confirm('最後の1本を取り消しますか？'))return;S.pk.kicks.pop();renderRecord();touched();}
+
+/* =========================================================
+   確認・提出
+   ========================================================= */
+function collectIssues(){
+  const ng=[],wn=[];
+  const add=(arr,msg,tab,focus)=>arr.push({msg,tab,focus});
+  if(!S.format.extraTime||!S.format.pk)add(ng,'延長戦・PK戦の「あり／なし」を選択してください','match','formatCard');
+  if(!S.firstKickoff)add(ng,'前半キックオフのチームを選択してください','match','formatCard');
+  else if(!S.secondKickoff)add(ng,'後半キックオフのチームを選択してください','match','formatCard');
+  [['fDate','日付'],['fTime','キックオフ時刻'],['fVenue','会場']].forEach(([id,l])=>{if(!$(id).value)add(ng,`「${l}」を入力してください`,'match',id);});
+  if(!S.officials.referee)add(ng,'主審の氏名を入力してください','match','fRef');
+  if(!S.incidentAnswer)add(ng,'問題事項の有無（なし／あり）を選んでください','submit','incBox');
+  else if(S.incidentAnswer==='あり'&&INCD&&!INCD.list.length)add(ng,'問題事項「あり」の場合は、問題事項報告書を提出してください','submit','incBox');
+  if(!S.officials.refereeEmail)add(ng,'主審のメールアドレスを入力してください（承認依頼の宛先）','match','fRefMail');
+  else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(S.officials.refereeEmail))add(ng,'主審のメールアドレスの形式を確認してください','match','fRefMail');
+
+  ['home','away'].forEach(side=>{
+    const n=starters(side).length;
+    if(!n)add(ng,`${sideName(side)}の先発を設定してください`,'members');
+    else if(n!==11)add(wn,`${sideName(side)}の先発が${n}人です`,'members');
+    members(side).filter(p=>SUSP[p.id]).forEach(p=>add(ng,`${pLabel(p.id)} は出場停止です。メンバー外にしてください`,'members'));
+    const noPos=members(side).filter(p=>!S.players[p.id].position).length;
+    if(noPos)add(wn,`${sideName(side)}：位置が未設定の選手が${noPos}人います`,'members');
+  });
+
+  // 得点経過（パスの流れ）が未入力の得点は注意だけ出す（提出はできる。PDFには得点者の背番号とシュート／ヘディングだけ入る）
+  const noSeq=S.goals.filter(g=>g.goalType!=='オウンゴール'&&!(g.seq||[]).length).length;
+  if(noSeq)add(wn,`得点経過（パスの流れ）が未入力の得点が${noSeq}件あります`,'record','goal');
+
+  [['goal',S.goals],['sub',S.subs],['card',S.cards]].forEach(([k,list])=>{
+    list.forEach(e=>{
+      const m=eventMissing(k,e);
+      if(m)add(ng,`${eventTitle(k)}（${formatMinute(e.period,e.time)||'時間未入力'}）：「${m}」が未入力です`,'record',k);
+    });
+  });
+
+  if(S.format.pk==='あり'){
+    const ev=pkEval();
+    if(!S.pk.firstTeamId)add(ng,'PK戦の先攻チームを選択してください','record','PK');
+    else if(!ev.finished)add(ng,'PK戦がまだ決着していません','record','PK');
+  }
+  consistencyIssues(add,ng,wn);
+  return{ng,wn};
+}
+
+/* 記録同士の食い違い（v4）：先発・交代・退場の時間から「その時間に出場していたか」を確かめる */
+function consistencyIssues(add,ng,wn){
+  const t=e=>{const m=formatMinute(e.period,e.time);return m?m+'分':String(e.time||'');};
+  const so=sentOffKeys();
+  const tl={}; // 選手ID → {in, out, why}
+  ['home','away'].forEach(side=>starters(side).forEach(p=>{tl[p.id]={in:-1,out:Infinity,why:''};}));
+  const sideOk=(pid,tid)=>!pid||!PLAYERS[pid]||!tid||sideTeamId(PLAYERS[pid].side)===String(tid)||String(sideTeamId(PLAYERS[pid].side))===String(tid);
+  S.subs.filter(s=>s.time!==''&&s.time!=null&&s.outId&&s.inId).slice()
+    .sort((a,b)=>evKey(a.period,a.time)-evKey(b.period,b.time)).forEach(s=>{
+      const k=evKey(s.period,s.time),o=tl[s.outId];
+      if(!sideOk(s.outId,s.teamId)||!sideOk(s.inId,s.teamId))add(ng,`交代（${t(s)}）：チームと選手が合っていません`,'record','sub');
+      if(!o||o.in>k)add(ng,`交代（${t(s)}）：OUTの ${pLabel(s.outId)} は、その時間に出場していません`,'record','sub');
+      else if(so[s.outId]!=null&&so[s.outId]<k)add(ng,`交代（${t(s)}）：OUTの ${pLabel(s.outId)} は、その前に退場しています`,'record','sub');
+      else if(o.out<k)add(ng,`交代（${t(s)}）：OUTの ${pLabel(s.outId)} は、その前に交代で退いています`,'record','sub');
+      else{o.out=k;o.why='交代';}
+      if(S.players[s.inId]&&S.players[s.inId].status==='starter')add(ng,`交代（${t(s)}）：INの ${pLabel(s.inId)} は先発の選手です`,'record','sub');
+      else if(tl[s.inId])add(ng,`交代（${t(s)}）：INの ${pLabel(s.inId)} は、すでに出場しています`,'record','sub');
+      else if(so[s.inId]!=null&&so[s.inId]<=k)add(ng,`交代（${t(s)}）：INの ${pLabel(s.inId)} は退場しています`,'record','sub');
+      else tl[s.inId]={in:k,out:Infinity,why:''};
+    });
+  Object.keys(so).forEach(pid=>{if(tl[pid]&&so[pid]<tl[pid].out){tl[pid].out=so[pid];tl[pid].why='退場';}});
+  const onAt=(pid,k)=>{const x=tl[pid];return !!x&&x.in<=k&&k<=x.out;};
+  const why=(pid,k)=>{const x=tl[pid];if(!x)return '出場していません（先発・交代を確認）';if(k<x.in)return 'まだ交代で入っていません';return x.why==='退場'?'すでに退場しています':'すでに交代で退いています';};
+
+  S.goals.forEach(g=>{
+    if(!g.time)return;const k=evKey(g.period,g.time);
+    if(g.goalType!=='オウンゴール'&&!sideOk(g.scorerId,g.teamId))add(ng,`得点（${t(g)}）：得点したチームと得点者のチームが合っていません`,'record','goal');
+    if(g.scorerId&&!onAt(g.scorerId,k))add(ng,`得点（${t(g)}）：${pLabel(g.scorerId)} は、その時間に${why(g.scorerId,k)}`,'record','goal');
+    if(g.assistId&&g.assistId===g.scorerId)add(ng,`得点（${t(g)}）：得点者とアシストが同じ選手です`,'record','goal');
+    else if(g.assistId&&!onAt(g.assistId,k))add(ng,`得点（${t(g)}）：アシストの ${pLabel(g.assistId)} は、その時間に${why(g.assistId,k)}`,'record','goal');
+  });
+
+  const yc={},rc={};
+  S.cards.forEach(c=>{
+    if(!c.playerId)return;
+    if(c.type==='警告')yc[c.playerId]=(yc[c.playerId]||0)+1;
+    if(c.type==='一発退場')rc[c.playerId]=(rc[c.playerId]||0)+1;
+    if(!sideOk(c.playerId,c.teamId))add(ng,`警告・退場（${t(c)}）：チームと選手が合っていません`,'record','card');
+    if(S.players[c.playerId]&&S.players[c.playerId].status==='out')add(ng,`警告・退場（${t(c)}）：${pLabel(c.playerId)} はメンバー外です`,'record','card');
+    if(c.time&&so[c.playerId]!=null&&so[c.playerId]<evKey(c.period,c.time))add(ng,`警告・退場（${t(c)}）：${pLabel(c.playerId)} は、その前に退場しています`,'record','card');
+  });
+  Object.keys(yc).forEach(p=>{if(yc[p]>2)add(ng,`${pLabel(p)} の警告が${yc[p]}枚あります（2枚目で退場です）`,'record','card');});
+  Object.keys(rc).forEach(p=>{if(rc[p]>1)add(ng,`${pLabel(p)} の一発退場が${rc[p]}件あります`,'record','card');});
+  Object.keys(rc).forEach(p=>{if(yc[p]>=2)add(wn,`${pLabel(p)} は警告2枚と一発退場の両方があります。順番と時間を確認してください`,'record','card');});
+
+  // 背番号の重なり・GKの人数
+  ['home','away'].forEach(side=>{
+    const seen={};
+    members(side).forEach(p=>{const n=pNo(p.id);if(!n)return;(seen[n]=seen[n]||[]).push(p.id);});
+    Object.keys(seen).forEach(n=>{if(seen[n].length>1)add(ng,`${sideName(side)}：背番号 ${n} が${seen[n].length}人います`,'members');});
+    const st=starters(side);
+    const gk=st.filter(p=>String((S.players[p.id]&&S.players[p.id].position)||p.position||'')==='GK').length;
+    if(st.length&&gk!==1)add(wn,`${sideName(side)}：先発のGKが${gk}人です`,'members');
+  });
+
+  // 時間が長すぎる（入力ミスの目安）
+  const half=(parseInt(String(S.info&&S.info.duration||'90'),10)||90)/2;
+  const lim={'前半':half+15,'後半':half+15,'延長前半':25,'延長後半':25};
+  [['goal',S.goals],['sub',S.subs],['card',S.cards]].forEach(([k,list])=>list.forEach(e=>{
+    const n=Number(e.time);if(Number.isFinite(n)&&lim[e.period]&&n>lim[e.period])add(wn,`${eventTitle(k)}（${e.period} ${e.time}分）：時間が長すぎます。経過分（その時間帯の何分か）で入れているか確認してください`,'record',k);
+  }));
+
+  // PK戦のキッカー：試合終了時にピッチにいた選手か
+  if(S.format.pk==='あり'){
+    const end=Infinity;
+    (S.pk.kicks||[]).forEach((x,i)=>{if(x.playerId&&!onAt(x.playerId,end))add(wn,`PK戦 ${i+1}本目：${pLabel(x.playerId)} は試合終了時にピッチにいません`,'record','PK');});
+  }
+}
+
+function renderChecks(){
+  renderIncBox();
+  if(!S)return;
+  const {ng,wn}=collectIssues();
+  const li=(x,cls,ic,i)=>`<li class="${cls}"><span class="ic">${ic}</span><span>${esc(x.msg)}</span><button type="button" class="btnGhost" onclick="goIssue('${cls}',${i})">入力へ</button></li>`;
+  const sc=scoreByPeriod();
+  const th=sc.home.reduce((a,b)=>a+b,0),ta=sc.away.reduce((a,b)=>a+b,0);
+  const pk=pkEval();
+  $('checkArea').innerHTML=
+    `<div class="matchBox"><div class="teams">${esc(DETAIL.match.home)} ${th} - ${ta} ${esc(DETAIL.match.away)}</div>
+      <div class="meta">得点 ${S.goals.length}｜交代 ${S.subs.length}｜警告・退場 ${S.cards.length+secondCautions().length}${S.format.pk==='あり'&&S.pk.kicks.length?`｜PK ${pk.home}-${pk.away}`:''}</div></div>`+
+    (ng.length||wn.length
+      ?`<ul class="checks">${ng.map((x,i)=>li(x,'ng','✕',i)).join('')}${wn.map((x,i)=>li(x,'wn','!',i)).join('')}</ul>`
+      :'<div class="allOk">すべての必須項目が入力されています。</div>')+
+    (S.submitted?`<div class="sub">前回提出：版${esc(S.submitted.version)}（${esc(S.submitted.at)}）。修正依頼を受けた場合は、修正して再提出してください。</div>`:'');
+}
+
+function goIssue(cls,i){
+  const {ng,wn}=collectIssues();
+  const x=(cls==='ng'?ng:wn)[i];
+  if(!x)return;
+  if(x.tab==='record'){
+    if(x.focus==='PK'){S.period='PK戦';}
+    else if(x.focus){if(S.period==='PK戦')S.period='後半';setKind(x.focus);}
+    renderAll();
+  }
+  setTab(x.tab);
+  if(x.focus&&$(x.focus)){
+    const el=$(x.focus);
+    el.classList.add('invalid');
+    setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),60);
+  }
+}
+
+function refreshBadges(){
+  if(!S)return;
+  const {ng}=collectIssues();
+  ['match','members','record'].forEach(t=>{
+    const n=ng.filter(x=>x.tab===t).length;
+    $('bd-'+t).textContent=n?'!':'';
+  });
+  $('bd-submit').textContent=ng.length?String(ng.length):'';
+  if(TAB==='submit')renderChecks();
+}
+
+function teamStatsPayload(side){
+  const o={};
+  const et=S.format.extraTime==='あり';
+  STAT_ITEMS.forEach(([k])=>{[1,2,3,4].forEach(h=>{o[k+h]=(h>2&&!et)?0:(S.stats[side][k+h]||0);});});
+  return o;
+}
+
+function buildPayload(){
+  const m=DETAIL.match;
+  const other=S.secondKickoff||(String(S.firstKickoff)===String(m.homeId)?m.awayId:m.homeId);
+  const players=[];
+  Object.values(PLAYERS).forEach(p=>{
+    const st=S.players[p.id];
+    if(!st||st.status==='out')return;
+    players.push({
+      playerId:p.id,teamId:p.teamId,
+      starter:st.status==='starter',
+      played:played(p.id),
+      shots1:st.shots1||0,shots2:st.shots2||0,
+      shots3:S.format.extraTime==='あり'?(st.shots3||0):0,
+      shots4:S.format.extraTime==='あり'?(st.shots4||0):0,
+      goals:S.goals.filter(g=>g.scorerId===p.id&&g.goalType!=='オウンゴール').length,
+      assists:S.goals.filter(g=>g.assistId===p.id).length,
+      number:pNo(p.id),position:st.position||''
+    });
+  });
+  const byTime=(a,b)=>evKey(a.period,a.time)-evKey(b.period,b.time);
+  const pkOn=S.format.pk==='あり';
+  const pk=pkEval();
+  const perTeam={};
+  return{
+    matchId:m.matchId,
+    matchFormat:{extraTime:S.format.extraTime,pk:S.format.pk},
+    firstKickoff:S.firstKickoff,
+    secondKickoff:S.firstKickoff?other:'',
+    matchInfo:{
+      dateTime:S.info.date+(S.info.time?' '+S.info.time:''),
+      venue:S.info.venue,duration:S.info.duration||'90分',
+      pitch:S.info.pitch,pitchCondition:S.info.pitchCondition,wbgt:S.info.wbgt,
+      weather:S.info.weather,wind:S.info.wind,
+      recorder:S.info.recorder,recorderUniversity:S.info.recorderUniversity,recorderEmail:(S.info.recorderEmail||'').trim()
+    },
+    officials:Object.assign({},S.officials),
+    benchStaff:{home:((S.staff||{}).home||[]).filter(s=>s.name),away:((S.staff||{}).away||[]).filter(s=>s.name)},
+    teamStats:{home:teamStatsPayload('home'),away:teamStatsPayload('away')},
+    players,
+    goals:S.goals.slice().sort(byTime).map(g=>({
+      period:g.period,time:g.time,teamId:g.teamId,scorerId:g.scorerId,assistId:g.assistId||'',
+      goalType:g.goalType,startType:g.startType||'流れの中',sequenceTokens:(g.seq||[]).slice()
+    })),
+    substitutions:S.subs.slice().sort(byTime).map(s=>({period:s.period,time:s.time,teamId:s.teamId,outId:s.outId,inId:s.inId})),
+    disciplinary:S.cards.slice().sort(byTime).map(c=>({period:c.period,time:c.time,teamId:c.teamId,playerId:c.playerId,type:c.type,reason:c.reason})),
+    pk:pkOn?{
+      firstTeamId:S.pk.firstTeamId,
+      home:S.pk.kicks.length?pk.home:'',
+      away:S.pk.kicks.length?pk.away:'',
+      kicks:S.pk.kicks.map(k=>{perTeam[k.teamId]=(perTeam[k.teamId]||0)+1;return{order:perTeam[k.teamId],teamId:k.teamId,playerId:k.playerId,result:k.result};})
+    }:{firstTeamId:'',home:'',away:'',kicks:[]}
+  };
+}
+
+function submitRecord(){
+  if(!S)return;
+  const {ng,wn}=collectIssues();
+  if(ng.length){
+    renderChecks();setTab('submit');
+    toast(`未入力の項目が${ng.length}件あります。`,'err');
+    return;
+  }
+  if(wn.length&&!confirm(`確認事項があります：\n・${wn.map(x=>x.msg).join('\n・')}\n\nこのまま提出しますか？`))return;
+  if(!confirm('公式記録を提出し、承認依頼を送信します。よろしいですか？'))return;
+
+  const payload=buildPayload();
+  const R=DETAIL&&DETAIL.record;
+  if(R&&R.confirmed){
+    const code=$('fCorrCode').value.trim(),reason=$('fCorrReason').value.trim();
+    if(!code||!reason){setTab('submit');toast('運営パスコードと訂正理由を入力してください','err');return;}
+    payload.correction={code,reason};
+  }
+  saveDraft();
+  payload.clientState=JSON.stringify(Object.assign({},S,{submitted:null,savedAt:0}));
+  const btn=$('submitBtn');
+  btn.disabled=true;btn.textContent='提出中…';
+  $('result').innerHTML='';
+  google.script.run
+    .withSuccessHandler(res=>{
+      btn.disabled=false;btn.textContent=(R&&R.confirmed)?'訂正版を提出':'公式記録を提出';
+      if(DETAIL)DETAIL.record=Object.assign({},DETAIL.record||{},{version:res&&res.version,recordId:res&&res.recordId,status:'承認待ち',revisions:[],correcting:!!(R&&R.confirmed),correctionReason:payload.correction?payload.correction.reason:''});
+      renderRecordBanner(DETAIL&&DETAIL.record);
+      const now=new Date();
+      S.submitted={version:res&&res.version,recordId:res&&res.recordId,at:`${now.getMonth()+1}/${now.getDate()} ${hhmm(now)}`};
+      saveDraft();
+      $('result').innerHTML=`<div class="success">${esc(res&&res.message||'提出しました。')}<br>公式記録ID：${esc(res&&res.recordId)}（版${esc(res&&res.version)}）</div>`;
+      renderChecks();
+      toast('提出しました','ok');
+    })
+    .withFailureHandler(err=>{
+      btn.disabled=false;btn.textContent=(R&&R.confirmed)?'訂正版を提出':'公式記録を提出';
+      const msg=err&&err.message||String(err);
+      $('result').innerHTML=`<div class="error">${esc(msg)}</div>`;
+      toast(msg,'err');
+    })
+    .submitOfficialRecordV2(payload);
+}
+
+/* =========================================================
+   主審メールのテスト送信
+   ========================================================= */
+function renderTestMailStatus(){
+  const el=$('testMailStatus');if(!el)return;
+  const t=S&&S.testMail;
+  if(t&&t.to&&t.to===S.officials.refereeEmail){
+    el.innerHTML=`<span style="color:var(--green);font-weight:800">✓ ${esc(t.at)} に ${esc(t.to)} へ送信済み</span><br>主審に受信（迷惑メールフォルダも）を確認してもらってください。`;
+  }else{
+    el.textContent='承認依頼が届くか、試合前に確認できます。';
+  }
+}
+
+function sendTestMail(){
+  if(!S)return;
+  const to=String($('fRefMail').value||'').trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){
+    $('fRefMail').classList.add('invalid');
+    toast('主審のメールアドレスを正しく入力してください。','err');
+    return;
+  }
+  if(!confirm(`${to} にテストメールを送信します。よろしいですか？`))return;
+  const btn=$('btnTestMail');
+  btn.disabled=true;btn.textContent='送信中…';
+  google.script.run
+    .withSuccessHandler(res=>{
+      btn.disabled=false;btn.textContent='✉ テストメールを送信';
+      S.testMail={to,at:hhmm(new Date())};
+      renderTestMailStatus();touched();
+      toast(res&&res.message||'テストメールを送信しました','ok');
+    })
+    .withFailureHandler(err=>{
+      btn.disabled=false;btn.textContent='✉ テストメールを送信';
+      const msg=err&&err.message||String(err);
+      $('testMailStatus').innerHTML=`<span style="color:var(--red);font-weight:800">送信できませんでした：${esc(msg)}</span>`;
+      toast(msg,'err');
+    })
+    .sendRefereeTestMail(to,DETAIL.match.matchId,S.officials.referee||'');
+}
+
+/* =========================================================
+   自動保存
+   ========================================================= */
+function storeGet(k){try{const s=localStorage.getItem(k);return s?JSON.parse(s):null;}catch(e){return null;}}
+function storeSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}
+function storeDel(k){try{localStorage.removeItem(k);}catch(e){}}
+
+function renderRecordBanner(R){
+  const el=$('recordBanner');
+  const box=$('correctionBox');
+  const btn=$('submitBtn');
+  el.classList.add('hidden');el.innerHTML='';
+  box.classList.add('hidden');
+  btn.textContent='公式記録を提出';
+  if(!R)return;
+  let html='';
+  if(R.status==='要修正'&&R.revisions&&R.revisions.length){
+    html=`<div style="width:100%"><b>修正依頼があります（版${esc(R.version)}）</b>`+
+      R.revisions.map(x=>`<div style="font-weight:400;margin-top:6px">・${esc(x.role)}${x.name?'（'+esc(x.name)+'）':''}${x.at?' '+esc(x.at):''}<br>${esc(x.comment).replace(/\n/g,'<br>')}</div>`).join('')+
+      `<div style="font-weight:400;margin-top:6px">直して「公式記録を提出」を押すと、新しい版として承認依頼が送り直されます。</div></div>`;
+  }else if(R.correcting){
+    html=`<div style="width:100%"><b>訂正版（版${esc(R.version)}）が再承認待ちです</b><div style="font-weight:400;margin-top:4px">訂正理由：${esc(R.correctionReason)}</div></div>`;
+  }else if(R.confirmed){
+    html=`<div style="width:100%"><b>この試合の公式記録は確定済みです（版${esc(R.confirmedVersion)}）</b><div style="font-weight:400;margin-top:4px">訂正は運営のみ行えます。「提出」タブで運営パスコードと訂正理由を入力してください。</div></div>`;
+  }
+  if(html){el.innerHTML=html;el.classList.remove('hidden');}
+  if(R.confirmed){box.classList.remove('hidden');btn.textContent='訂正版を提出';}
+}
+
+function loadServerVersion(){
+  if(!DETAIL||!DETAIL.record)return;
+  if(!confirm('この端末の入力内容を、提出済み（版'+DETAIL.record.version+'）の内容に置き換えますか？'))return;
+  loadMatch(DETAIL,{server:true});
+}
+
+function saveDraft(){
+  clearTimeout(saveTimer);
+  if(!S)return;
+  S.savedAt=Date.now();
+  const ok=storeSet(STORE_PREFIX+S.matchId,S);
+  DIRTY=false;
+  $('saveState').textContent=ok?`自動保存 ${hhmm(new Date())}`:'この端末では自動保存できません';
+}
+
+function discardDraft(){
+  if(!DETAIL)return;
+  if(!confirm('保存されている入力途中の内容（この端末とサーバー）を破棄して、最初から入力しますか？'))return;
+  storeDel(STORE_PREFIX+DETAIL.match.matchId);
+  DETAIL.draft=null;SERVER_DIRTY=false;
+  google.script.run.withFailureHandler(()=>{}).deleteRecordDraft(DETAIL.match.matchId);
+  $('restoreBanner').classList.add('hidden');
+  loadMatch(DETAIL,{fresh:true});
+}
+
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){if(DIRTY)saveDraft();if(SERVER_DIRTY)serverSave();}});
+window.addEventListener('pagehide',()=>{if(DIRTY)saveDraft();if(SERVER_DIRTY)serverSave();});
+</script>
+
+<script>
+/* 貼り付けミスの検知：ファイルの内容が二重に入っていると、見出しが2つ以上になる */
+window.addEventListener('load',function(){
+  var n=document.querySelectorAll('.appHeader').length;
+  if(n>1){
+    var b=document.createElement('div');
+    b.style.cssText='position:fixed;left:0;right:0;top:0;z-index:9999;background:#991b1b;color:#fff;padding:14px 16px;font:700 15px/1.6 sans-serif';
+    b.textContent='⚠ このページのファイルが二重に貼り付けられています（見出しが'+n+'個）。Apps Scriptでこのファイルの中身をすべて削除してから、もう一度貼り付けてデプロイしてください。';
+    document.body.appendChild(b);
+  }
+});
+</script>
+
+<div style="text-align:center;font-size:11px;color:#94a3b8;padding:8px 0 90px">公式記録 2026-09-27版</div>
+</body>
+</html>
