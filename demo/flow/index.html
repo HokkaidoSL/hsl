@@ -113,7 +113,7 @@ td.n,th.n{text-align:center}
 </main>
 <div class="toast" id="toast"></div>
 <div class="busy" id="busy"><span id="busyT">動かしています…</span></div>
-<script src="client.js?v=mv5toprf"></script>
+<script src="client.js?v=mv5zg04y"></script>
 <script>
 (function () {
   'use strict';
@@ -169,7 +169,7 @@ td.n,th.n{text-align:center}
     var lastDone = info.matches.every(function (m) { return m.confirmed; });
     var s = [];
     s.push(stepHtml(1, '事務局', 'jimu', '運営ダッシュボードに入ってみる',
-      '<p>事務局の担当者が使う画面です。試合・登録・処分の様子をまとめて見られます。</p><div class="hint">パスコード：<span class="pass">' + esc(info.pass) + '</span>（本物では事務局だけが知っています）</div>',
+      '<p>事務局の担当者が使う画面です。<b>「シーズン」</b>に、1年でやること（設定・大会と競技規則・参加クラブ・選手登録・日程・ホームページ）が順番に並んでいて、すべてここからできます。スプレッドシートを開く必要はありません。</p><div class="hint">パスコード：<span class="pass">' + esc(info.pass) + '</span>（本物では事務局だけが知っています）</div>',
       '', false, a(L.admin, 'ダッシュボードを開く')));
     s.push(stepHtml(2, 'クラブ（札幌あおぞらFC）', 'club', '選手を登録する（追加登録）',
       '<p>あおぞらFCのチームページを開いて、<b>「選手登録」</b>から新しい選手を申請します。名前・生年月日・背番号・JFAの登録番号を入れます（架空で大丈夫）。</p>' +
