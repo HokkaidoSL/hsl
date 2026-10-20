@@ -342,7 +342,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const QS=new URLSearchParams(location.search);
 $('menu').addEventListener('click',()=>{const o=$('nav').classList.toggle('open');$('menu').setAttribute('aria-expanded',String(o))});
 
-let SEASONS=[],BLOCKS={},FINALS={},byYear={},years=[];
+let SEASONS=[],BLOCKS={},FINALS={},byYear={},years=[],REC=new Set();
 const state={year:0,tab:QS.get('tab')||'standings',block:0};
 async function load(f){try{const r=await fetch('../results/data/history/'+f,{cache:'no-store'});return r.ok?await r.json():null}catch(e){return null}}
 
@@ -365,6 +365,7 @@ function fromSystem(y,d){
 }
 
 async function boot(){
+  try{const r=await fetch('../results/data/competitions.json',{cache:'no-store'});if(r.ok)((await r.json()).competitions||[]).forEach(c=>REC.add(c.id))}catch(e){}
   const a=await load('archive.json');
   if(a){SEASONS=a.seasons||[];BLOCKS=a.blocks||{};FINALS=a.finals||{};if(a.source)$('source').innerHTML=a.source.replace(/^<p[^>]*>|<\/p>$/g,'')}
   const last=SEASONS.length?SEASONS[SEASONS.length-1].year:2026,now=new Date().getFullYear();
@@ -430,7 +431,8 @@ function standings(s){
   if(s.divisions[0].pk)out+=PKNOTE;
   return out+seasonNotes(s)+sysLink(s);
 }
-const sysLink=s=>s.sys?'<a class="more" href="./results.html?comp='+s.year+'-TOP">'+s.year+'年度の大会記録（日程・結果・星取表）を見る ›</a>':'';
+/* 大会記録のページに試合ごとの記録（得点・メンバー・スタッツ）がある年度は、そこへのリンクを出す */
+const sysLink=s=>s.sys||REC.has(s.year+'-TOP')?'<a class="more" href="./results.html?comp='+s.year+'-TOP">'+s.year+'年度の試合ごとの記録（得点・メンバー・スタッツ）を見る ›</a>':'';
 function seasonNotes(s){
   const li=[];
   if(s.year===2020)li.push('<li><b>方式</b>1回戦総当たり（各7試合）で実施</li>');
@@ -466,7 +468,7 @@ function matrix(s){
   if(!s.divisions.every(d=>d.abbr))return '<p class="empty">この年度の星取表は未収録です。</p>';
   let out='';
   s.divisions.forEach(d=>{out+=divTitle(s,d)+mxTable(d)});
-  return out+legend(s.divisions[0].pk,'各マスは、行のチームから見たスコア（1回戦・2回戦）');
+  return out+legend(s.divisions[0].pk,'各マスは、行のチームから見たスコア（1回戦・2回戦）')+sysLink(s);
 }
 function blocks(s){
   const bl=BLOCKS[s.year];
