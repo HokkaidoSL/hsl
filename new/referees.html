@@ -336,7 +336,7 @@ function draw(){
   for(const m of ms)m.refs.forEach((n,i)=>{if(!n)return;const k=canon(n);
     const p=P.get(k)||{k,names:new Map(),t:0,r:0,a:0,f:0,ys:new Set(),list:[]};
     p.names.set(n,(p.names.get(n)||0)+1);p.t++;p[RK[i]]++;p.ys.add(m.c.slice(0,4));p.list.push({m,role:ROLE[i]});P.set(k,p)});
-  let L=[...P.values()].map(p=>({...p,name:[...p.names].sort((a,b)=>b[1]-a[1])[0][0]}));
+  let L=[...P.values()].map(p=>({...p,name:([...p.names.keys()].find(n=>nk(n)===p.k))||[...p.names].sort((a,b)=>b[1]-a[1])[0][0]}));  // まとめた先の書き方があればそれを出す
   L.sort((a,b)=>b[S.k]-a[S.k]||b.t-a.t||a.name.localeCompare(b.name,'ja'));
   let rk=0,prev=null;L.forEach((p,i)=>{if(p[S.k]!==prev){rk=i+1;prev=p[S.k]}p.rank=rk});
   const shown=S.q?L.filter(p=>p.k.includes(S.q)):L;
