@@ -300,6 +300,9 @@ table.ht tr.top1 td{background:rgba(230,0,18,.10)}
 .arc .more{display:inline-block;margin-top:12px;font-size:13px;font-weight:700;color:var(--blue)}
 .arc .source{margin-top:28px;font-size:11.5px;color:var(--muted);line-height:1.7}
 .arc .source a{text-decoration:underline}
+.arc .cupt td.wrap>span{display:block;padding:1px 0}
+.arc .cupt td.wrap>span+span{border-top:1px dashed var(--line);margin-top:3px;padding-top:4px}
+.arc .cupt .t{display:inline!important;margin:0 4px 0 0}
 @media(max-width:600px){.arc dl.aw div{grid-template-columns:100px 1fr}.arc .views button{padding:10px 12px}}
 </style>
 <main class="wrap main">
@@ -329,9 +332,9 @@ table.ht tr.top1 td{background:rgba(230,0,18,.10)}
     <section data-panel="cups" hidden>
       <p class="note" style="margin:0 0 6px">全国大会の北海道予選の結果です。年度を押すと、トーナメント表と試合の結果が見られます（2019年度から）。</p>
       <h3 style="margin-top:10px">全国社会人サッカー選手権大会 北海道予選</h3>
-      <div class="card"><div class="scroll"><table id="cupSC"><tbody><tr><td><span class="sk"></span></td></tr></tbody></table></div></div>
+      <div class="card"><div class="scroll"><table id="cupSC" class="cupt"><tbody><tr><td><span class="sk"></span></td></tr></tbody></table></div></div>
       <h3>全国クラブチームサッカー選手権大会 北海道予選</h3>
-      <div class="card"><div class="scroll"><table id="cupCC"><tbody><tr><td><span class="sk"></span></td></tr></tbody></table></div></div>
+      <div class="card"><div class="scroll"><table id="cupCC" class="cupt"><tbody><tr><td><span class="sk"></span></td></tr></tbody></table></div></div>
     </section>
     <p class="source" id="source"></p>
   </div>
@@ -405,7 +408,7 @@ async function drawCups(){
     const all=[];for(let y=Math.max(...ys);y>=Math.min(...ys);y--)all.push(y);
     const win=m=>{const s=m.score;if(!s)return null;const h=s.home,a=s.away;if(h!==a)return h>a?m.home:m.away;return s.pk?(s.pk.home>s.pk.away?m.home:m.away):null};
     const lose=m=>{const w=win(m);return w?(w===m.home?m.away:m.home):null};
-    const sc=m=>m.score?m.score.home+'-'+m.score.away+(m.score.pk?'（PK'+m.score.pk.home+'-'+m.score.pk.away+'）':''):'';
+    const sc=(m,w)=>{if(!m.score)return '';const s=m.score,f=w===m.home,a=f?s.home:s.away,b=f?s.away:s.home;return a+'-'+b+(s.pk?'（PK'+(f?s.pk.home:s.pk.away)+'-'+(f?s.pk.away:s.pk.home)+'）':'')};  // 代表の側から
     let h='<thead><tr><th class="l">年度</th><th class="l">回</th><th class="l">北海道代表</th><th class="l">決勝の相手・スコア</th></tr></thead><tbody>';
     for(const y of all){
       const x=by[y];
@@ -415,7 +418,7 @@ async function drawCups(){
       const reps=fin.map(m=>({w:win(m),l:lose(m),m})).filter(r=>r.w);
       h+='<tr><td class="l num"><a href="./results.html?comp='+encodeURIComponent(x.c.id)+'" style="text-decoration:underline">'+y+'</a></td><td class="l num">'+(ed?'第'+ed+'回':'')+'</td>'+
         '<td class="team wrap" style="color:#145ec9">'+(reps.length?reps.map(r=>'<span>'+esc(r.w.name)+'</span>').join(''):'－')+'</td>'+
-        '<td class="l wrap">'+reps.map(r=>'<span>'+(fin.length>1?'<span class="t" style="display:inline;margin:0 4px 0 0">'+esc(String(r.m.round).replace(/\s*(代表決定戦|決勝)$/,''))+'</span>':'')+esc(r.l.short||r.l.name)+'　'+esc(sc(r.m))+'</span>').join('')+'</td></tr>';
+        '<td class="l wrap">'+reps.map(r=>'<span>'+(fin.length>1?'<span class="t" style="display:inline;margin:0 4px 0 0">'+esc(String(r.m.round).replace(/\s*(代表決定戦|決勝)$/,''))+'</span>':'')+esc(r.l.short||r.l.name)+'　'+esc(sc(r.m,r.w))+'</span>').join('')+'</td></tr>';
     }
     $('cup'+code).innerHTML=h+'</tbody>';
   }
