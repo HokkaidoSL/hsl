@@ -274,9 +274,13 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 .pt span{display:block;font-size:12px;color:var(--muted)}.pt b{font-family:var(--num);font-size:28px}
 .plog .ev{white-space:nowrap}
 .pst td,.pst th{white-space:nowrap}
-.pst td.l:first-child{white-space:normal;min-width:120px}
-@media(max-width:560px){.pst .tn .tx{display:none}.pst td,.pst th{padding-left:6px;padding-right:6px}}
+.pst td.l:nth-child(2){white-space:normal;min-width:110px}
+@media(max-width:560px){.pst:not(.hist) .tn .tx{display:none}.pst.hist .tn .tx{font-size:12px}.pst td,.pst th{padding-left:6px;padding-right:6px}}
 .pst td.b{font-weight:700;font-size:15px}
+.ctot{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ctot .card{padding:12px 6px;text-align:center}
+.ctot b{display:block;font-family:var(--num);font-size:28px;line-height:1.1}
+.ctot span{font-size:11.5px;color:var(--muted);font-weight:700}
 .pst tr.sum td{background:var(--card2);font-weight:900;border-top:2px solid var(--red)}
 .pst .tn{display:inline-flex;align-items:center;gap:6px}
 .plog .yc,.plog .rc{display:inline-block;width:9px;height:12px;border-radius:2px;vertical-align:-1px;background:#f5c400}.plog .rc{background:#e60012}
@@ -430,40 +434,49 @@ const P={team:QS.get('team')||'',name:QS.get('name')||'',comp:QS.get('comp')||''
 const S={comp:P.comp};
 const nrm=v=>String(v||'').replace(/[\s　]/g,'');
 function showErr(e){$('main').innerHTML='<div class="card empty">読み込めませんでした。<br><small>'+esc(e&&e.message||e)+'</small></div>';}
+/* 同じ名前（空白・字体をそろえたもの）は同じ選手として、クラブ・年度をまたいで集める（移籍した選手もいるため）。
+   書き方のちがい（髙/高 など）は ../results/data/player-aliases.json の aliases で1つの名前にまとめる */
+let ALIAS={};
+const canon=n=>{const k=nrm(n);return ALIAS[k]||k};
+const CSHORT={TOP:'北海道リーグ',SD:'札幌・道央ブロック',DN:'道南ブロック',DT:'道東・道北ブロック',BF:'ブロックリーグ決勝大会',SC:'全国社会人 北海道予選',CC:'全国クラブ 北海道予選',HC:'北海道サッカー選手権'};
+const compLabel=c=>CSHORT[String(c.id).split('-').pop()]||shortComp(c.name);
+const yearOf=c=>Number(c.year||String(c.id).slice(0,4));
 async function init(){
   try{
     await embReady;
     if(!P.team||!P.name)throw new Error('選手が指定されていません');
+    try{const a=await getJSON('player-aliases.json');for(const [k,v] of Object.entries(a.aliases||{}))ALIAS[nrm(k)]=nrm(v);}catch(e){}
     const cl=await getJSON('competitions.json');
     const comps=cl.competitions||[];
-    const all=await Promise.all(comps.map(c=>getJSON(encodeURIComponent(c.id)+'.json').then(d=>({c,d})).catch(()=>null)));
+    const all=(await Promise.all(comps.map(c=>getJSON(encodeURIComponent(c.id)+'.json').then(d=>({c,d})).catch(()=>null)))).filter(Boolean);
     // この選手のチーム（クラブ）
     let me=null;
-    for(const x of all.filter(Boolean)){for(const m of x.d.matches||[])for(const t of [m.home,m.away])if(t&&t.id===P.team)me=t;if(me)break;}
+    for(const x of all){for(const m of x.d.matches||[])for(const t of [m.home,m.away])if(t&&t.id===P.team)me=t;if(me)break;}
     if(!me)throw new Error('チームが見つかりません');
-    const univ=me.univ||me.name;
-    const sameU=t=>t&&(t.univ||t.name)===univ;
+    const key=canon(P.name);
     const rows=[];
-    for(const x of all.filter(Boolean)){
+    for(const x of all){
       const d=x.d;
-      for(const st of (d.playerStats||[]).filter(t=>sameU(t.team))){
-        const p=(st.players||[]).find(p=>nrm(p.name)===nrm(P.name));
+      for(const st of d.playerStats||[]){
+        const p=(st.players||[]).find(p=>canon(p.name)===key);
         if(p)rows.push({comp:x.c,data:d,team:st.team,p,games:st.games||[]});
       }
-      // 出場記録のない大会（試合報告だけ）は、得点・警告から
+      // 出場記録のない大会（結果だけ）は、得点・警告から
       if(!rows.some(r=>r.comp.id===x.c.id)){
-        const sc=(d.scorers||[]).find(r=>sameU(r.team)&&nrm(r.name)===nrm(P.name));
-        const as=(d.assists||[]).find(r=>sameU(r.team)&&nrm(r.name)===nrm(P.name));
-        const ct=(d.cardTable||[]).filter(t=>sameU(t.team)).map(t=>({t,p:(t.players||[]).find(p=>nrm(p.name)===nrm(P.name))})).find(z=>z.p);
+        const sc=(d.scorers||[]).find(r=>canon(r.name)===key);
+        const as=(d.assists||[]).find(r=>canon(r.name)===key);
+        const ct=(d.cardTable||[]).map(t=>({t,p:(t.players||[]).find(p=>canon(p.name)===key)})).find(z=>z.p);
         if(sc||as||ct)rows.push({comp:x.c,data:d,team:(sc||as||{}).team||ct.t.team,p:{name:P.name,goals:sc?sc.count:0,assists:as?as.count:0,yc:ct?ct.p.c||0:0,rc:ct?ct.p.s||0:0},games:[]});
       }
     }
-    // 名鑑（掲載してよい選手だけ。写真は本人の同意があるものだけが入っている）
+    rows.sort((a,b)=>yearOf(b.comp)-yearOf(a.comp)||comps.indexOf(a.comp)-comps.indexOf(b.comp));
+    // 名鑑（掲載してよい選手だけ。写真は本人の同意があるものだけが入っている）。いま見ているクラブの名鑑から
+    const sameU=t=>t&&(t.univ||t.name)===(me.univ||me.name);
     let prof=null;
-    for(const r of rows.concat(P.comp?[{comp:{id:P.comp}}]:[])){
+    for(const r of rows.filter(r=>sameU(r.team)).concat(P.comp?[{comp:{id:P.comp}}]:[])){
       try{const ro=await getJSON(encodeURIComponent(r.comp.id)+'-roster.json');
         for(const t of ro.teams||[]){if(!sameU(t.team))continue;if(t.profile&&!PROF.has(tkey(t.team)))PROF.set(tkey(t.team),t.profile);
-          const f=(t.players||[]).find(p=>nrm(p.name)===nrm(P.name));if(f&&!prof)prof=f;}
+          const f=(t.players||[]).find(p=>canon(p.name)===key);if(f&&!prof)prof=f;}
       }catch(e){}
       if(prof)break;
     }
@@ -475,39 +488,48 @@ function render(me,rows,prof){
   // 試合報告から取り込んだ試合は、出場の数に入っていないことがあるので、試合ごとの記録からも数える
   rows.forEach(r=>{const L=Object.values(r.p.log||{});if(!L.length)return;r.p.apps=Math.max(Number(r.p.apps)||0,L.length);r.p.starts=Math.max(Number(r.p.starts)||0,L.filter(l=>l.st).length);
     const mm=L.filter(l=>l.min!=null);if(!mm.length&&!r.p.min)r.p.min=null;});
-  const tot=k=>rows.reduce((a,r)=>a+(Number(r.p[k])||0),0);
-  const hasApps=rows.some(r=>r.p.apps!=null);
+  const tot=(rs,k)=>rs.reduce((a,r)=>a+(Number(r.p[k])||0),0);
+  const latest=rows.length?yearOf(rows[0].comp):null;
+  const cur=rows.filter(r=>yearOf(r.comp)===latest);
+  const years=[...new Set(rows.map(r=>yearOf(r.comp)))];
+  const clubs=[...new Map(rows.map(r=>[r.team.univ||r.team.name,r.team])).values()];
   const photo=prof&&prof.photo?photoSrc(prof.photo,400):'';
   const head='<div class="ph card">'+(photo?'<img class="pimg" src="'+esc(photo)+'" alt="" onerror="this.remove()">':'<div class="pimg none">'+crest(me,'xl')+'</div>')+
     '<div class="pinfo"><div class="pteam"><a href="'+teamUrlP(me)+'">'+crest(me,'xs')+esc(me.univ||me.name)+'</a></div><h1>'+esc(P.name)+'</h1>'+(prof&&prof.kana?'<div class="kana">'+esc(prof.kana)+'</div>':'')+
     '<div class="pmeta">'+[prof&&prof.no?'背番号 '+esc(prof.no):'',prof&&prof.pos?esc(prof.pos):'',prof&&prof.grade?esc(prof.grade)+'年':'',prof&&prof.school?esc(prof.school):''].filter(Boolean).map(x=>'<span>'+x+'</span>').join('')+'</div></div></div>';
-  // 大会ごとの成績＋全公式戦の合計（Jリーグの選手ページと同じ形）
-  const hasMin=rows.some(r=>r.p.min);
-  const cols=[['出場','apps'],['得点','goals']].concat(hasApps&&(tot('starts')||hasMin)?[['先発','starts']]:[],hasMin?[['時間','min']]:[],[['アシスト','assists'],['警告','yc'],['退場','rc']]);
+  // 表の列（出場の記録がある大会があれば 出場・先発・時間 も）
+  const hasApps=rows.some(r=>r.p.apps!=null),hasMin=rows.some(r=>r.p.min);
+  const cols=[['出場','apps'],['得点','goals']].concat(hasApps&&(tot(rows,'starts')||hasMin)?[['先発','starts']]:[],hasMin?[['時間','min']]:[],rows.some(r=>r.p.assists)?[['アシスト','assists']]:[],[['警告','yc'],['退場','rc']]);
   const cell=(r,k)=>{const v=r.p[k];if(k==='min')return v?v+'分':'–';if((k==='apps'||k==='starts')&&v==null)return '–';return v||0;};
-  const byComp=rows.length?'<div class="sh"><h2>今シーズンの成績</h2></div><div class="card scroll"><table class="tbl pst"><tr><th class="l">大会</th><th class="l">チーム</th>'+cols.map(c=>'<th>'+c[0]+'</th>').join('')+'</tr>'+
-    rows.map(r=>'<tr><td class="l"><a href="./results.html?comp='+encodeURIComponent(r.comp.id)+'">'+esc(shortComp(r.comp.name))+'</a></td><td class="l"><span class="tn">'+crest(r.team,'xs')+'<span class="tx">'+esc(r.team.short||r.team.name)+'</span></span></td>'+cols.map(c=>'<td'+(c[1]==='apps'||c[1]==='goals'?' class="b"':'')+'>'+cell(r,c[1])+'</td>').join('')+'</tr>').join('')+
-    '<tr class="sum"><td class="l" colspan="2">全公式戦 合計</td>'+cols.map(c=>'<td class="b">'+(c[1]==='min'?tot('min')+'分':tot(c[1]))+'</td>').join('')+'</tr></table></div>':'';
-  const logs=rows.filter(r=>r.p.log&&Object.keys(r.p.log).length).map(r=>{
+  const sumRow=(label,rs)=>'<tr class="sum"><td class="l" colspan="3">'+label+'</td>'+cols.map(c=>'<td class="b">'+(c[1]==='min'?tot(rs,'min')+'分':tot(rs,c[1]))+'</td>').join('')+'</tr>';
+  const line=r=>'<tr><td class="l">'+yearOf(r.comp)+'</td><td class="l"><a href="./results.html?comp='+encodeURIComponent(r.comp.id)+'">'+esc(compLabel(r.comp))+'</a></td><td class="l"><span class="tn">'+crest(r.team,'xs')+'<span class="tx">'+esc(r.team.short||r.team.name)+'</span></span></td>'+cols.map(c=>'<td'+(c[1]==='apps'||c[1]==='goals'?' class="b"':'')+'>'+cell(r,c[1])+'</td>').join('')+'</tr>';
+  const thead='<tr><th class="l">年度</th><th class="l">大会</th><th class="l">チーム</th>'+cols.map(c=>'<th>'+c[0]+'</th>').join('')+'</tr>';
+  // 通算（数字の大きいカード）
+  const big=[['シーズン',years.length],['出場',hasApps?tot(rows,'apps'):'–'],['得点',tot(rows,'goals')],['警告',tot(rows,'yc')]];
+  const career=rows.length?'<div class="sh"><h2>通算成績<small>'+(years.length>1?Math.min(...years)+'〜'+Math.max(...years)+'年度':years[0]+'年度')+(clubs.length>1?'・'+clubs.length+'クラブ':'')+'</small></h2></div>'+
+    '<div class="ctot">'+big.map(([l,v])=>'<div class="card"><b>'+v+'</b><span>'+l+'</span></div>').join('')+'</div>':'';
+  const now=cur.length?'<div class="sh"><h2>'+latest+'年度の成績</h2></div><div class="card scroll"><table class="tbl pst">'+thead+cur.map(line).join('')+(cur.length>1?sumRow(latest+'年度 合計',cur):'')+'</table></div>':'';
+  const hist=rows.length?'<div class="sh"><h2>シーズンごとの成績</h2></div><div class="card scroll"><table class="tbl pst hist">'+thead+rows.map(line).join('')+sumRow('通算',rows)+'</table></div>':'';
+  const logs=cur.filter(r=>r.p.log&&Object.keys(r.p.log).length).map(r=>{
     const g=new Map(r.games.map(x=>[x.id,x]));
     const ids=Object.keys(r.p.log).sort((a,b)=>String((g.get(a)||{}).date||'').localeCompare(String((g.get(b)||{}).date||'')));
-    return '<div class="sh"><h2>試合ごと<small>'+esc(shortComp(r.comp.name))+'</small></h2></div><div class="card scroll"><table class="tbl plog" data-comp="'+esc(r.comp.id)+'"><tr><th class="l">日付</th><th class="l">節</th><th class="l">相手</th><th>結果</th><th>出場</th><th>時間</th><th class="l">記録</th></tr>'+
+    return '<div class="sh"><h2>試合ごと<small>'+latest+'年度 '+esc(compLabel(r.comp))+'</small></h2></div><div class="card scroll"><table class="tbl plog" data-comp="'+esc(r.comp.id)+'"><tr><th class="l">日付</th><th class="l">節</th><th class="l">相手</th><th>結果</th><th>出場</th><th>時間</th><th class="l">記録</th></tr>'+
       ids.map(id=>{const x=g.get(id)||{},l=r.p.log[id];const res=x.gf!=null?(x.gf>x.ga?'○':x.gf<x.ga?'●':'△')+' '+x.gf+'-'+x.ga:'';
         return '<tr data-mid="'+esc(id)+'"><td class="l">'+esc(sd(x.date))+'</td><td class="l">'+esc(x.round||'')+'</td><td class="l">'+(x.h?'':'@')+esc(x.opp||'')+'</td><td><a href="./results.html?comp='+encodeURIComponent(r.comp.id)+'&match='+encodeURIComponent(id)+'">'+esc(res||'詳細')+'</a></td><td>'+(l.st?'先発':(l.min!=null?'途中':'出場'))+'</td><td>'+(l.min!=null?l.min+'分':'')+'</td><td class="l ev"></td></tr>';}).join('')+'</table></div>';
   }).join('');
-  $('main').innerHTML='<a class="back" href="'+teamUrlP(me)+'">‹ '+esc(me.univ||me.name)+'のページへ</a>'+head+byComp+logs+
-    (rows.length?'':'<div class="card empty">今シーズンの公式記録はまだありません</div>')+
-    '<p class="note">成績は、連盟の公式記録（試合報告をふくむ）から自動で出しています。</p>';
+  $('main').innerHTML='<a class="back" href="'+teamUrlP(me)+'">‹ '+esc(me.univ||me.name)+'のページへ</a>'+head+career+now+logs+hist+
+    (rows.length?'':'<div class="card empty">公式記録はまだありません</div>')+
+    '<p class="note">成績は、連盟の公式記録（2019年度からの北海道サッカーリーグなど）から自動で出しています。同じ名前の選手は、クラブがちがっても同じ選手として数えています。</p>';
   // 試合ごとの得点・警告（試合詳細のデータから。名前で合わせる）
-  for(const r of rows.filter(r=>r.p.log)){
+  for(const r of cur.filter(r=>r.p.log)){
     getJSON(encodeURIComponent(r.comp.id)+'-matches.json').then(md=>{
       document.querySelectorAll('.plog[data-comp="'+r.comp.id+'"] tr[data-mid]').forEach(tr=>{
         const d=md.details&&md.details[tr.dataset.mid];if(!d)return;
         const side=d.match&&d.match.home&&(d.match.home.univ||d.match.home.name)===(r.team.univ||r.team.name)?'home':'away';
-        const ev=[];
-        (d.goals||[]).filter(x=>x.side===side&&nrm(x.scorer)===nrm(P.name)).forEach(x=>ev.push('⚽'+(x.minute?' '+x.minute+"'":'')));
-        (d.goals||[]).filter(x=>x.side===side&&nrm(x.assist)===nrm(P.name)).forEach(x=>ev.push('A'+(x.minute?' '+x.minute+"'":'')));
-        (d.cards||[]).filter(x=>x.side===side&&nrm(x.name)===nrm(P.name)).forEach(x=>ev.push('<span class="'+(x.kind==='C'?'yc':'rc')+'"></span>'+(x.minute?' '+x.minute+"'":'')));
+        const ev=[],key=canon(P.name);
+        (d.goals||[]).filter(x=>x.side===side&&canon(x.scorer)===key).forEach(x=>ev.push('⚽'+(x.minute?' '+x.minute+"'":'')));
+        (d.goals||[]).filter(x=>x.side===side&&x.assist&&canon(x.assist)===key).forEach(x=>ev.push('A'+(x.minute?' '+x.minute+"'":'')));
+        (d.cards||[]).filter(x=>x.side===side&&canon(x.name)===key).forEach(x=>ev.push('<span class="'+(x.kind==='C'?'yc':'rc')+'"></span>'+(x.minute?' '+x.minute+"'":'')));
         tr.querySelector('.ev').innerHTML=ev.join('　');
       });
     }).catch(()=>{});
