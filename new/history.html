@@ -308,6 +308,7 @@ table.ht tr.top1 td{background:rgba(230,0,18,.10)}
     <div class="views" role="tablist">
       <button role="tab" data-view="season" aria-selected="true">年度別</button>
       <button role="tab" data-view="history" aria-selected="false">歴代優勝</button>
+      <button role="tab" data-view="cups" aria-selected="false">カップ戦</button>
     </div>
     <section data-panel="season">
       <div class="yearbar">
@@ -324,6 +325,13 @@ table.ht tr.top1 td{background:rgba(230,0,18,.10)}
       <div class="card"><div class="scroll"><table id="hist"></table></div></div>
       <h3>ブロックリーグ 歴代優勝</h3>
       <div class="card"><div class="scroll"><table id="histBlk"></table></div></div>
+    </section>
+    <section data-panel="cups" hidden>
+      <p class="note" style="margin:0 0 6px">全国大会の北海道予選の結果です。年度を押すと、トーナメント表と試合の結果が見られます（2019年度から）。</p>
+      <h3 style="margin-top:10px">全国社会人サッカー選手権大会 北海道予選</h3>
+      <div class="card"><div class="scroll"><table id="cupSC"><tbody><tr><td><span class="sk"></span></td></tr></tbody></table></div></div>
+      <h3>全国クラブチームサッカー選手権大会 北海道予選</h3>
+      <div class="card"><div class="scroll"><table id="cupCC"><tbody><tr><td><span class="sk"></span></td></tr></tbody></table></div></div>
     </section>
     <p class="source" id="source"></p>
   </div>
@@ -380,8 +388,37 @@ async function boot(){
   document.querySelectorAll('#arc .step').forEach(b=>b.onclick=()=>{const i=years.indexOf(state.year)+(+b.dataset.step);if(i>=0&&i<years.length){state.year=years[i];render()}});
   document.querySelectorAll('#arc .views button').forEach(b=>b.onclick=()=>view(b.dataset.view));
   drawHistory();
-  if(QS.get('view')==='history')view('history');
+  drawCups();
+  if(['history','cups'].includes(QS.get('view')))view(QS.get('view'));
   render();
+}
+/* カップ戦（全国社会人・全国クラブの北海道予選）：大会の一覧にある大会から、代表決定戦・決勝の勝者を出す */
+const CUP_OFF={2020:'新型コロナウイルスの影響で中止'};
+async function drawCups(){
+  let cl=[];try{cl=(await (await fetch('../results/data/competitions.json',{cache:'no-store'})).json()).competitions||[]}catch(e){}
+  for(const code of ['SC','CC']){
+    const cs=cl.filter(c=>String(c.id).endsWith('-'+code));
+    const rows=await Promise.all(cs.map(c=>fetch('../results/data/'+encodeURIComponent(c.id)+'.json',{cache:'no-cache'}).then(r=>r.json()).then(d=>({c,d})).catch(()=>null)));
+    const by={};rows.filter(Boolean).forEach(x=>by[Number(String(x.c.id).slice(0,4))]=x);
+    const ys=Object.keys(by).map(Number);
+    if(!ys.length){$('cup'+code).innerHTML='<tbody><tr><td class="l">まだ記録がありません</td></tr></tbody>';continue}
+    const all=[];for(let y=Math.max(...ys);y>=Math.min(...ys);y--)all.push(y);
+    const win=m=>{const s=m.score;if(!s)return null;const h=s.home,a=s.away;if(h!==a)return h>a?m.home:m.away;return s.pk?(s.pk.home>s.pk.away?m.home:m.away):null};
+    const lose=m=>{const w=win(m);return w?(w===m.home?m.away:m.home):null};
+    const sc=m=>m.score?m.score.home+'-'+m.score.away+(m.score.pk?'（PK'+m.score.pk.home+'-'+m.score.pk.away+'）':''):'';
+    let h='<thead><tr><th class="l">年度</th><th class="l">回</th><th class="l">北海道代表</th><th class="l">決勝の相手・スコア</th></tr></thead><tbody>';
+    for(const y of all){
+      const x=by[y];
+      if(!x){h+='<tr><td class="l num">'+y+'</td><td class="l"></td><td class="l" colspan="2" style="color:var(--muted)">'+esc(CUP_OFF[y]||'記録なし')+'</td></tr>';continue}
+      const ed=(String(x.c.name).match(/第(\d+)回/)||[])[1];
+      const fin=(x.d.matches||[]).filter(m=>/決勝|代表決定/.test(m.round||'')&&!/準決勝|3位|三位/.test(m.round||'')&&m.score);
+      const reps=fin.map(m=>({w:win(m),l:lose(m),m})).filter(r=>r.w);
+      h+='<tr><td class="l num"><a href="./results.html?comp='+encodeURIComponent(x.c.id)+'" style="text-decoration:underline">'+y+'</a></td><td class="l num">'+(ed?'第'+ed+'回':'')+'</td>'+
+        '<td class="team wrap" style="color:#145ec9">'+(reps.length?reps.map(r=>'<span>'+esc(r.w.name)+'</span>').join(''):'－')+'</td>'+
+        '<td class="l wrap">'+reps.map(r=>'<span>'+(fin.length>1?'<span class="t" style="display:inline;margin:0 4px 0 0">'+esc(String(r.m.round).replace(/\s*(代表決定戦|決勝)$/,''))+'</span>':'')+esc(r.l.short||r.l.name)+'　'+esc(sc(r.m))+'</span>').join('')+'</td></tr>';
+    }
+    $('cup'+code).innerHTML=h+'</tbody>';
+  }
 }
 function view(v){
   document.querySelectorAll('#arc .views button').forEach(x=>x.setAttribute('aria-selected',String(x.dataset.view===v)));
