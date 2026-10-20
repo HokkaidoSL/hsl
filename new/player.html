@@ -458,8 +458,12 @@ async function init(){
     for(const x of all){
       const d=x.d;
       for(const st of d.playerStats||[]){
-        const p=(st.players||[]).find(p=>canon(p.name)===key);
-        if(p)rows.push({comp:x.c,data:d,team:st.team,p,games:st.games||[]});
+        // 同じ年度に背番号が2つある選手（背番号ごとに別の行になっている）は足し合わせる
+        const ps=(st.players||[]).filter(p=>canon(p.name)===key);
+        if(!ps.length)continue;
+        const p=ps.length===1?ps[0]:ps.reduce((a,b)=>{const o={...a,no:a.no+'・'+b.no,log:{...(a.log||{}),...(b.log||{})}};
+          for(const k of ['apps','starts','min','goals','assists','yc','rc'])o[k]=(Number(a[k])||0)+(Number(b[k])||0);return o;});
+        rows.push({comp:x.c,data:d,team:st.team,p,games:st.games||[]});
       }
       // 出場記録のない大会（結果だけ）は、得点・警告から
       if(!rows.some(r=>r.comp.id===x.c.id)){
