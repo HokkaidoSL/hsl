@@ -353,6 +353,16 @@ body{background:var(--canvas);font-family:"Noto Sans JP",-apple-system,BlinkMacS
 .scoreBar .sc{background:var(--ink);color:#fff;border-radius:10px;padding:2px 12px;min-width:84px;text-align:center}
 .scoreBar .pk{color:#ddd}
 .periodBar button.active{background:var(--blue);border-color:var(--blue)}
+.periodBar button:disabled{opacity:.35}
+/* 前半・後半の開始・終了 */
+.clockBar{display:flex;align-items:center;gap:6px;margin-top:6px}
+body:not([data-tab="record"]):not([data-tab="stats"]) .clockBar{display:none}
+.clockBar .cbMain{flex:1 1 auto;min-height:44px;font-size:16px;font-weight:900;border-radius:10px;background:var(--blue);border-color:var(--blue);color:#fff}
+.clockBar .cbMain.end{background:var(--red);border-color:var(--red)}
+.clockBar .cbInfo{flex:1 1 auto;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--sub);background:var(--blueL);border-radius:10px;padding:0 8px;text-align:center}
+.clockBar .cbNow{flex:none;font-size:13px;font-weight:800;color:var(--blue);white-space:nowrap}
+.clockBar .cbLink{flex:none;background:none;border:0;padding:4px 2px;min-height:0;font-size:12px;color:var(--sub);text-decoration:underline}
+.clockLock{font-size:13px;color:var(--red);font-weight:800;text-align:center;margin:2px 0 6px}
 .card{border:0;box-shadow:var(--shadow);border-radius:14px;padding:16px 14px 6px}
 .card h2{border-left:0;padding-left:12px;position:relative}
 .card h2::before{content:"";position:absolute;left:0;top:2px;bottom:2px;width:4px;border-radius:2px;background:var(--blue)}
@@ -419,6 +429,7 @@ function tcDot() {
     <button type="button" data-p="延長後半" class="et">延長後半</button>
     <button type="button" data-p="PK戦" class="pkOnly">PK戦</button>
   </div>
+  <div class="clockBar" id="clockBar"></div>
 </header>
 
 <div class="tabWrapWide">
@@ -598,11 +609,12 @@ function tcDot() {
   <!-- ================= 試合中（シュート・スタッツ） ================= -->
   <section class="card live" id="shotsCard" data-tab="stats">
     <div class="qa">
-      <button type="button" onclick="quickEvent('goal')">＋得点</button>
-      <button type="button" onclick="quickEvent('sub')">＋交代</button>
-      <button type="button" onclick="quickEvent('card')">＋警告・退場</button>
+      <button type="button" class="qaEv" onclick="quickEvent('goal')">＋得点</button>
+      <button type="button" class="qaEv" onclick="quickEvent('sub')">＋交代</button>
+      <button type="button" class="qaEv" onclick="quickEvent('card')">＋警告・退場</button>
       <button type="button" id="undoBtn" class="undo" onclick="toggleUndo()">－取消</button>
     </div>
+    <div class="clockLock hidden" id="shotLock"></div>
     <div class="liveHead"><span id="shotHalfLabel"></span><button type="button" class="linkBtn" id="showAllBtn" onclick="toggleShowAll()">控え・退いた選手も表示</button></div>
     <div class="liveCols" id="shotList"></div>
     <div class="hidden"><div class="seg two" id="shotTeamSeg"></div><div class="pick small" id="halfPick"><button type="button" data-v="前半">前半</button><button type="button" data-v="後半">後半</button><button type="button" data-v="延長前半">延長前半</button><button type="button" data-v="延長後半">延長後半</button></div><span id="statHalfLabel"></span><div id="teamStats"></div></div>
@@ -677,7 +689,7 @@ const PERIODS=['前半','後半','延長前半','延長後半'];
 const PERIOD_IDX={'前半':0,'後半':1,'延長前半':2,'延長後半':3};
 const POSITIONS=['GK','DF','MF','FW'];
 const POS_ORDER={GK:0,DF:1,MF:2,FW:3,'':9};
-const DURATIONS=['90分','80分','70分'];
+const DURATIONS=['90分','80分','70分','60分'];
 const GOAL_TYPES=['シュート','ヘディング','PK','オウンゴール','その他'];
 const START_TYPES=['流れの中','CK','直接FK','間接FK','PK','スローイン','その他'];
 const PK_MAX_PER_TEAM=18; /* 公式記録PDFは1チーム18本目まで */
@@ -770,17 +782,18 @@ function pNo(pid){const p=PLAYERS[pid];if(!p)return '';const o=S&&S.players[pid]
 function pLabel(pid){const p=PLAYERS[pid];if(!p)return '';const n=pNo(pid);return `${n?'No.'+n+' ':''}${p.name}`;}
 
 /* 時間帯内の経過分 → 報告書表記 */
+/* 前後半・延長の長さ（分）：試合時間（例 70分→35分ずつ）、延長の試合時間（例 20分→10分ずつ） */
+function halfLen(){const S_=typeof S!=='undefined'&&S?S:null;return{h:(parseInt(String(S_&&S_.info&&S_.info.duration||'90'),10)||90)/2,e:(parseInt(String(S_&&S_.info&&S_.info.etDuration||'30'),10)||30)/2};}
 function formatMinute(period,raw){
   const s=String(raw??'').trim();
   if(!s)return '';
   if(s==='HT')return 'HT';
   const n=Number(s);
   if(!Number.isFinite(n)||n<1)return '';
-  if(period==='前半')return n<=45?String(n):`45+${n-45}`;
-  if(period==='後半')return n<=45?String(45+n):`90+${n-45}`;
-  if(period==='延長前半')return n<=15?String(90+n):`105+${n-15}`;
-  if(period==='延長後半')return n<=15?String(105+n):`120+${n-15}`;
-  return s;
+  const {h,e}=halfLen();
+  const base={'前半':[0,h],'後半':[h,h],'延長前半':[2*h,e],'延長後半':[2*h+e,e]}[period];
+  if(!base)return s;
+  return n<=base[1]?String(base[0]+n):`${base[0]+base[1]}+${n-base[1]}`;
 }
 function evKey(period,time){
   const pi=PERIOD_IDX[period]??0;
@@ -963,9 +976,10 @@ function newState(d){
     v:1,matchId:d.match.matchId,
     format:{extraTime:'',pk:''},
     firstKickoff:'',secondKickoff:'',
-    info:{date:d.match.date||'',time:d.match.kickoff||'',venue:d.match.venue||'',duration:'90分',pitch:'',pitchCondition:'',wbgt:'',weather:'',wind:'',recorder:rec.recorder||'',recorderUniversity:rec.recorderUniversity||'',recorderEmail:rec.recorderEmail||''},
+    info:{date:d.match.date||'',time:d.match.kickoff||'',venue:d.match.venue||'',duration:d.match.duration||'90分',etDuration:d.match.etDuration||'30分',pitch:'',pitchCondition:'',wbgt:'',weather:'',wind:'',recorder:rec.recorder||'',recorderUniversity:rec.recorderUniversity||'',recorderEmail:rec.recorderEmail||''},
     officials:{referee:'',refereeEmail:'',ar1:'',ar2:'',fourth:''},
     period:'前半',statHalf:'前半',hideOut:false,
+    clock:{},clockFree:false,
     players,
     goals:[],subs:[],cards:[],
     stats:{home:emptyStats(),away:emptyStats()},
@@ -1132,6 +1146,8 @@ const INFO_MAP=[['fDate','date'],['fTime','time'],['fVenue','venue'],['fPitch','
 const OFF_MAP=[['fRef','referee'],['fRefMail','refereeEmail'],['fAr1','ar1'],['fAr2','ar2'],['fFourth','fourth']];
 
 function writeForm(){
+  // 大会の試合時間が選択肢にないとき（75分など）は足す
+  {const fd=$('fDuration'),v=S.info.duration;if(fd&&v&&![...fd.options].some(o=>o.value===v))fd.add(new Option(v,v));}
   INFO_MAP.forEach(([id,k])=>{const el=$(id);if(el.tagName==='SELECT')setSelect(id,S.info[k]);else el.value=S.info[k]||'';});
   OFF_MAP.forEach(([id,k])=>{$(id).value=S.officials[k]||'';});
   setPickValue($('pkExtra'),S.format.extraTime);
@@ -1247,12 +1263,76 @@ function setTab(tab){
 
 function setPeriod(p){
   if(!S)return;
+  if(!started(p))return toast(p+'を開始してから入力できます。','err');
   S.period=p;
   if(p!=='PK戦')S.statHalf=p;
-  document.querySelectorAll('#periodBar button').forEach(b=>b.classList.toggle('active',b.dataset.p===p));
+  renderClock();
   renderRecord();renderStatsTab();
   touched();
 }
+
+/* ---------- 前半・後半の開始・終了 ----------
+   「前半を開始する」を押すまで、前半の得点・交代・警告・シュートは入れられない。後半・延長・PK戦も同じ。
+   試合のあとにまとめて入力するときは「まとめて入力する」で、ボタンを使わずに全部入れられる。
+   前の版の下書き（clock がない）は、まとめて入力と同じ扱い */
+function clockSeq(){return ['前半','後半'].concat(S.format.extraTime==='あり'?['延長前半','延長後半']:[],S.format.pk==='あり'?['PK戦']:[]);}
+function clockOn(){return !!(S&&S.clock&&!S.clockFree);}
+function started(p){return !clockOn()||!!(S.clock[p]&&S.clock[p].s);}
+function clockNext(){
+  for(const p of clockSeq()){const c=S.clock[p]||{};if(!c.s)return{p,act:'s'};if(!c.e)return{p,act:'e'};}
+  return null;
+}
+function clockLast(){
+  let last=null;
+  ['前半','後半','延長前半','延長後半','PK戦'].forEach(p=>{const c=S.clock[p]||{};if(c.e)last={p,act:'e',t:c.e};else if(c.s)last={p,act:'s',t:c.s};});
+  return last;
+}
+/* 開始からの経過分（1分目＝1）。終わった時間帯・始まっていない時間帯は '' */
+function autoMin(p){
+  if(!clockOn()||p==='PK戦')return '';
+  const c=S.clock[p]||{};if(!c.s||c.e)return '';
+  return String(Math.max(1,Math.ceil((Date.now()-c.s)/60000)));
+}
+function clockPress(){
+  if(!S||!clockOn())return;
+  const n=clockNext();if(!n)return;
+  const label=n.p+(n.act==='s'?'を開始':'を終了');
+  if(n.act==='e'&&!confirm(label+'しますか？'))return;
+  S.clock[n.p]=Object.assign({},S.clock[n.p],{[n.act]:Date.now()});
+  if(n.act==='s'){S.period=n.p;if(n.p!=='PK戦')S.statHalf=n.p;}
+  renderAll();if(TAB==='stats')renderStatsTab();touched();serverSave();
+  toast(label+'しました（'+hhmm(new Date())+'）','ok');
+}
+function clockUndo(){
+  const l=clockLast();if(!l)return;
+  if(!confirm(`「${l.p}を${l.act==='s'?'開始':'終了'}」を取り消しますか？`))return;
+  delete S.clock[l.p][l.act];
+  if(l.act==='s'){delete S.clock[l.p];const prev=clockLast();const p=prev?prev.p:'前半';S.period=p;if(p!=='PK戦')S.statHalf=p;}
+  renderAll();if(TAB==='stats')renderStatsTab();touched();
+}
+function clockFreeSet(on){
+  if(on&&!confirm('時間のボタンを使わずに、前半・後半とも自由に入力できるようにしますか？\n（試合のあとにまとめて入力するとき）'))return;
+  S.clock=S.clock||{};S.clockFree=!!on;
+  renderAll();if(TAB==='stats')renderStatsTab();touched();
+}
+function renderClock(){
+  if(!S)return;
+  document.querySelectorAll('#periodBar button').forEach(b=>{b.classList.toggle('active',b.dataset.p===S.period);b.disabled=!started(b.dataset.p);});
+  const box=$('clockBar');
+  if(!clockOn()){
+    box.innerHTML=S.clock?`<span class="cbInfo">まとめて入力中（時間のボタンなし）</span><button type="button" class="cbLink" onclick="clockFreeSet(false)">時間のボタンを使う</button>`:'';
+    return;
+  }
+  const n=clockNext(),l=clockLast();
+  let h='';
+  if(n)h+=`<button type="button" class="cbMain${n.act==='e'?' end':''}" onclick="clockPress()">${esc(n.p)}を${n.act==='s'?'開始する':'終了する'}</button>`;
+  else h+=`<span class="cbInfo">試合終了</span>`;
+  if(n&&n.act==='e'&&n.p!=='PK戦')h+=`<span class="cbNow">${esc(n.p)} ${autoMin(n.p)}分</span>`;
+  if(l)h+=`<button type="button" class="cbLink" onclick="clockUndo()">取り消す</button>`;
+  else h+=`<button type="button" class="cbLink" onclick="clockFreeSet(true)">まとめて入力する</button>`;
+  box.innerHTML=h;
+}
+setInterval(()=>{if(S&&clockOn()&&(TAB==='record'||TAB==='stats'))renderClock();},15000);
 
 function setKind(k){
   KIND=k;document.body.dataset.kind=k;
@@ -1369,7 +1449,7 @@ function liveImport(){
 function renderAll(){
   if(!S)return;
   renderLiveBox();
-  document.querySelectorAll('#periodBar button').forEach(b=>b.classList.toggle('active',b.dataset.p===S.period));
+  renderClock();
   setPickValue($('halfPick'),S.statHalf);
   renderScore();
   renderRecord();
@@ -1454,7 +1534,9 @@ function renderEvents(){
     </button>`;
   }).join(''):`<div class="empty">${eventTitle(KIND)}の記録はありません</div>`;
 
-  $('btnAddEv').textContent=`＋ ${eventTitle(KIND)}を追加（${S.period}）`;
+  const ok=started(S.period);
+  $('btnAddEv').disabled=!ok;
+  $('btnAddEv').textContent=ok?`＋ ${eventTitle(KIND)}を追加（${S.period}）`:`${S.period}を開始すると入力できます`;
 }
 
 /* ---------- メンバー ---------- */
@@ -1549,7 +1631,7 @@ function toggleHideOut(){S.hideOut=!S.hideOut;renderMembers();touched();}
 let SHOW_ALL=false,UNDO=false;
 function toggleShowAll(){SHOW_ALL=!SHOW_ALL;renderShots();}
 function toggleUndo(){UNDO=!UNDO;renderShots();}
-function quickEvent(kind){if(!S)return;if(S.period==='PK戦')setPeriod('後半');setKind(kind);openEvent(null);}
+function quickEvent(kind){if(!S)return;if(!started(S.statHalf))return toast(S.statHalf+'を開始してから入力できます。','err');if(S.period!==S.statHalf){S.period=S.statHalf;renderClock();}setKind(kind);openEvent(null);}
 
 function renderStatsTab(){
   if(!S)return;
@@ -1564,7 +1646,10 @@ function halves(){return S.format.extraTime==='あり'?[1,2,3,4]:[1,2];}
    今ピッチにいる選手だけ（控え・交代で退いた選手・退場者は出さない） */
 function renderShots(){
   if(!S)return;
-  const h=halfIdx(),hs=halves();
+  const h=halfIdx(),hs=halves(),lock=!started(S.statHalf);
+  $('shotLock').classList.toggle('hidden',!lock);
+  $('shotLock').textContent=lock?`上の「${S.statHalf}を開始する」を押すと入力できます`:'';
+  document.querySelectorAll('#shotsCard .qa button').forEach(b=>{b.disabled=lock;});
   $('shotHalfLabel').textContent=`${S.statHalf}に加算${UNDO?'（取消モード：押すと1つ減ります）':''}`;
   $('showAllBtn').textContent=SHOW_ALL?'出場中の選手だけ表示':'控え・退いた選手も表示';
   $('undoBtn').classList.toggle('on',UNDO);
@@ -1577,7 +1662,7 @@ function renderShots(){
     const cells=list.map(p=>{
       const st=S.players[p.id],isOn=on.has(p.id),pl=played(p.id);
       const cur=st['shots'+h]||0,sum=hs.reduce((a,i)=>a+(st['shots'+i]||0),0);
-      const can=UNDO?cur>0:(isOn||(SHOW_ALL&&pl));
+      const can=!lock&&(UNDO?cur>0:(isOn||(SHOW_ALL&&pl)));
       const gk=String(st.position||'')==='GK'?'<span class="pos">GK</span>':'';
       return `<button type="button" class="nb${isOn?'':' off'}${cur?' has':''}" ${can?'':'disabled'} onclick="shot('${esc(p.id)}',${UNDO?-1:1})" title="${esc(p.name)}">
         ${gk}<span class="no">${esc(pNo(p.id)||'?')}</span><span class="ct">${cur}${sum!==cur?`<small>/${sum}</small>`:''}</span></button>`;
@@ -1588,16 +1673,17 @@ function renderShots(){
 }
 
 function tilesHTML(side){
-  const h=halfIdx(),hs=halves(),o=S.stats[side];
+  const h=halfIdx(),hs=halves(),o=S.stats[side],lock=!started(S.statHalf);
   return `<div class="tiles">${STAT_ITEMS.map(([k,l])=>{
     const v=o[k+h]||0,tot=hs.reduce((a,i)=>a+(o[k+i]||0),0);
-    const can=UNDO?v>0:true;
+    const can=!lock&&(UNDO?v>0:true);
     const fn=k==='pk'&&!UNDO?`openPkKick('${side}')`:`stat('${side}','${k}',${UNDO?-1:1})`;
     return `<button type="button" class="tile" ${can?'':'disabled'} onclick="${fn}"><span class="l">${esc(l)}</span><span class="v">${v}${tot!==v?`<small>/${tot}</small>`:''}</span></button>`;
   }).join('')}</div>`;
 }
 
 function shot(pid,d){
+  if(!started(S.statHalf))return;
   const k='shots'+halfIdx();
   S.players[pid][k]=Math.max(0,(S.players[pid][k]||0)+d);
   if(d<0)UNDO=false;
@@ -1611,6 +1697,7 @@ function teamShots(side,h){
 function renderTeamStats(){renderShots();}
 
 function stat(side,k,d){
+  if(!started(S.statHalf))return;
   const h=halfIdx();
   const o=S.stats[side];
   o[k+h]=Math.max(0,(o[k+h]||0)+d);
@@ -1625,7 +1712,7 @@ function stat(side,k,d){
 /* 試合中のPK：キッカーを選んで、成功／失敗。PKの数を＋1、キッカーのシュートを＋1。成功なら得点を記録して時間を入れる */
 let PKK=null;
 function openPkKick(side){
-  if(!S)return;
+  if(!S||!started(S.statHalf))return;
   PKK={side,pid:''};renderPkKick();$('pkkBackdrop').classList.add('open');
 }
 function closePkKick(){$('pkkBackdrop').classList.remove('open');PKK=null;}
@@ -1644,7 +1731,7 @@ function pkInGame(ok){
   S.stats[side]['pk'+h]=(S.stats[side]['pk'+h]||0)+1;
   closePkKick();
   if(ok){
-    const g={id:uid(),period:S.statHalf,time:'',teamId:side==='home'?DETAIL.match.homeId:DETAIL.match.awayId,scorerId:pid,assistId:'',goalType:'PK',startType:'PK',seq:[]};
+    const g={id:uid(),period:S.statHalf,time:autoMin(S.statHalf),teamId:side==='home'?DETAIL.match.homeId:DETAIL.match.awayId,scorerId:pid,assistId:'',goalType:'PK',startType:'PK',seq:[]};
     applyGoalShot(g);S.goals.push(g);
     renderAll();touched();
     setKind('goal');openEvent(g.id);openKeypad();
@@ -1666,7 +1753,8 @@ function openEvent(id){
   }
   const list=listFor(KIND);
   const src=id?list.find(e=>e.id===id):null;
-  const base={id:uid(),period:S.period,time:'',teamId:''};
+  if(!id&&!started(S.period))return toast(S.period+'を開始してから入力できます。','err');
+  const base={id:uid(),period:S.period,time:autoMin(S.period),teamId:''};
   if(KIND==='goal')Object.assign(base,{scorerId:'',assistId:'',goalType:'シュート',startType:'流れの中',seq:[]});
   if(KIND==='sub')Object.assign(base,{outId:'',inId:''});
   if(KIND==='card')Object.assign(base,{playerId:'',type:'警告',reason:''});
@@ -1680,7 +1768,7 @@ function openEvent(id){
 function closeEvent(){$('evBackdrop').classList.remove('open');EDIT=null;}
 
 function periodPickHTML(v){
-  return `<div class="pick" data-f="period">${PERIODS.map(p=>`<button type="button" data-v="${p}" class="${p.startsWith('延長')?'et ':''}${p===v?'active':''}">${p}</button>`).join('')}</div>`;
+  return `<div class="pick" data-f="period">${PERIODS.map(p=>`<button type="button" data-v="${p}" class="${p.startsWith('延長')?'et ':''}${p===v?'active':''}"${started(p)||p===v?'':' disabled'}>${p}</button>`).join('')}</div>`;
 }
 function teamPickHTML(v){
   return `<div class="pick" data-f="teamId">${['home','away'].map(s=>`<button type="button" data-v="${esc(sideTeamId(s))}" class="${String(v)===String(sideTeamId(s))?'active':''}">${esc(sideName(s))}</button>`).join('')}</div>`;
@@ -2114,8 +2202,8 @@ function consistencyIssues(add,ng,wn){
   });
 
   // 時間が長すぎる（入力ミスの目安）
-  const half=(parseInt(String(S.info&&S.info.duration||'90'),10)||90)/2;
-  const lim={'前半':half+15,'後半':half+15,'延長前半':25,'延長後半':25};
+  const {h:half,e:etHalf}=halfLen();
+  const lim={'前半':half+15,'後半':half+15,'延長前半':etHalf+10,'延長後半':etHalf+10};
   [['goal',S.goals],['sub',S.subs],['card',S.cards]].forEach(([k,list])=>list.forEach(e=>{
     const n=Number(e.time);if(Number.isFinite(n)&&lim[e.period]&&n>lim[e.period])add(wn,`${eventTitle(k)}（${e.period} ${e.time}分）：時間が長すぎます。経過分（その時間帯の何分か）で入れているか確認してください`,'record',k);
   }));

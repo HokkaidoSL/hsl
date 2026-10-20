@@ -62,3 +62,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ft nav{display:flex;gap:16px;flex-wrap:wrap}
 
 .sk{display:block;height:14px;margin:14px;border-radius:6px;background:var(--soft)}
+
+/* 緊急のお知らせ（alert.js） */
+.alertbar{display:block;background:#c0392b;color:#fff;text-decoration:none;font-weight:700;font-size:14px;line-height:1.55}
+.alertbar .alertin{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;gap:10px;align-items:center}
+.alertbar b{flex:none;background:#fff;color:#c0392b;border-radius:4px;padding:1px 8px;font-size:12px}
+.alertbar span{flex:1;min-width:0;overflow-wrap:anywhere}
+.alertbar i{flex:none;font-style:normal;font-size:20px;line-height:1}
+a.alertbar:hover span{text-decoration:underline}

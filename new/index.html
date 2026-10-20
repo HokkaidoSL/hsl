@@ -5,9 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>北海道サッカーリーグ | 公式サイト</title>
+<meta name="description" content="北海道の社会人サッカーの日程・結果・順位表・試合速報・お知らせ。北海道サッカーリーグの公式サイトです。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="北海道サッカーリーグ">
+<meta property="og:title" content="北海道サッカーリーグ | 公式サイト">
+<meta property="og:description" content="北海道の社会人サッカーの日程・結果・順位表・試合速報・お知らせ。北海道サッカーリーグの公式サイトです。">
+<meta property="og:url" content="https://hokkaidosl.github.io/hsl/new/">
+<meta property="og:image" content="https://hokkaidosl.github.io/hsl/new/img/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="icon" href="./img/hsl-logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./site.css?v=20261012c">
+<link rel="stylesheet" href="./site.css?v=20261020">
 <style>
 /* トップ：① 試合のカード（今のトップと同じ） ② カレンダー ③ リーグのつながり */
 
@@ -34,6 +45,10 @@
 .tcard .meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:10px}
 .st{font-weight:700;font-size:10px;padding:2px 7px;background:var(--soft);color:var(--muted)}
 .st.done{background:var(--dark);color:#fff}
+.st.live{background:var(--red,#c0392b);color:#fff}
+.st.live::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#fff;margin-right:4px;vertical-align:1px;animation:lvp 1.4s infinite}
+@keyframes lvp{50%{opacity:.25}}
+.m .s.live{background:var(--red,#c0392b)}
 .tr{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:10px;padding:5px 0;font-size:15.5px;font-weight:700}
 .tr span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tr b{font:800 26px/1 var(--num);min-width:20px;text-align:right}
@@ -146,7 +161,8 @@ tr[data-z=up]{--zc:#43A047}tr[data-z=po]{--zc:#F6B93B}tr[data-z=dn]{--zc:#E53935
   <section class="sec"><div class="h2"><h2><small>LEAGUE PYRAMID</small>リーグのつながり</h2><a href="./results.html">大会記録 ›</a></div><div class="pyr" id="pyr"></div></section>
 </main>
 <script src="./season.js?v=20261012c"></script>
-<script src="./site.js?v=20261012c"></script>
+<script src="./site.js?v=20261020"></script>
+<script src="./live.js?v=20261020"></script>
 <script>
 chrome();
 const today=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
@@ -168,15 +184,15 @@ function pickComp(code){
   $('ctabs').innerHTML=seasonSelect(SEASON,'season')+C.map(c=>'<button role="tab" data-c="'+c.code+'" aria-selected="'+(c===CUR)+'">'+esc(c.short)+'</button>').join('');
   renderTicker();
 }
-function stBadge(m){if(done(m))return '<span class="st done">試合終了</span>';if(m.date===today)return '<span class="st">今日</span>';return '<span class="st">'+(m.kickoff?esc(m.kickoff)+' KO':'予定')+'</span>'}
+function stBadge(m){const lv=liveOf(m);if(lv)return '<span class="st live">'+esc(HSL_LIVE.label(lv))+'</span>';if(done(m))return '<span class="st done">試合終了</span>';if(m.date===today)return '<span class="st">今日</span>';return '<span class="st">'+(m.kickoff?esc(m.kickoff)+' KO':'予定')+'</span>'}
 function renderTicker(){
   const r=ROUNDS[RI];
   $('rLabel').textContent=r?r.label:'–';
   $('prevR').disabled=RI<=0;$('nextR').disabled=RI>=ROUNDS.length-1;
   if(!r){$('tickerRow').innerHTML='<p class="empty">試合データがありません。</p>';return}
-  $('tickerRow').innerHTML=r.list.map(m=>{const f=done(m),h=+(m.score&&m.score.home),a=+(m.score&&m.score.away);
+  $('tickerRow').innerHTML=r.list.map(m0=>{const lv=liveOf(m0),m=lv?Object.assign({},m0,{score:{home:lv.score.home,away:lv.score.away,pk:lv.pk}}):m0,f=done(m),h=+(m.score&&m.score.home),a=+(m.score&&m.score.away);
     const lh=f&&m.winner&&m.winner!==m.home.id,la=f&&m.winner&&m.winner!==m.away.id;
-    return '<a class="tcard" href="'+matchUrl(CUR.id,m)+'"><div class="meta"><span>'+esc(md(m.date)+'（'+wd(m.date)+'）')+'</span>'+stBadge(m)+'</div>'+
+    return '<a class="tcard" href="'+matchUrl(CUR.id,m)+'"><div class="meta"><span>'+esc(md(m.date)+'（'+wd(m.date)+'）')+'</span>'+stBadge(m0)+'</div>'+
       '<div class="tr'+(lh?' lose':'')+'">'+crest(m.home,'sm')+'<span>'+esc(m.home.short)+'</span><b>'+(f?esc(m.score.home)+(m.score.pk?'<small style="font-size:13px"> ('+esc(m.score.pk.home)+')</small>':''):'')+'</b></div>'+
       '<div class="tr'+(la?' lose':'')+'">'+crest(m.away,'sm')+'<span>'+esc(m.away.short)+'</span><b>'+(f?esc(m.score.away)+(m.score.pk?'<small style="font-size:13px"> ('+esc(m.score.pk.away)+')</small>':''):'')+'</b></div>'+
       '<div class="venue">'+esc(m.venue||'会場未定')+'</div></a>'}).join('');
@@ -199,9 +215,9 @@ function renderDay(){
   const groups=C.map(c=>({c,ms:ms.filter(m=>m._c===c)})).filter(g=>g.ms.length);
   $('dayList').innerHTML='<div class="dh"><b>'+esc(md(SEL))+'</b><span>（'+wd(SEL)+'）　'+ms.length+'試合</span></div>'+
     (groups.map(({c,ms})=>'<div class="gh k-'+KC(c)+'">'+esc(c.short)+'<small>'+esc(ms[0].round||'')+'</small><a href="'+boardUrl(c)+'">大会記録 ›</a></div>'+
-    ms.map(m=>{const f=done(m),lh=f&&m.winner&&m.winner!==m.home.id,la=f&&m.winner&&m.winner!==m.away.id;
+    ms.map(m0=>{const lv=liveOf(m0),m=lv?Object.assign({},m0,{score:{home:lv.score.home,away:lv.score.away,pk:lv.pk}}):m0,f=done(m),lh=f&&m.winner&&m.winner!==m.home.id,la=f&&m.winner&&m.winner!==m.away.id;
       return '<a class="m" href="'+matchUrl(c.id,m)+'"><span class="ko">'+esc(m.kickoff||'–')+'</span><span class="t h'+(lh?' lose':'')+'">'+crest(m.home,'sm')+'<span>'+esc(m.home.short)+'</span></span>'+
-        '<span class="s'+(f?'':' vs')+'">'+(f?esc(m.score.home+'-'+m.score.away)+(m.score.pk?'<small>PK '+m.score.pk.home+'-'+m.score.pk.away+'</small>':''):'VS')+'</span><span class="t'+(la?' lose':'')+'">'+crest(m.away,'sm')+'<span>'+esc(m.away.short)+'</span></span>'+
+        '<span class="s'+(f?'':' vs')+(lv?' live':'')+'">'+(f?esc(m.score.home+'-'+m.score.away)+(m.score.pk?'<small>PK '+m.score.pk.home+'-'+m.score.pk.away+'</small>':''):'VS')+'</span><span class="t'+(la?' lose':'')+'">'+crest(m.away,'sm')+'<span>'+esc(m.away.short)+'</span></span>'+
         (m.venue?'<span class="v">📍 '+esc(m.venue)+'</span>':'')+'</a>'}).join('')).join('')||'<p class="empty">この日の試合はありません。</p>');
 }
 function pickDay(d){SEL=d;renderDays();renderDay()}
@@ -255,7 +271,11 @@ async function renderPhotos(){
   /* カレンダーの最初の日：今日に近い試合日（今日以前の最後の日。なければ最初の日） */
   pickDay([...DATES].reverse().find(d=>d<=today)||DATES[0]);
   renderPyramid();
+  /* 速報が届いたら、試合のカードとカレンダーを描き直す */
+  if(window.HSL_LIVE)HSL_LIVE.on(()=>{if(CUR){const x=$('tickerRow').scrollLeft;renderTicker();$('tickerRow').scrollLeft=x;}if(SEL)renderDay();});
 })().catch(e=>{$('tickerRow').innerHTML='<p class="empty">読み込みに失敗しました：'+esc(e.message)+'</p>'});
 </script>
+<script src="./alert.js?v=20261020"></script>
+<script src="./hit.js?v=20261020"></script>
 </body>
 </html>

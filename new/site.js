@@ -9,9 +9,9 @@ function chrome(){
   document.body.insertAdjacentHTML('afterbegin',
     '<header class="hd"><div class="wrap in"><a class="brand" href="./"><span class="lg"><img src="./img/hsl-logo.svg" alt="" width="34" height="38"></span><span><b>北海道サッカーリーグ</b><small>Hokkaido Soccer League</small></span></a>'+
     '<button class="menubtn" id="menu" aria-controls="nav" aria-expanded="false">☰ メニュー</button>'+
-    '<nav id="nav"><a href="./">トップ</a><a href="./#calendar">カレンダー</a><a href="./results.html">大会記録</a><a href="./news.html">お知らせ</a><a href="./about.html">連盟について</a></nav></div><div class="tri"></div></header>');
+    '<nav id="nav"><a href="./">トップ</a><a href="./#calendar">カレンダー</a><a href="./results.html">大会記録</a><a href="./news.html">お知らせ</a><a href="./about.html">連盟について</a><a href="./history.html">歴代成績</a></nav></div><div class="tri"></div></header>');
   document.body.insertAdjacentHTML('beforeend',
-    '<footer class="ft"><div class="tri"></div><div class="wrap in"><div><b>北海道サッカーリーグ</b><p>内容は連盟の大会運営システムと公式記録から自動で反映しています。</p></div><nav><a href="./">トップ</a><a href="./results.html">大会記録</a><a href="./news.html">お知らせ</a><a href="./about.html">連盟について</a></nav></div></footer>');
+    '<footer class="ft"><div class="tri"></div><div class="wrap in"><div><b>北海道サッカーリーグ</b><p>内容は連盟の大会運営システムと公式記録から自動で反映しています。</p></div><nav><a href="./">トップ</a><a href="./results.html">大会記録</a><a href="./news.html">お知らせ</a><a href="./about.html">連盟について</a><a href="./history.html">歴代成績</a></nav></div></footer>');
   $('menu').onclick=()=>{const o=$('nav').classList.toggle('open');$('menu').setAttribute('aria-expanded',String(o))};
 }
 
@@ -34,13 +34,15 @@ const KIND={TOP:'リーグ',SD:'ブロック',DN:'ブロック',DT:'ブロック
 function compShort(c){return SHORT[c.id.split('-').pop()]||c.name}
 const isFinal=m=>/^決勝$|代表決定/.test(m.round||'');
 const done=m=>m.score&&m.score.home!=null;
+/* 速報（live.js）：確定前の試合だけ */
+const liveOf=m=>!done(m)&&window.HSL_LIVE?HSL_LIVE.of(m.matchId):null;
 const order=ms=>[...ms].sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.kickoff||'').localeCompare(String(b.kickoff||'')));
 const WD=['日','月','火','水','木','金','土'];
 function md(s){const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');return m?(+m[2])+'/'+(+m[3]):'未定'}
 function wd(s){const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');return m?WD[new Date(+m[1],+m[2]-1,+m[3]).getDay()]:''}
 function scoreText(m){if(!done(m))return 'vs';const s=m.score;return s.home+'-'+s.away+(s.pk?' (PK'+s.pk.home+'-'+s.pk.away+')':'')}
 const teamUrl=t=>'./team.html?team='+encodeURIComponent(t.id);
-const matchUrl=(c,m)=>'./results.html?comp='+encodeURIComponent(c)+(done(m)?'&match='+encodeURIComponent(m.matchId):'');
+const matchUrl=(c,m)=>'./results.html?comp='+encodeURIComponent(c)+(done(m)||liveOf(m)?'&match='+encodeURIComponent(m.matchId):'');
 const compUrl=(c,tab)=>'./results.html?comp='+encodeURIComponent(c)+(tab?'&tab='+tab:'');
 /* 大会の勝者：リーグは1位、トーナメントは決勝（代表決定戦）の勝者 */
 function winners(c){

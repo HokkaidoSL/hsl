@@ -7,6 +7,17 @@
 <link rel="icon" href="./img/hsl-logo.svg" type="image/svg+xml">
 <meta name="robots" content="noindex,nofollow">
 <title>チーム紹介 | 北海道サッカーリーグ</title>
+<meta name="description" content="北海道サッカーリーグのクラブの紹介・選手名鑑・試合結果">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="北海道サッカーリーグ">
+<meta property="og:title" content="チーム紹介 | 北海道サッカーリーグ">
+<meta property="og:description" content="北海道サッカーリーグのクラブの紹介・選手名鑑・試合結果">
+<meta property="og:url" content="https://hokkaidosl.github.io/hsl/new/team.html">
+<meta property="og:image" content="https://hokkaidosl.github.io/hsl/new/img/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -153,7 +164,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .tabs{display:inline-flex;background:#e6edf3;border-radius:10px;padding:3px;gap:2px}
 .tabs button{border:0;background:transparent;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;color:var(--muted)}
 .tabs button[aria-selected=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px #0b2a4520}
-.mrow{display:grid;grid-template-columns:62px 34px minmax(0,1fr) 74px 40px;align-items:center;gap:10px;padding:13px 16px;border-top:1px solid var(--line);transition:background .15s}
+.mrow{display:grid;grid-template-columns:62px minmax(0,1fr) 74px 40px;align-items:center;gap:10px;padding:13px 16px;border-top:1px solid var(--line);transition:background .15s}
 .mrow:first-child{border-top:0}
 .mrow:hover{background:#f6f9fc}
 .mrow .d{font-family:var(--num);font-size:16px;font-weight:700;line-height:1.1}
@@ -333,8 +344,21 @@ dl.facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
   .player .no{font-size:28px;min-width:30px}
   #schedule,#record,#players,#about{scroll-margin-top:110px}
 }
+
+/* カレンダーに入れる */
+.calbox{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;font-size:13px}
+.calbox[hidden]{display:none}
+.calbox .cl{font-weight:700;color:var(--ink)}
+.calbox a{padding:6px 12px;border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;font-weight:700}
+.calbox a:hover{border-color:var(--red);color:var(--red)}
+.calbox small{flex-basis:100%;color:var(--muted);font-size:12px}
+.calbox .calsel{max-width:100%;font:inherit;font-size:13px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.calbox .calone{font-size:13px;color:var(--muted)}
+
+.plink{color:inherit;text-decoration:none;border-bottom:1px dotted var(--muted)}
+.plink:hover{color:var(--red);border-bottom-color:var(--red)}
 </style>
-<link rel="stylesheet" href="./theme.css?v=20261012c">
+<link rel="stylesheet" href="./theme.css?v=20261020">
 </head>
 <body>
 <div class="demo" id="demo" hidden>プレビュー用のサンプルデータを表示しています（公開環境では公式データに自動で切り替わります）</div>
@@ -350,6 +374,7 @@ dl.facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
       <a href="./#calendar">カレンダー</a>
       <a href="./results.html">大会記録</a>
       <a href="./news.html">お知らせ</a>
+      <a href="./history.html">歴代成績</a>
       <a href="./about.html">連盟について</a>
     </nav>
   </div>
@@ -391,6 +416,7 @@ dl.facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
       </div>
       <div class="card" id="matchList"><span class="sk"></span><span class="sk"></span></div>
       <p class="note">試合をタップすると大会記録のページ（得点者・警告などの詳細）に移動します。</p>
+      <div class="calbox" id="calBox" hidden></div>
     </section>
 
     <div class="side">
@@ -428,7 +454,7 @@ dl.facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
 
 <footer class="footer">
   <div class="wrap">
-    <div><strong>北海道サッカーリーグ</strong><p>チームページ Ver.2（試験公開）。試合・成績は公式記録から自動反映、クラブ情報・選手名鑑は各クラブの登録内容を表示しています。</p><p id="updated"></p></div>
+    <div><strong>北海道サッカーリーグ</strong><p>試合・成績は公式記録から自動反映、クラブ情報・選手名鑑は各クラブの登録内容を表示しています。</p><p id="updated"></p></div>
     <nav><a href="./">新公式サイト</a><a href="./results.html">大会記録</a><a href="#" onclick="scrollTo({top:0});return false">ページ上部へ ↑</a></nav>
   </div>
 </footer>
@@ -438,6 +464,18 @@ dl.facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
 'use strict';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* カレンダーに入れる：../results/data/cal/*.ics（全体システムが書き出す）。ファイルがあるときだけ出す */
+function calBox(el,choices,title){
+  if(!el||!choices.length)return;
+  const url=f=>new URL('../results/data/cal/'+f,location.href).href;
+  fetch(url(choices[0].file),{method:'HEAD',cache:'no-store'}).then(r=>{if(!r.ok)return;
+    el.innerHTML='<span class="cl">📅 '+esc(title)+'</span>'+(choices.length>1?'<select class="calsel" aria-label="カレンダーに入れる日程">'+choices.map((c,i)=>'<option value="'+i+'">'+esc(c.label)+'</option>').join('')+'</select>':'<span class="calone">'+esc(choices[0].label)+'</span>')+
+      '<a class="cal-ios" href="#">iPhone・Mac</a><a class="cal-g" href="#" target="_blank" rel="noopener">Googleカレンダー</a><small>登録すると、日程や会場が変わったときもカレンダーが自動で変わります（反映まで数時間かかることがあります）</small>';
+    const set=i=>{const w=url(choices[i].file).replace(/^https?:/,'webcal:');el.querySelector('.cal-ios').href=w;el.querySelector('.cal-g').href='https://calendar.google.com/calendar/r?cid='+encodeURIComponent(w);};
+    const sel=el.querySelector('.calsel');if(sel)sel.onchange=()=>set(+sel.value);
+    set(0);el.hidden=false;}).catch(()=>{});
+}
 const name=t=>typeof t==='string'?t:(t?.short||t?.name||'未定');
 const fullName=t=>typeof t==='string'?t:(t?.name||t?.short||'未定');
 const tkey=t=>typeof t==='string'?t:(t?.id||t?.name||t?.short||'');
@@ -569,6 +607,7 @@ function renderHero(row,ms){
   document.documentElement.style.setProperty('--teamText',crestInk(teamColor(t))==='#fff'?'color-mix(in srgb,'+teamColor(t)+' 55%,#fff)':teamColor(t));
   document.title=fullName(t)+' | 北海道サッカーリーグ';
   $('crumbName').textContent=name(t);
+  if(typeof t==='object'&&t.id)calBox($('calBox'),[{file:'t-'+t.id+'.ics',label:fullName(t)+'の試合'},{file:String(t.id).replace(/-[^-]*$/,'')+'.ics',label:(t.univ||name(t))+'のすべての大会の試合'}],'日程をカレンダーに入れる');
   $('heroCrest').innerHTML=crest(t,'xl');
   const hp=teamPhotoUrl(p,1600)||manualTeamPhoto(t);
   $('heroPh').innerHTML=hp?'<img src="'+esc(hp)+'" alt="" decoding="async" onerror="this.remove()">':'';
@@ -726,7 +765,7 @@ function renderPlayers(){
   const dash=v=>v?esc(v):'<span class="z">–</span>';
   const card=x=>(x.yc?'<i class="yc">'+x.yc+'</i>':'')+(x.rc?'<i class="rc">'+x.rc+'</i>':'')||'<span class="z">–</span>';
   const row=x=>'<tr><td class="no">'+esc(x.no??'')+'</td>'+
-    '<td class="nm"><b>'+esc(x.name)+'</b>'+(has(x.kana)?'<small>'+esc(x.kana)+'</small>':'')+
+    '<td class="nm"><b>'+(typeof S.team==='object'&&S.team&&S.team.id?'<a class="plink" href="./player.html?comp='+encodeURIComponent(S.comp||'')+'&team='+encodeURIComponent(S.team.id)+'&name='+encodeURIComponent(x.name)+'">'+esc(x.name)+'</a>':esc(x.name))+'</b>'+(has(x.kana)?'<small>'+esc(x.kana)+'</small>':'')+
       ((hasGrade||hasSchool)?'<small class="sp">'+esc([x.grade,x.school].filter(has).join('・'))+'</small>':'')+'</td>'+
     (hasGrade?'<td class="pc">'+esc(x.grade||'')+'</td>':'')+
     (hasSchool?'<td class="pc l sch">'+esc(x.school||'')+'</td>':'')+
@@ -890,5 +929,7 @@ function demoProfiles(){
     news:[{date:jstToday(),title:'（サンプル）新入部員の募集について',url:''},{date:'2026-09-01',title:'（サンプル）夏季合宿を実施しました',url:''}]}]};
 }
 </script>
+<script src="./alert.js?v=20261020"></script>
+<script src="./hit.js?v=20261020"></script>
 </body>
 </html>
