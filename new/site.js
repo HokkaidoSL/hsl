@@ -5,14 +5,28 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const QS=new URLSearchParams(location.search);
 
 
-function chrome(){
+/* ヘッダー（大会の切り替え・ロゴ・メニュー）とフッター。DESIGN.md の 7-1
+   大会の切り替えの中身は、データを読んだあと各ページが switchHTML() で入れる */
+const GNAV=[['./','トップ'],['./results.html?tab=schedule','日程・結果'],['./results.html?tab=standings','順位表'],['./#calendar','カレンダー'],['./history.html','歴代成績'],['./news.html','お知らせ'],['./about.html','連盟について']];
+function chrome(cur){
   document.body.insertAdjacentHTML('afterbegin',
-    '<header class="hd"><div class="wrap in"><a class="brand" href="./"><span class="lg"><img src="./img/hsl-logo.svg" alt="" width="34" height="38"></span><span><b>北海道サッカーリーグ</b><small>Hokkaido Soccer League</small></span></a>'+
-    '<button class="menubtn" id="menu" aria-controls="nav" aria-expanded="false">☰ メニュー</button>'+
-    '<nav id="nav"><a href="./">トップ</a><a href="./#calendar">カレンダー</a><a href="./results.html">大会記録</a><a href="./news.html">お知らせ</a><a href="./about.html">連盟について</a><a href="./history.html">歴代成績</a></nav></div><div class="tri"></div></header>');
+    '<header class="hd"><div class="wrap">'+
+      '<nav class="cswitch" aria-label="大会の切り替え"><div class="bar" id="cswitch" role="tablist"><span class="sk" style="width:240px;height:20px;margin:8px"></span></div></nav>'+
+      '<div class="hrow"><a class="brand" href="./"><span class="lg"><img src="./img/hsl-logo.svg" alt="" width="34" height="38"></span><span><b>北海道サッカーリーグ</b><small>HOKKAIDO SOCCER LEAGUE</small></span></a>'+
+      '<nav class="gnav" id="nav" aria-label="メニュー"><div class="bar">'+GNAV.map(([h,t])=>'<a href="'+h+'"'+(cur===h?' aria-current="page"':'')+'>'+t+'</a>').join('')+'</div></nav>'+
+      '<button class="menubtn" id="menu" aria-controls="nav" aria-expanded="false" aria-label="メニュー">☰</button></div>'+
+    '</div><div class="tri"></div></header>');
   document.body.insertAdjacentHTML('beforeend',
-    '<footer class="ft"><div class="tri"></div><div class="wrap in"><div><b>北海道サッカーリーグ</b><p>内容は連盟の大会運営システムと公式記録から自動で反映しています。</p></div><nav><a href="./">トップ</a><a href="./results.html">大会記録</a><a href="./news.html">お知らせ</a><a href="./about.html">連盟について</a><a href="./history.html">歴代成績</a></nav></div></footer>');
+    '<footer class="ft"><div class="wrap in"><div><b>北海道サッカーリーグ</b><p>日程・結果・記録は、連盟の大会運営システムと公式記録から自動で反映しています。</p><p id="updated"></p></div>'+
+    '<nav aria-label="サイトの中のリンク">'+GNAV.map(([h,t])=>'<a href="'+h+'">'+t+'</a>').join('')+'<a href="./referees.html">審判の担当</a></nav></div></footer>');
   $('menu').onclick=()=>{const o=$('nav').classList.toggle('open');$('menu').setAttribute('aria-expanded',String(o))};
+}
+/* 大会の印の色（DESIGN.md 2.） */
+const KCOL={TOP:'var(--ink)',SD:'var(--logo-g)',DN:'var(--logo-g)',DT:'var(--logo-g)',BF:'var(--logo-b)',SC:'var(--logo-y)',CC:'var(--logo-y)',HC:'var(--logo-y)'};
+/** 大会の切り替えのボタン（comps：loadAll() の大会、cur：選ばれている大会のコード） */
+function switchHTML(comps,cur){
+  return comps.map((c,i)=>(i&&KIND[c.code]!==KIND[comps[i-1].code]?'<span class="sep" aria-hidden="true"></span>':'')+
+    '<button role="tab" data-c="'+c.code+'" aria-selected="'+(c.code===cur)+'" style="--k:'+(KCOL[c.code]||'var(--ink)')+'"><i aria-hidden="true"></i>'+esc(c.short)+'</button>').join('');
 }
 
 /* データ */
@@ -87,7 +101,7 @@ async function topPhotos(){
   const b=(PH.top||[]).map(h=>({src:imgUrl(h.file||h.photo,'photos',1600),caption:h.caption||'',credit:h.credit||'',link:/^https:\/\//.test(h.link||'')?h.link:''}));
   return a.concat(b).filter(x=>x.src);
 }
-const PALETTE=['#145ec9','#0f7a6b','#7b3fb5','#c0392b','#1d6fa5','#b35c00','#2e7d32','#ad1457','#37474f','#5d4dbf'];
+const PALETTE=['var(--draw)'];  // チームの色が入っていないときの台の色（DESIGN.md の色だけ）
 function crest(t,size){
   const n=t.short||t.name||'';let h=0;for(const ch of t.id||n)h=(h*31+ch.charCodeAt(0))>>>0;
   const u=emblemOf(t);
