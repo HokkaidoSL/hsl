@@ -109,8 +109,8 @@ img{max-width:100%}
 .crest{display:inline-grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:var(--c,#5b6b7c);color:#fff;font-size:12px;font-weight:900;overflow:hidden;line-height:1}
 .crest.img{background:#fff;padding:3px}
 .crest.img img{width:100%;height:100%;object-fit:contain}
-.crest.xs{width:24px;height:24px;font-size:10.5px;padding:2px}
-.crest.sm{width:28px;height:28px;font-size:11px}
+.crest.xs{width:24px;height:24px;font-size:12px;padding:2px;letter-spacing:-.06em}
+.crest.sm{width:28px;height:28px;font-size:12px;letter-spacing:-.04em}
 .crest.lg{width:72px;height:72px;font-size:20px;padding:6px}
 @media(max-width:600px){.crest.lg{width:56px;height:56px;font-size:16px}}
 
