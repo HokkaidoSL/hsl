@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#08121d">
 <link rel="icon" href="./img/hsl-logo.svg" type="image/svg+xml">
 <title>大会記録 | 北海道サッカーリーグ</title>
 <meta name="description" content="北海道サッカーリーグの大会の日程・結果・順位表・星取表・トーナメント・得点ランキング・警告退場">
@@ -25,369 +25,316 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./hsl.css?v=20261021">
 <style>
-:root{
-  --navy:#071b2e;--navy2:#0e2c48;--lime:#c5f26d;--ink:#141e28;--muted:#6b7a89;
-  --line:#e3e8ee;--bg:#f4f6f8;--blue:#145ec9;--win:#1f7a3f;--draw:#8a96a3;--lose:#c0392b;--yc:#f2c200;
-  --num:"Barlow Condensed","Noto Sans JP",sans-serif;
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP",system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.55}
-a{color:inherit;text-decoration:none}
-button,select{font:inherit;color:inherit}
+/* 大会記録のページだけの部品（色・影・角丸は hsl.css の変数だけ。DESIGN.md） */
 button{cursor:pointer}
-.wrap{width:min(1200px,100% - 40px);margin:auto}
-.num{font-family:var(--num);font-variant-numeric:tabular-nums}
+.lay{font-size:14px;line-height:1.55}
 
-/* header（チームページと同じ） */
-.header{background:var(--navy);color:#fff;position:sticky;top:0;z-index:30}
-.head{height:62px;display:flex;align-items:center;gap:18px;position:relative}
-.brand{display:flex;align-items:center;gap:11px;min-width:0}
-.logo{height:46px;border-radius:8px;background:#fff;display:flex;align-items:center;flex:none;padding:4px 7px}
-.logo img{height:100%;width:auto;display:block}
-.brandname{font-size:15px;font-weight:900;line-height:1.25}
-.brandname small{display:block;font-family:var(--num);font-size:11px;color:#9fb8cc;letter-spacing:.04em;font-weight:600}
-.nav{display:flex;margin-left:auto;height:100%}
-.nav a{display:flex;align-items:center;padding:0 13px;font-size:13px;font-weight:700;color:#d2e0eb;border-bottom:3px solid transparent;transition:.15s}
-.nav a:hover,.nav a.on{color:#fff;border-bottom-color:var(--lime)}
-.menubtn{display:none;margin-left:auto;background:transparent;border:1px solid #ffffff33;color:#fff;border-radius:8px;padding:7px 11px;font-size:12px}
-.comptabs{background:var(--navy2);border-top:1px solid #ffffff12}
-.comptabs .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;height:44px;align-items:center}
-.comptabs .wrap::-webkit-scrollbar{display:none}
-.comptabs button,.comptabs a{flex:none;border:0;background:transparent;color:#a9c0d3;padding:7px 14px;border-radius:30px;font-size:12.5px;font-weight:700;white-space:nowrap}
-.comptabs button:hover,.comptabs a:hover{color:#fff}
-.comptabs button[aria-selected=true],.comptabs a[aria-current=page]{background:var(--lime);color:#fff}
-
-/* crest（チームページと同じ） */
-.crest{--c:#145ec9;width:40px;height:40px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;font-weight:900;font-size:15px;flex:none;box-shadow:inset 0 0 0 2.5px #ffffff38;position:relative}
-.crest .bdg{position:absolute;right:-6px;bottom:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--lime);color:var(--navy);font:800 10px/16px var(--num);font-style:normal;text-align:center;white-space:nowrap}
-.crest.xs{width:22px;height:22px;font-size:10px;box-shadow:inset 0 0 0 1.5px #ffffff38}
+/* エンブレム（hsl.css の .crest に、同じ見た目のときの小さな札と、12px より小さくしない文字を足す） */
+.crest{position:relative;overflow:visible}
+.crest.img{overflow:visible}
+.crest.img img{border-radius:50%}
+.crest .bdg{position:absolute;right:-8px;bottom:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:var(--r-pill);background:var(--logo-y);color:var(--navy);font:800 12px/18px var(--num);font-style:normal;text-align:center;white-space:nowrap}
 .crest.xs .bdg{display:none}
-.crest.sm{width:30px;height:30px;font-size:12px}
-.crest.lg{width:64px;height:64px;font-size:24px}
-.crest.two{font-size:13px;letter-spacing:-.05em}
-.crest.xs.two{font-size:8.5px}.crest.sm.two{font-size:10.5px}.crest.lg.two{font-size:19px}
-.crest.img{background:transparent!important;box-shadow:none!important;border-radius:0}
-.crest.img img{width:100%;height:100%;object-fit:contain;display:block}
+.crest.xs,.crest.sm{font-size:12px}
+.crest.two{letter-spacing:-.06em}
+.crest.lg.two{font-size:18px}
 .crest.img .ed{display:none}
-
-/* page */
-.pagehead{padding:26px 0 6px}
-.pagehead .eyebrow{font-family:var(--num);font-size:13px;letter-spacing:.18em;font-weight:700}
-.pagehead h1{margin:2px 0 4px;font-size:clamp(22px,3.4vw,34px);font-weight:900;line-height:1.25}
-.pagehead p{margin:0;color:var(--muted);font-size:12.5px}
-.subtabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:16px 0 4px;padding-bottom:2px}
-.subtabs::-webkit-scrollbar{display:none}
-.subtabs a{flex:none;display:block;border:1px solid var(--line);padding:8px 16px;border-radius:30px;font-size:13px;font-weight:700}
-.main{padding:8px 0 64px;min-height:50vh}
-.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 10px}
-.bar .note{margin:0 0 0 auto}
-.bar select{background:var(--card,#fff);border:1px solid var(--line);border-radius:10px;padding:8px 30px 8px 12px;min-height:40px;appearance:none;
-  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
-  background-position:right 14px center,right 9px center;background-size:5px 5px;background-repeat:no-repeat;max-width:100%}
-.sh{display:flex;align-items:baseline;gap:10px;margin:26px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
-.sh h2{margin:0;font-size:18px;font-weight:900}
-.sh small{color:var(--muted);font-size:12px}
-.card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.note{font-size:11.5px;color:var(--muted);margin:9px 2px 0;line-height:1.7}
-.empty{padding:26px;color:var(--muted);text-align:center}
-.loading{padding:50px 0;text-align:center;color:var(--muted)}
-.badge{display:inline-block;font-size:10.5px;line-height:1;padding:3px 6px;border:1px solid var(--red,#c0392b);color:var(--red,#c0392b);border-radius:4px;margin-right:4px;vertical-align:1px}
-
-/* 試合の行 */
-.mrow{display:grid;grid-template-columns:52px minmax(0,1fr) 92px minmax(0,1fr);align-items:center;gap:12px;padding:13px 16px;border-top:1px solid var(--line)}
-.mrow:first-child{border-top:0}
-.mrow.link{cursor:pointer;transition:background .15s}
-.mrow .ko{font-family:var(--num);font-size:16px;font-weight:700;color:var(--muted)}
-.mrow .tm{display:flex;align-items:center;gap:9px;font-weight:700;min-width:0}
-.mrow .tm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mrow .tm.h{justify-content:flex-end;text-align:right}
-.mrow .tm.h .crest{order:2}
-.mrow .tm.lose{font-weight:500}
-.mrow .sc{text-align:center;font-family:var(--num);font-size:22px;font-weight:800;border-radius:8px;padding:4px 0;line-height:1.1}
-.mrow .sc small{display:block;font-family:"Noto Sans JP";font-size:10px;font-weight:500;color:var(--muted)}
-.mrow .sc.live{background:var(--red,#E60012);color:#fff}
-.mrow .sc.live small{display:block;font-size:10px;font-weight:700;margin-top:2px}
-.lvtag{display:inline-block;background:var(--red,#E60012);color:#fff;font-size:12px;font-weight:700;border-radius:4px;padding:2px 8px;margin-top:6px}
-.mrow .sc.pend{font-size:14px;font-weight:700;border:1px solid var(--line);color:var(--muted)}
-.mrow .meta{grid-column:2 / 5;font-size:11.5px;color:var(--muted);margin-top:-6px;text-align:center}
-.mrow .meta .go{color:var(--blue);font-weight:700}
-.mrow.tbd .tm{grid-column:2 / 5;justify-content:flex-start;color:var(--muted);font-weight:500}
-.dayhead{padding:9px 16px;font-size:12px;font-weight:700;border-top:1px solid var(--line)}
-.dayhead:first-child{border-top:0}
-
-/* 表 */
-.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
-.tbl th,.tbl td{padding:10px 8px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--line)}
-.tbl th{font-size:11.5px;font-weight:700}
-.tbl td.l,.tbl th.l{text-align:left}
-.tbl tr:last-child td{border-bottom:0}
-.tbl td.pts{font-family:var(--num);font-size:18px;font-weight:800}
-.tbl td.rk{font-family:var(--num);font-size:17px;font-weight:800;width:44px}
-.tbl tr[data-z] td.rk{box-shadow:inset 4px 0 0 var(--zc)}
-:root{--z-up:#43A047;--z-po:#F6B93B;--z-dn:#E53935;--z-hi:#49ADE9}
-tr[data-z=up]{--zc:var(--z-up)}tr[data-z=po]{--zc:var(--z-po)}tr[data-z=dn]{--zc:var(--z-dn)}tr[data-z=hi]{--zc:var(--z-hi)}
-.zones{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 2px 0;font-size:11.5px;color:var(--muted)}
-.zones i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--zc)}
-.tbl .tn{display:flex;align-items:center;gap:9px;font-weight:700}
-.tbl .tn a:hover{text-decoration:underline}
-.grid td{font-size:12.5px;min-width:72px}
-.grid td.self{background:var(--card2,#eef2f6)}
-.grid .w{font-weight:800}.grid .l{color:var(--muted)}
-.grid .up{color:var(--muted);font-size:11px}
-.grid th .crest{margin:auto}
 
 /* ---------- 大会ボードの形：左に大会の一覧、右に表紙と中身 ---------- */
 .lay{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start;margin-top:24px}
 .lay-main{min-width:0}
-.cmenu{position:sticky;top:84px;display:grid;gap:14px}
+.cmenu{position:sticky;top:16px;display:grid;gap:12px}
 .cmenu .season{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
-.cmenu .season select{flex:1;font:inherit;font-weight:700;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:7px 8px;background:#fff}
-@media(max-width:900px){.cmenu .season{flex:none}}
-.cmenu h3{margin:0 0 6px;font:700 11px/1 var(--num);letter-spacing:.16em;color:var(--muted)}
-.cmenu a{display:block;padding:10px 12px;background:#fff;border:1px solid var(--line);border-left:4px solid transparent;margin-top:-1px}
-.cmenu a{color:var(--ink)}
-.cmenu a b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cmenu a small{font-size:10.5px;color:var(--muted)}
-.cmenu a[aria-current=page]{border-left-color:var(--blue);background:#e4f0f8}
-.cmenu a:hover{background:#f2f5f7}
-.pagehead.cover{background:var(--navy)!important;color:#fff!important;border:0!important}
-.cover{background:var(--navy);color:#fff;padding:22px 24px 18px!important;position:relative;overflow:hidden;border-radius:4px}
-.cover:after{content:"";position:absolute;right:-40px;bottom:-60px;width:220px;height:220px;border-radius:50%;border:36px solid #ffffff0d;pointer-events:none}
-.cover .eyebrow{color:var(--lime)!important;font:700 12px/1 var(--num);letter-spacing:.12em}
-.cover h1{color:#fff!important;margin:6px 0 4px;font-size:clamp(20px,3vw,28px)}
+.cmenu .season select{flex:1;min-width:0;appearance:none;border:0;border-radius:var(--r-pill);background:var(--card2);color:var(--ink);font-size:14px;font-weight:700;min-height:44px;padding:0 32px 0 16px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+.cmenu>div{background:var(--card);border-radius:var(--r-card);box-shadow:var(--shadow-card);padding:8px}
+.cmenu h3{margin:4px 8px 8px;font:700 12px/1 var(--num);letter-spacing:.12em;color:var(--logo-b)}
+.cmenu a{display:block;padding:8px 16px;border-radius:var(--r-pill);color:var(--ink);min-height:44px}
+.cmenu a+a{margin-top:2px}
+.cmenu a b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmenu a small{display:block;font-size:12px;color:var(--muted);line-height:1.4}
+.cmenu a:hover{background:var(--card2)}
+.cmenu a[aria-current=page]{background:var(--ink);color:var(--navy)}
+.cmenu a[aria-current=page] small{color:var(--navy)}
+
+/* 表紙（ページの見出しの帯） */
+.cover{background:var(--card);border-radius:var(--r-card);box-shadow:var(--shadow-card);padding:24px;position:relative}
+.cover:before{content:"";position:absolute;left:0;top:24px;width:4px;height:44px;border-radius:0 2px 2px 0;background:var(--cc,var(--ink))}
+.cover .eyebrow{font:700 12px/1.4 var(--num);letter-spacing:.12em;color:var(--logo-b)}
+.cover h1{margin:6px 0 0;font-size:32px;font-weight:900;line-height:1.3}
+.cover p{margin:4px 0 0;color:var(--muted);font-size:12px}
 .cover p:empty{display:none}
-.cover .subtabs{margin:12px 0 0;position:relative;z-index:1}
-.cover .subtabs a{background:transparent!important;border:1px solid #ffffff44!important;color:#fff!important;border-radius:4px;padding:6px 12px;font-size:12.5px}
-.cover .subtabs a:hover{background:#ffffff1a!important}
-.cover .subtabs a[aria-current=page]{background:#fff!important;color:var(--navy)!important;border-color:#fff!important}
+.subtabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:16px 0 0;padding:2px}
+.subtabs::-webkit-scrollbar{display:none}
+.subtabs a{flex:none;display:inline-flex;align-items:center;border-radius:var(--r-pill);background:var(--card2);color:var(--ink);padding:0 16px;min-height:40px;font-size:14px;font-weight:700;white-space:nowrap}
+.subtabs a:hover{color:var(--logo-b)}
+.subtabs a[aria-current=page]{background:var(--ink);color:var(--navy)}
 @media(max-width:900px){
-  .lay{grid-template-columns:minmax(0,1fr);gap:14px;margin-top:14px}
-  .cmenu{position:static;display:flex;overflow-x:auto;gap:6px;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+  .lay{grid-template-columns:minmax(0,1fr);gap:12px;margin-top:16px}
+  .cmenu{position:static;display:flex;overflow-x:auto;gap:6px;scrollbar-width:none;margin:0 -16px;padding:2px 16px}
   .cmenu::-webkit-scrollbar{display:none}
   .cmenu h3{display:none}
   .cmenu>div{display:contents}
-  .cmenu a{flex:none;width:160px;margin:0;border-left-width:1px;border-top:4px solid transparent}
-  .cmenu a[aria-current=page]{border-top-color:var(--blue);border-left-color:var(--line)}
+  .cmenu .season{flex:none}
+  .cmenu a{flex:none;max-width:200px;background:var(--card2);margin:0!important;padding:6px 16px}
+  .cmenu a b{font-size:13px}
 }
-/* 概要 */
-.g2{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px}
-.g2>section{min-width:0}
-@media(max-width:1100px){.g2{grid-template-columns:minmax(0,1fr)}}
-.sh .more2{margin-left:auto;font-size:12px;font-weight:700;color:var(--blue);white-space:nowrap}
-.rdnav{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line)}
-.rdnav b{font-size:13px}
-.rdnav button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff}
-.rdnav button:disabled{opacity:.3}
-@media(min-width:681px){.rdcard .mrow{grid-template-columns:44px minmax(0,1fr) 64px minmax(0,1fr)}}
-.rdcard .mrow .tm{font-size:13px}
-.rdcard .mrow .go{display:none}
-.rdcard .mrow .meta{font-size:10.5px}
-.scs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-.sc1{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 12px;border-top:1px solid var(--line)}
-.sc1:nth-child(-n+2){border-top:0}
-.sc1:nth-child(2n){border-left:1px solid var(--line)}
-.sc1 .r{font:800 16px/1 var(--num);color:var(--muted);text-align:center}
-.sc1.top .r{color:var(--blue)}
-.sc1 b{display:block;font-size:13px}
-.sc1 small{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--muted)}
-.sc1 .g{font:800 22px/1 var(--num)}
-.sc1 .g small{display:inline;font:500 10px "Noto Sans JP";margin-left:2px}
-@media(max-width:700px){.scs{grid-template-columns:minmax(0,1fr)}.sc1:nth-child(2){border-top:1px solid var(--line)}.sc1:nth-child(2n){border-left:0}}
-/* トーナメント表：左から右へ勝ち上がる。線でつなぎ、勝ったクラブを太字＋色の帯 */
-.bk{background:#fff;border:1px solid var(--line);border-radius:4px;padding:16px;margin:14px 0}
-.bk h3{margin:0 0 4px;font-size:14px}
-.tree{overflow-x:auto;padding:10px 2px 6px;--lc:#b5c2cb;display:flex;gap:10px}
-.node{display:flex;align-items:center}
-.kids{display:flex;flex-direction:column;justify-content:center;gap:14px;margin-right:14px}
-.kids>*{position:relative;padding-right:14px}
-.kids>.node{justify-content:flex-end}
-.kids>*:after{content:"";position:absolute;right:0;top:50%;width:14px;border-top:2px solid var(--lc)}
-.kids>*:before{content:"";position:absolute;right:0;top:0;bottom:0;border-right:2px solid var(--lc)}
-.kids>*:first-child:before{top:50%;bottom:-7px}
-.kids>*:last-child:before{bottom:50%;top:-7px}
-.kids>*:only-child:before{display:none}
-.mt{position:relative}
-.kids+.mt:before{content:"";position:absolute;left:-14px;top:50%;width:14px;border-top:2px solid var(--lc)}
-.mc{width:220px;background:#fff;border:1px solid var(--line);display:block}
-.mc.link{cursor:pointer}.mc.link:hover{border-color:var(--blue)}
-.mc .rd2{display:flex;justify-content:space-between;gap:6px;padding:5px 9px;font-size:10.5px;color:var(--muted);background:#eef2f5}
-.mc .rd2 b{color:var(--ink);font-weight:700}
-.bl{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:7px;align-items:center;padding:7px 9px;font-size:13px;color:var(--muted);font-weight:500;border-left:4px solid transparent}
-.bl+.bl{border-top:1px solid var(--line)}
-.bl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bl .crest:empty{background:#eef2f5;box-shadow:none}
-.bl b{font:800 18px/1 var(--num)}
-.bl b small{font:600 11px var(--num);margin-left:2px}
-.bl.win{color:var(--ink);font-weight:900;border-left-color:var(--blue);background:#e4f0f8}
-.seed{display:flex;align-items:center;gap:7px;width:220px;padding:7px 9px;border:1px dashed var(--line);font-size:12.5px;font-weight:700;background:#fff}
-.seed small{order:2;margin-left:auto;font-size:10px;color:var(--muted);font-weight:500;border:1px solid var(--line);padding:0 5px}
-.champ2{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:120px;margin-left:14px;position:relative;padding:12px 10px;background:var(--navy);color:#fff}
-.champ2:before{content:"";position:absolute;left:-14px;top:50%;width:14px;border-top:2px solid var(--blue)}
-.champ2 small{font-size:10.5px;color:var(--lime);font-weight:700}
-.champ2 b{font-size:13px}
-.champ2 .crest.img{background:#fff!important;border-radius:50%!important}
-.champ2 .crest.img img{position:absolute;inset:13%;width:74%;height:74%}
-.swipe{display:none;font-size:11px;color:var(--muted);margin:2px 0 0}
-@media(max-width:900px){.swipe{display:block}}
-@media(max-width:600px){.mc,.seed{width:168px}.bl{font-size:12px;padding:6px 7px}.mc .rd2 span{display:none}.seed{flex-wrap:wrap;gap:2px 7px;font-size:11.5px;padding:6px 7px}.seed small{order:-1;width:100%;margin:0;border:0;padding:0}.champ2{min-width:96px}}
-
-/* ランキング */
-.rank td.nm{text-align:left;font-weight:700}
-.rank td.cnt{font-family:var(--num);font-size:20px;font-weight:800}
-.rank tr.top td.rk{color:var(--red,#c0392b)}
-
-/* 警告・退場 */
-.ct{border-collapse:collapse;font-size:12.5px;width:auto}
-.ct th,.ct td{border:1px solid var(--line);padding:5px 7px;text-align:center;white-space:nowrap}
-.ct th{font-size:10.5px;font-weight:700}
-.ct td.l,.ct th.l{text-align:left;position:sticky;left:0;z-index:1}
-.ct td.cc{background:var(--yc);color:#222;font-weight:800}
-.ct td.ss{background:#d32f2f;color:#fff;font-weight:800}
-.ct td.stop{background:#000;color:#fff;font-weight:800}
-.ct td.stop.done{background:transparent;color:var(--muted);outline:1px solid var(--muted);outline-offset:-3px}
-.ct .rd{display:block;font-weight:800}
-.ct .opp{display:block;font-size:10px;color:var(--muted)}
-.sus{color:#ff6b73;font-weight:800}
-.sw{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:4px}
-.codes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:3px 16px;font-size:12px;margin:4px 0 10px;color:var(--muted)}
-.codes b{display:inline-block;min-width:2.4em;color:var(--ink)}
-
-/* 試合詳細 */
-.back{display:inline-block;color:var(--blue);font-weight:700;padding:14px 0 10px}
-.mh{background:var(--navy);color:#fff;border-radius:16px;padding:20px 16px 18px;text-align:center;position:relative;overflow:hidden}
-.mh .meta{color:#b5b5b5;font-size:12px}
-.mh .row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;margin:14px 0 6px}
-.mh .t{display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:800;font-size:16px;min-width:0}
-.mh .t a:hover{text-decoration:underline}
-.mh .big{font-family:var(--num);font-size:52px;font-weight:800;line-height:1;letter-spacing:.02em}
-.mh .half{color:#cfcfcf;font-size:12.5px;font-variant-numeric:tabular-nums}
-.tl{margin:0;padding:0;list-style:none}
-.tl li{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);gap:8px;padding:9px 14px;border-top:1px solid var(--line);align-items:center}
-.tl li:first-child{border-top:0}
-.tl .min{text-align:center;font-family:var(--num);font-size:16px;font-weight:700;color:var(--muted)}
-.tl .h{text-align:right}
-.ico{display:inline-block;width:10px;height:14px;border-radius:2px;vertical-align:-2px;margin:0 4px}
-.ico.c{background:var(--yc)}.ico.s{background:#d32f2f}
-.goal{font-weight:800}
-.lu{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.lu .card{padding:4px 14px 10px}
-.lu h3{display:flex;align-items:center;gap:8px;font-size:15px;margin:10px 0 2px}
-.lu h4{font-size:11.5px;color:var(--muted);margin:10px 0 2px;font-weight:700}
-.lu td{padding:6px 4px;border-bottom:1px solid var(--line);white-space:nowrap}
-.lu tr:last-child td{border-bottom:0}
-.lu td.no{width:34px;text-align:right;font-family:var(--num);font-size:16px;font-weight:700;color:var(--muted)}
-.lu td.ps{width:34px;color:var(--muted);font-size:11px}
-.lu .ev{color:var(--muted);font-size:11.5px;margin-left:6px}
-.off{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 18px;padding:14px 16px}
-.off span{color:var(--muted);display:inline-block;min-width:58px;font-size:12px}
-.foot{color:var(--muted);font-size:11.5px;margin-top:30px}
-
-.footer{background:var(--navy);color:#a5bccf;padding:36px 0 30px;font-size:12px}
-.footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.footer strong{color:#fff;font-size:14px}
-.footer p{margin:8px 0 0;line-height:1.8}
-.footer nav{display:flex;gap:18px;flex-wrap:wrap}
-.footer nav a:hover{color:var(--lime)}
-
-@media(max-width:920px){.nav a{padding:0 8px;font-size:12px}}
-@media(max-width:680px){
-  .wrap{width:calc(100% - 32px)}
-  .head{height:56px}
-  .logo{height:36px;padding:3px 5px}
-  .brand{gap:8px}
-  .brandname{font-size:13px}
-  .brandname small{font-size:9.5px;letter-spacing:0;white-space:normal;line-height:1.25}
-  .menubtn{display:block;font-size:0;padding:6px 11px;flex:none}
-  .menubtn:before{content:"☰";font-size:18px;line-height:1}
-  .nav{display:none;position:absolute;top:56px;left:-16px;right:-16px;flex-direction:column;padding:6px 16px 14px;height:auto}
-  .nav.open{display:flex}
-  .nav a{padding:13px 8px;border-bottom:1px solid #ffffff12}
-  .pagehead{padding-top:18px}
-  .mrow{grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr);gap:8px;padding:12px}
-  .mrow .ko{grid-column:1 / 4;font-size:13px;margin-bottom:-4px}
-  .mrow .meta{grid-column:1 / 4}
-  .mrow.tbd .tm{grid-column:1 / 4}
-  .mrow .tm{gap:6px;font-size:13px}
-  .mrow .tm .crest{display:none}
-  .mrow .sc{font-size:19px}
-  .hide-sp{display:none}
-  .lu{grid-template-columns:minmax(0,1fr)}
-  .mh .big{font-size:40px}
-  .mh .t{font-size:13.5px}
-  .tl li{padding:8px 10px;font-size:13px;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr)}
+@media(max-width:600px){
+  .cover{padding:16px 16px 16px 20px}
+  .cover:before{top:16px}
+  .cover h1{font-size:24px}
+  .subtabs a{min-height:44px}
 }
 
 /* カレンダーに入れる */
 .calbox{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;font-size:13px}
 .calbox[hidden]{display:none}
 .calbox .cl{font-weight:700;color:var(--ink)}
-.calbox a{padding:6px 12px;border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;font-weight:700}
-.calbox a:hover{border-color:var(--red);color:var(--red)}
+.calbox a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:var(--r-pill);background:var(--card2);color:var(--ink);font-weight:700}
+.calbox a:hover{color:var(--logo-b)}
 .calbox small{flex-basis:100%;color:var(--muted);font-size:12px}
-.calbox .calsel{max-width:100%;font:inherit;font-size:13px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.calbox .calsel{max-width:100%;min-height:44px;font-size:13px;font-weight:700;padding:0 16px;border-radius:var(--r-pill);border:0;background:var(--card2);color:var(--ink)}
 .calbox .calone{font-size:13px;color:var(--muted)}
 
+/* 中身 */
+.main{padding:8px 0 0;min-height:50vh}
+.main .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:16px 0 12px}
+.main .bar .note{margin:0 0 0 auto}
+.main .bar select{appearance:none;border:0;border-radius:var(--r-pill);background:var(--card2);color:var(--ink);font-size:14px;font-weight:700;min-height:44px;padding:0 36px 0 16px;max-width:100%;
+  background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 15px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+.sh{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;margin:32px 0 12px}
+.sh:before{content:"";width:4px;height:18px;border-radius:2px;background:var(--cc,var(--ink));flex:none}
+.sh h2{margin:0;font-size:18px;font-weight:900;line-height:1.4}
+.sh small{color:var(--muted);font-size:12px}
+.card{overflow:hidden}
+.main .note{margin:8px 2px 0;line-height:1.7}
+.empty{text-align:center}
+.loading{padding:48px 0;text-align:center;color:var(--muted)}
+.main .badge{margin-right:4px;vertical-align:1px}
+
+/* 試合の行 */
+.mrow{display:grid;grid-template-columns:52px minmax(0,1fr) 92px minmax(0,1fr);align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line)}
+.mrow:first-child{border-top:0}
+.mrow.link{cursor:pointer}
+.mrow.link:hover .go{text-decoration:underline}
+.mrow .ko{font-family:var(--num);font-size:16px;font-weight:700;color:var(--muted)}
+.mrow .tm{display:flex;align-items:center;gap:8px;font-weight:700;min-width:0}
+.mrow .tm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mrow .tm .crest{overflow:hidden}
+.mrow .tm.h{justify-content:flex-end;text-align:right}
+.mrow .tm.h .crest{order:2}
+.mrow .tm.lose{font-weight:500;color:var(--muted)}
+.mrow .sc{text-align:center;font-family:var(--num);font-size:22px;font-weight:700;border-radius:var(--r-sm);padding:6px 0;line-height:1.1;background:var(--card2)}
+.mrow .sc small{display:block;font:500 12px/1.3 "Noto Sans JP",sans-serif;color:var(--muted)}
+.mrow .sc.live{background:var(--red-bg);color:#fff}
+.mrow .sc.live small{color:#fff;font-weight:700;margin-top:2px}
+.lvtag{display:inline-block;background:var(--red-bg);color:#fff;font-size:12px;font-weight:700;border-radius:var(--r-pill);padding:2px 10px;margin-top:8px}
+.mrow .sc.pend{font-size:14px;font-weight:700;background:transparent;box-shadow:inset 0 0 0 1px var(--line);color:var(--muted)}
+.mrow .meta{grid-column:2 / 5;font-size:12px;color:var(--muted);margin-top:-6px;text-align:center}
+.mrow .meta .go{color:var(--logo-b);font-weight:700}
+.mrow.tbd .tm{grid-column:2 / 5;justify-content:flex-start;color:var(--muted);font-weight:500}
+.dayhead{padding:8px 16px;font-size:13px;font-weight:700;background:var(--card2);color:var(--ink)}
+
+/* 表（hsl.css の .tbl に、まん中そろえと列の形を足す） */
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{text-align:center}
+.tbl td.l,.tbl th.l{text-align:left}
+.tbl td.pts{font-family:var(--num);font-size:18px;font-weight:800}
+.tbl td.rk{font-family:var(--num);font-size:16px;font-weight:700;width:44px}
+.tbl .tn{display:flex}
+.tbl .tn a:hover{text-decoration:underline}
+.tbl td small{color:var(--muted);font-size:12px;margin-left:2px}
+.tbl td.z{color:var(--muted)}
+.grid td{font-size:13px;min-width:72px}
+.grid td.self{background:var(--card2)}
+.grid td div{text-align:center}
+.grid .w{font-weight:800;color:var(--logo-g)}
+.grid div.l{color:var(--red);font-weight:700}
+.grid .d{color:var(--ink)}
+.grid .up{color:var(--muted);font-size:12px}
+.grid th .crest{margin:auto}
+.grid th div{font-size:12px;margin-top:4px}
+
+/* 概要 */
+.g2{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px}
+.g2>section{min-width:0}
+@media(max-width:1100px){.g2{grid-template-columns:minmax(0,1fr);gap:0}}
+.sh .more2{margin-left:auto;font-size:13px;font-weight:700;color:var(--logo-b);white-space:nowrap;min-height:44px;display:inline-flex;align-items:center}
+.rdnav{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line)}
+.rdnav b{font-size:14px}
+.rdnav button{width:44px;height:44px;border-radius:50%;border:2px solid var(--ink);background:transparent;color:var(--ink);font-size:20px;line-height:1}
+.rdnav button:disabled{opacity:.35;cursor:default}
+@media(min-width:681px){.rdcard .mrow{grid-template-columns:44px minmax(0,1fr) 64px minmax(0,1fr)}}
+.rdcard .mrow .tm{font-size:13px}
+.rdcard .mrow .go{display:none}
+.scs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.sc1{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 12px;border-top:1px solid var(--line)}
+.sc1:nth-child(-n+2){border-top:0}
+.sc1:nth-child(2n){border-left:1px solid var(--line)}
+.sc1 .r{font:800 16px/1 var(--num);color:var(--muted);text-align:center}
+.sc1.top .r{color:var(--logo-y)}
+.sc1 b{display:block;font-size:13px}
+.sc1 small{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.sc1 .g{font:800 22px/1 var(--num)}
+.sc1 .g small{display:inline;font:500 12px "Noto Sans JP",sans-serif;margin-left:2px}
+@media(max-width:700px){.scs{grid-template-columns:minmax(0,1fr)}.sc1:nth-child(2){border-top:1px solid var(--line)}.sc1:nth-child(2n){border-left:0}}
+
+/* トーナメント表：左から右へ勝ち上がる。勝ったクラブの線と名前を --logo-y で太く */
+.bk{background:var(--card);border-radius:var(--r-card);box-shadow:var(--shadow-card);padding:16px;margin:16px 0}
+.bk h3{margin:0 0 4px;font-size:16px;font-weight:900}
+.tree{overflow-x:auto;padding:12px 2px 8px;--lc:var(--faint);display:flex;gap:12px}
+.node{display:flex;align-items:center}
+.kids{display:flex;flex-direction:column;justify-content:center;gap:16px;margin-right:16px}
+.kids>*{position:relative;padding-right:16px}
+.kids>.node{justify-content:flex-end}
+.kids>*:after{content:"";position:absolute;right:0;top:50%;width:16px;border-top:2px solid var(--lc)}
+.kids>*:before{content:"";position:absolute;right:0;top:0;bottom:0;border-right:2px solid var(--lc)}
+.kids>*:first-child:before{top:50%;bottom:-8px}
+.kids>*:last-child:before{bottom:50%;top:-8px}
+.kids>*:only-child:before{display:none}
+.kids>.node.won:after{border-top:3px solid var(--logo-y)}
+.kids>.node.won:before{border-right:3px solid var(--logo-y)}
+.mt{position:relative}
+.kids+.mt:before{content:"";position:absolute;left:-16px;top:50%;width:16px;border-top:2px solid var(--lc)}
+.mc{width:220px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;display:block}
+.mc.link{cursor:pointer}.mc.link:hover{border-color:var(--logo-b)}
+.mc .rd2{display:flex;justify-content:space-between;gap:6px;padding:4px 8px;font-size:12px;color:var(--muted);background:var(--card2)}
+.mc .rd2 b{color:var(--ink);font-weight:700}
+.bl{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 8px;font-size:13px;color:var(--muted);font-weight:500;border-left:4px solid transparent}
+.bl+.bl{border-top:1px solid var(--line)}
+.bl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bl .crest{overflow:hidden}
+.bl .crest:empty{background:var(--card2)}
+.bl b{font:800 18px/1 var(--num)}
+.bl b small{font:600 12px var(--num);margin-left:2px}
+.bl.win{color:var(--logo-y);font-weight:900;border-left-color:var(--logo-y)}
+.seed{display:flex;align-items:center;gap:8px;width:220px;padding:6px 8px;border:1px dashed var(--faint);border-radius:var(--r-sm);font-size:13px;font-weight:700;background:var(--bg)}
+.kids>.seed{margin-right:16px}
+.kids>.seed:before,.kids>.seed:after{right:-17px}
+.seed small{order:2;margin-left:auto;font-size:12px;color:var(--muted);font-weight:500}
+.champ2{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:120px;margin-left:16px;position:relative;padding:12px;background:var(--card2);border-radius:var(--r-sm)}
+.champ2:before{content:"";position:absolute;left:-16px;top:50%;width:16px;border-top:3px solid var(--logo-y)}
+.champ2 small{font-size:12px;color:var(--logo-y);font-weight:700}
+.champ2 b{font-size:14px}
+.swipe{display:none;font-size:12px;color:var(--muted);margin:4px 0 0}
+@media(max-width:900px){.swipe{display:block}}
+@media(max-width:600px){.mc,.seed{width:168px}.bl{font-size:12px;padding:6px}.mc .rd2 span{display:none}.seed{flex-wrap:wrap;gap:2px 8px;font-size:12px;padding:6px}.seed small{order:-1;width:100%;margin:0}.champ2{min-width:96px}}
+
+/* ランキング */
+.rank td.nm{text-align:left;font-weight:700}
+.rank td.cnt{font-family:var(--num);font-size:20px;font-weight:800}
+.rank tr.top td.rk{color:var(--logo-y)}
+
+/* 警告・退場 */
+.ct{border-collapse:collapse;font-size:13px;width:auto}
+.ct th,.ct td{border:1px solid var(--line);padding:6px 8px;text-align:center;white-space:nowrap}
+.ct th{font-size:12px;font-weight:700;background:var(--card2);color:var(--muted)}
+.ct td.l,.ct th.l{text-align:left;position:sticky;left:0;z-index:1}
+.ct td.l{background:var(--card)}
+.ct td.cc{background:var(--logo-y);color:var(--navy);font-weight:800}
+.ct td.ss{background:var(--red-bg);color:#fff;font-weight:800}
+.ct td.stop{background:var(--ink);color:var(--navy);font-weight:800}
+.ct td.stop.done{background:transparent;color:var(--muted);outline:1px solid var(--muted);outline-offset:-3px}
+.ct .rd{display:block;font-weight:800;color:var(--ink)}
+.ct .opp{display:block;font-size:12px;color:var(--muted)}
+.sus{color:var(--red);font-weight:800}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+.codes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 16px;font-size:12px;margin:4px 0 12px;color:var(--muted)}
+.codes b{display:inline-block;min-width:2.4em;color:var(--ink)}
+
+/* 試合詳細 */
+.back{display:inline-flex;align-items:center;min-height:44px;color:var(--logo-b);font-weight:700;margin:8px 0}
+.mh{background:var(--card);border-radius:var(--r-card);box-shadow:var(--shadow-card);padding:24px 16px;text-align:center;position:relative}
+.mh .meta{color:var(--muted);font-size:12px}
+.mh .row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;margin:16px 0 8px}
+.mh .t{display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:900;font-size:16px;min-width:0;overflow-wrap:anywhere}
+.mh .t a:hover{text-decoration:underline}
+.mh .big{font-family:var(--num);font-size:60px;font-weight:800;line-height:1;letter-spacing:.02em;white-space:nowrap}
+.mh .half{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.tl{margin:0;padding:0;list-style:none}
+.tl li{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);gap:8px;padding:10px 16px;border-top:1px solid var(--line);align-items:center}
+.tl li:first-child{border-top:0}
+.tl .min{text-align:center;font-family:var(--num);font-size:16px;font-weight:700;color:var(--muted)}
+.tl .h{text-align:right}
+.tl small{font-size:12px}
+.ico{display:inline-block;width:10px;height:14px;border-radius:2px;vertical-align:-2px;margin:0 4px}
+.ico.c{background:var(--logo-y)}.ico.s{background:var(--red-bg)}
+.goal{font-weight:800}
+.lu{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lu .card{padding:4px 16px 12px}
+.lu h3{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:900;margin:12px 0 4px}
+.lu h4{font-size:12px;color:var(--muted);margin:12px 0 4px;font-weight:700}
+.lu td{padding:8px 4px;border-bottom:1px solid var(--line);white-space:nowrap}
+.lu tr:last-child td{border-bottom:0}
+.lu td.no{width:36px;text-align:right;font-family:var(--num);font-size:16px;font-weight:700;color:var(--muted)}
+.lu td.ps{width:36px;color:var(--muted);font-size:12px}
+.lu .ev{color:var(--muted);font-size:12px;margin-left:6px}
+.off{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px 16px;padding:16px}
+.off span{color:var(--muted);display:inline-block;min-width:58px;font-size:12px}
+.foot{color:var(--muted);font-size:12px;margin-top:32px}
+
+@media(max-width:680px){
+  .mrow{grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr);gap:8px;padding:12px}
+  .mrow .ko{grid-column:1 / 4;font-size:13px;margin-bottom:-4px}
+  .mrow .meta{grid-column:1 / 4}
+  .mrow.tbd .tm{grid-column:1 / 4}
+  .mrow .tm{gap:6px;font-size:13px}
+  .mrow .tm .crest{display:none}
+  .mrow .sc{font-size:20px}
+  .hide-sp{display:none}
+  .lu{grid-template-columns:minmax(0,1fr)}
+  .mh .big{font-size:48px}
+  .mh .t{font-size:14px}
+  .tl li{padding:8px 12px;font-size:13px;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr)}
+}
+
 /* 表彰 */
-.awlist{padding:6px 16px}
-.awrow{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line)}
+.awlist{padding:4px 16px}
+.awrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
 .awrow:first-child{border-top:0}
-.awk{flex:none;min-width:118px;text-align:center;font-size:13px;font-weight:900;padding:4px 10px;border-radius:999px;background:var(--card2);color:var(--ink)}
-.awk.hot{background:var(--red);color:#fff}
-.awb{display:flex;align-items:center;gap:10px;min-width:0}
-.awb b{display:block;font-size:17px}
+.awk{flex:none;min-width:118px;text-align:center;font-size:13px;font-weight:900;padding:4px 12px;border-radius:var(--r-pill);background:var(--card2);color:var(--ink)}
+.awk.hot{background:var(--logo-y);color:var(--navy)}
+.awb{display:flex;align-items:center;gap:12px;min-width:0}
+.awb b{display:block;font-size:16px}
 .awb small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
 .awb a{color:inherit}
 
 /* 試合の写真 */
-.mphotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:8px}
-.mphotos figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.mphotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:8px}
+.mphotos figure{margin:0;background:var(--card);border-radius:var(--r-card);box-shadow:var(--shadow-card);overflow:hidden}
 .mphotos img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;background:var(--card2)}
-.mphotos figcaption{padding:8px 10px;font-size:13px;color:var(--ink)}
-.mphotos figcaption span{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.mphotos figcaption{padding:8px 12px;font-size:13px;color:var(--ink)}
+.mphotos figcaption span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 @media (max-width:420px){.mphotos{grid-template-columns:1fr}}
 
-.mst{padding:6px 14px 12px}
-.mst .hd{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:13px;padding:8px 0 4px}
+/* スタッツ（ホーム --logo-b・アウェイ --muted） */
+.mst{padding:4px 16px 12px}
+.mst .hd{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:13px;padding:8px 0 4px;z-index:auto}
 .mst .hd span{display:flex;align-items:center;gap:6px}
 .mst .r{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
 .mst .r>b{font-family:var(--num);font-size:20px;font-weight:800;text-align:center}
 .mst .r>b.lo{color:var(--muted)}
 .mst .lb{display:block;text-align:center;font-size:12px;font-weight:700;margin-bottom:4px}
-.mst .bars{display:flex;gap:3px;height:8px}
-.mst .bars span{flex:1;display:flex;background:var(--card2,#eef2f6);border-radius:4px;overflow:hidden}
+.mst .bars{display:flex;gap:4px;height:8px}
+.mst .bars span{flex:1;display:flex;background:var(--card2);border-radius:4px;overflow:hidden}
 .mst .bars span:first-child{justify-content:flex-end}
 .mst .bars i{display:block;height:100%}
-.mst .bars i.h{background:var(--red,#E60012)}.mst .bars i.a{background:var(--ink,#222)}
-.mst small{display:block;text-align:center;font-size:11px;color:var(--muted);margin-top:4px}
-.ana-bars{padding:10px 14px}
-.ana-bars div{display:grid;grid-template-columns:62px 1fr 34px;align-items:center;gap:8px;padding:5px 0;font-size:12.5px}
-.ana-bars i{display:block;height:14px;border-radius:0 4px 4px 0;background:var(--red,#E60012);min-width:2px}
-.ana-bars b{font-family:var(--num);text-align:right}
-.tbl td small{color:var(--muted);font-size:11px;margin-left:2px}
-.tbl td.z{color:var(--muted)}
+.mst .bars i.h{background:var(--logo-b)}.mst .bars i.a{background:var(--muted)}
+.mst small{display:block;text-align:center;font-size:12px;color:var(--muted);margin-top:4px}
+.ana-bars{padding:12px 16px}
+.ana-bars div{display:grid;grid-template-columns:64px 1fr 36px;align-items:center;gap:8px;padding:4px 0;font-size:13px}
+.ana-bars i{display:block;height:14px;border-radius:0 4px 4px 0;background:var(--logo-b);min-width:2px}
+.ana-bars b{font-family:var(--num);font-size:16px;text-align:right}
 .plink{color:inherit;text-decoration:none;border-bottom:1px dotted var(--muted)}
-.plink:hover{color:var(--red);border-bottom-color:var(--red)}
+.plink:hover{color:var(--logo-b);border-bottom-color:var(--logo-b)}
 </style>
-<link rel="stylesheet" href="./theme.css?v=20261020">
-<style>.mst .bars i.h,.ana-bars i{background:var(--cc,var(--acc,#1d6fa5))}</style>
 </head>
 <body>
-<header class="header">
-  <div class="wrap head">
-    <a href="./" class="brand"><span class="logo"><img src="./img/hsl-logo.svg" alt="北海道サッカーリーグ" width="34" height="38"></span><span class="brandname">北海道サッカーリーグ<small>Hokkaido Soccer League</small></span></a>
-    <button class="menubtn" id="menu" aria-controls="nav" aria-expanded="false">☰ メニュー</button>
-    <nav class="nav" id="nav">
-      <a href="./">トップ</a>
-      <a href="./#calendar">カレンダー</a>
-      <a href="./results.html" class="on">大会記録</a>
-      <a href="./news.html">お知らせ</a>
-      <a href="./history.html">歴代成績</a>
-      <a href="./about.html">連盟について</a>
-    </nav>
-  </div>
-</header>
+<script src="./hdr.js?v=20261021"></script>
+<script>hslChrome(new URLSearchParams(location.search).get('tab')==='standings'?'./results.html?tab=standings':'./results.html?tab=schedule')</script>
 
 <div class="wrap lay">
   <nav class="cmenu" id="comptabs" aria-label="大会"></nav>
@@ -403,12 +350,6 @@ tr[data-z=up]{--zc:var(--z-up)}tr[data-z=po]{--zc:var(--z-po)}tr[data-z=dn]{--zc
   </div>
 </div>
 
-<footer class="footer">
-  <div class="wrap">
-    <div><strong>北海道サッカーリーグ</strong><p>大会記録は、北海道サッカー協会の公式記録から反映しています。</p><p id="updated"></p></div>
-    <nav><a href="./">トップ</a><a href="./news.html">お知らせ</a><a href="./about.html">連盟について</a><a href="./history.html">歴代成績</a><a href="#" onclick="scrollTo({top:0});return false">ページ上部へ ↑</a></nav>
-  </div>
-</footer>
 
 <script src="./season.js?v=20261012c"></script>
 <script src="./live.js?v=20261020"></script>
@@ -443,7 +384,7 @@ const JC={};
 const getJSON=f=>JC[f]||(JC[f]=fetch('../results/data/'+f,{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('データを読み込めませんでした（'+r.status+'）');return r.json();}).catch(e=>{delete JC[f];throw e;}));
 
 /* ---------- エンブレム・チームカラー（チームページと同じ考え方） ---------- */
-const PALETTE=['#145ec9','#0f7a6b','#7b3fb5','#c0392b','#1d6fa5','#b35c00','#2e7d32','#ad1457','#37474f','#5d4dbf'];
+const PALETTE=['var(--draw)'];  // チームの色が入っていないときの台の色（DESIGN.md の色だけ）
 const PROF=new Map();
 let EMB={};
 const embReady=fetch('./emblems/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{EMB=j&&typeof j==='object'?j:{}}).catch(()=>{});
@@ -458,7 +399,7 @@ function emblemUrl(e){
 }
 const profOf=t=>t&&(PROF.get(tkey(t))||PROF.get(t.univ||''))||null;
 function teamColor(t){const p=profOf(t);if(p&&/^#[0-9a-f]{3,8}$/i.test(p.color||''))return p.color;let h=0;for(const ch of String(tkey(t)))h=(h*31+ch.charCodeAt(0))>>>0;return PALETTE[h%PALETTE.length]}
-function crestInk(c){const m=/^#?([0-9a-f]{6})$/i.exec(String(c||''));if(!m)return '#fff';const n=parseInt(m[1],16),L=[n>>16&255,n>>8&255,n&255].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*L[0]+.7152*L[1]+.0722*L[2]>.45?'#222':'#fff'}
+function crestInk(c){const m=/^#?([0-9a-f]{6})$/i.exec(String(c||''));if(!m)return '#fff';const n=parseInt(m[1],16),L=[n>>16&255,n>>8&255,n&255].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*L[0]+.7152*L[1]+.0722*L[2]>.45?'var(--navy)':'#fff'}
 function crestBase(t,size){
   if(!t)return '';
   const n=name(t);let s=n.replace(/^(北海道|国立|私立)/,'').replace(/(クラブ|大)$/,'');if(![...s].length)s=n.replace(/クラブ$/,'大');
@@ -513,9 +454,10 @@ const S={comp:QS.get('comp')||'',tab:QS.get('tab')||'',match:QS.get('match')||''
 const pageUrl=(comp,tab,match)=>'./results.html?comp='+encodeURIComponent(comp)+(tab?'&tab='+encodeURIComponent(tab):'')+(match?'&match='+encodeURIComponent(match):'');
 function setQS(){try{const q=new URLSearchParams();if(S.comp)q.set('comp',S.comp);if(S.tab)q.set('tab',S.tab);if(DETAIL&&S.match)q.set('match',S.match);history.replaceState(null,'','?'+q.toString());}catch(e){}}
 /* 大会のテーマカラー（発信の画像と同じ色。applyCompColor が --cc を決める） */
-const COMP_COLORS=[[/北海道サッカー選手権|-HC$/,'#D4AF37','#111','#B8860B'],[/全国クラブ|-CC$/,'#EF6C00','#fff','#EF6C00'],[/全国社会人|-SC$/,'#C62828','#fff','#C62828'],
-  [/決勝大会|-BF$/,'#F6E14F','#18252e','#8a7a10'],[/道東|道北|-DT$/,'#6A1B9A','#fff','#6A1B9A'],[/道南|-DN$/,'#00838F','#fff','#00838F'],[/札幌|道央|-SD$/,'#2F7D32','#fff','#2F7D32'],[/北海道サッカーリーグ|-TOP$/,'#1d6fa5','#fff','#1d6fa5']];
-function compColor(c){const t=c?(c.name||'')+' '+(c.id||''):'';const r=COMP_COLORS.find(x=>x[0].test(t));return r?{c:r[1],on:r[2],t:r[3]}:{c:'#1d6fa5',on:'#fff',t:'#1d6fa5'};}
+/* 大会の印の色（DESIGN.md 2.「大会の印の色」。applyCompColor が --cc を決める） */
+const COMP_COLORS=[[/北海道サッカー選手権|-HC$/,'var(--logo-y)'],[/全国クラブ|-CC$/,'var(--logo-y)'],[/全国社会人|-SC$/,'var(--logo-y)'],
+  [/決勝大会|-BF$/,'var(--logo-b)'],[/道東|道北|-DT$/,'var(--logo-g)'],[/道南|-DN$/,'var(--logo-g)'],[/札幌|道央|-SD$/,'var(--logo-g)'],[/北海道サッカーリーグ|-TOP$/,'var(--ink)']];
+function compColor(c){const t=c?(c.name||'')+' '+(c.id||''):'';const r=COMP_COLORS.find(x=>x[0].test(t));const k=r?r[1]:'var(--ink)';return {c:k,on:'var(--navy)',t:k};}
 function applyCompColor(){const k=compColor(COMPS.find(c=>c.id===S.comp)),st=document.documentElement.style;st.setProperty('--cc',k.c);st.setProperty('--cc-on',k.on);st.setProperty('--cc-t',k.t);}
 function showErr(e){$('main').innerHTML='<div class="card empty">読み込めませんでした。時間をおいて、もう一度開いてください。<br><small>'+esc(e&&e.message||e)+'</small></div>';}
 
@@ -584,7 +526,6 @@ document.addEventListener('click',e=>{
   if(m)location.href=pageUrl(S.comp,S.tab,m.dataset.match);
 });
 document.addEventListener('keydown',e=>{if(e.key==='Enter'){const m=e.target.closest&&e.target.closest('[data-match]');if(m)location.href=pageUrl(S.comp,S.tab,m.dataset.match);}});
-$('menu').addEventListener('click',()=>{const o=$('nav').classList.toggle('open');$('menu').setAttribute('aria-expanded',String(o))});
 
 function render(){
   const f={board:rBoard,schedule:rSchedule,standings:rStandings,grid:rGrid,tournament:rTournament,scorers:()=>rRanking(DATA.scorers,'得点'),assists:()=>rRanking(DATA.assists,'アシスト'),cards:rCards,awards:rAwards,analysis:rAnalysis}[S.tab]||rSchedule;
@@ -642,16 +583,17 @@ const ZLABEL={
   SD:[['hi','上位リーグへ（予選リーグ）'],['up','ブロックリーグ決勝大会へ']],
   BF:[['up','北海道リーグへ昇格']]
 };
+const ZCOL={up:'var(--logo-g)',hi:'var(--logo-b)',po:'var(--logo-y)',dn:'var(--red-bg)'};
 const zoneCode=()=>String(S.comp||'').split('-').pop();
 function rStandings(){
   return (DATA.groups||[]).map(g=>{
     const fp=g.table.some(r=>r.fairPlay!=null),rate=g.table.some(r=>r.pointsRate!=null);
     return (g.group?'<div class="sh"><h2>'+esc(g.group)+'</h2></div>':'<div style="height:14px"></div>')+'<div class="card scroll"><table class="tbl">'+
-      '<tr><th>順位</th><th class="l">チーム</th><th>勝点</th><th>試合</th><th>勝</th><th>分</th><th>敗</th><th class="hide-sp">得点</th><th class="hide-sp">失点</th><th>得失点</th>'+(rate?'<th>勝点率</th>':'')+(fp?'<th>FP</th>':'')+'</tr>'+
+      '<tr><th>順位</th><th class="l">チーム</th><th>勝点</th><th>試合</th><th>勝</th><th>分</th><th>負</th><th class="hide-sp">得点</th><th class="hide-sp">失点</th><th>得失点</th>'+(rate?'<th>勝点率</th>':'')+(fp?'<th>FP</th>':'')+'</tr>'+
       g.table.map(r=>{const z=(ZONES[zoneCode()]||(()=>''))(+r.rank,g.table.length,g.group||'');return '<tr'+(z?' data-z="'+z+'"':'')+'><td class="rk">'+r.rank+'</td><td class="l"><span class="tn">'+crest(r.team,'xs')+teamLink(r.team,r.team.short)+'</span></td><td class="pts">'+r.points+'</td><td>'+r.played+'</td><td>'+r.won+'</td><td>'+r.drawn+'</td><td>'+r.lost+'</td>'+
         '<td class="hide-sp">'+r.goalsFor+'</td><td class="hide-sp">'+r.goalsAgainst+'</td><td>'+(r.goalDiff>0?'+':'')+r.goalDiff+'</td>'+(rate?'<td>'+(r.pointsRate??'')+'</td>':'')+(fp?'<td>'+(r.fairPlay??'')+'</td>':'')+'</tr>'}).join('')+
       '</table></div>'+(g.table.some(r=>r.note)?'<p class="note">'+g.table.filter(r=>r.note).map(r=>esc(r.team.short+'：'+r.note)).join('　')+'</p>':'');
-  }).join('')+((ZLABEL[zoneCode()]||[]).length?'<div class="zones">'+ZLABEL[zoneCode()].map(([k,t])=>'<span style="--zc:var(--z-'+k+')"><i></i>'+esc(t)+'</span>').join('')+'</div>':'')+'<p class="note">順位は勝点・得失点差・総得点・当該チーム同士の勝敗の順で決めます（大会要項による）。</p>';
+  }).join('')+((ZLABEL[zoneCode()]||[]).length?'<div class="zl">'+ZLABEL[zoneCode()].map(([k,t])=>'<span style="--zc:'+ZCOL[k]+'"><i></i>'+esc(t)+'</span>').join('')+'</div>':'')+'<p class="note">順位は勝点・得失点差・総得点・当該チーム同士の勝敗の順で決めます（大会要項による）。</p>';
 }
 
 /* ---------- 星取表 ---------- */
@@ -700,7 +642,7 @@ function rTournament(){
       line(m.home,f?m.score.home:'',pk?pk.home:'')+line(m.away,f?m.score.away:'',pk?pk.away:'')+(f?'':'<span class="rd2"><span>'+esc(m.placeholder||'これから')+'</span></span>')+'</div>'};
   const node=x=>{const sides=sidesOf(x),any=sides.some(s=>s.p);
     const kids=any?'<div class="kids">'+sides.map(s=>s.p?node(s.p):s.t?'<div class="seed"><small>シード</small>'+crest(s.t,'xs')+esc(s.t.short)+'</div>':'').join('')+'</div>':'';
-    return '<div class="node">'+kids+'<div class="mt">'+card(x)+'</div></div>'};
+    return '<div class="node'+(winnerOf(x.m)?' won':'')+'">'+kids+'<div class="mt">'+card(x)+'</div></div>'};
   const label=CODE(S.comp)==='HC'?'優勝':/予選/.test(DATA.competition&&DATA.competition.name||'')?'北海道代表':'優勝';
   if(!roots.length)return '<div class="card empty">試合はまだありません</div>';
   return roots.map(x=>{const w=winnerOf(x.m);
@@ -752,7 +694,7 @@ function rCards(){
   const C=[['C1','反スポーツ的行為'],['C2','ラフプレー'],['C3','言葉または行動による異議'],['C4','繰り返しの反則'],['C5','プレーの再開を遅らせる'],['C6','規定の距離を守らない'],['C7','主審の承認を得ずにフィールドに入る'],['C8','主審の承認を得ずにフィールドから出る']];
   const SS=[['S1','著しく不正なプレー'],['S2','乱暴な行為'],['S3','人をかむ、つばを吐く'],['S4','手で得点・決定的な得点の機会を阻止'],['S5','反則で決定的な得点の機会を阻止'],['S6','攻撃的、侮辱的、下品な発言や行動'],['S7','同じ試合で2つ目の警告']];
   const codes=a=>'<div class="codes">'+a.map(([k,v])=>'<div><b>'+k+'</b>'+esc(v)+'</div>').join('')+'</div>';
-  const legend='<div class="sh"><h2>注釈</h2></div><p class="note"><span class="sw" style="background:var(--yc)"></span>警告　<span class="sw" style="background:#d32f2f"></span>退場　<span class="sw" style="background:#000;outline:1px solid #555"></span>出場停止の試合　<span class="sw" style="outline:1px solid var(--muted)"></span>出場停止（消化済み）<br>'+
+  const legend='<div class="sh"><h2>注釈</h2></div><p class="note"><span class="sw" style="background:var(--logo-y)"></span>警告　<span class="sw" style="background:var(--red-bg)"></span>退場　<span class="sw" style="background:var(--ink)"></span>出場停止の試合　<span class="sw" style="outline:1px solid var(--muted)"></span>出場停止（消化済み）<br>'+
     'コードのない「C」「S」は、理由の区分が記録されていない警告・退場です。累積警告は、出場停止となった時点と大会終了時に消えます。</p>'+
     '<p class="note" style="margin-bottom:0"><b>警告</b></p>'+codes(C)+'<p class="note" style="margin-bottom:0"><b>退場</b></p>'+codes(SS);
   return top+bar+(body||'<div class="card empty">警告・退場はありません</div>')+legend;
@@ -799,7 +741,7 @@ function anaHtml(det){
   h+='<div class="sh"><h2>チームの時間帯別 得点-失点</h2></div><div class="card scroll"><table class="tbl"><tr><th class="l">チーム</th>'+BL.slice(0,nb).map(l=>'<th>'+l.replace('分','')+'</th>').join('')+'</tr>'+
     teams.map(t=>'<tr>'+tn(t)+t.gf.slice(0,nb).map((g,i)=>'<td>'+z(g)+'<small>-'+t.ga[i]+'</small></td>').join('')+'</tr>').join('')+'</table></div>';
   // 2. 先制・逆転
-  const wdl=a=>a[0]+'勝'+a[1]+'分'+a[2]+'敗';
+  const wdl=a=>a[0]+'勝'+a[1]+'分'+a[2]+'負';
   h+='<div class="sh"><h2>先制したとき・されたとき</h2></div><div class="card scroll"><table class="tbl"><tr><th class="l">チーム</th><th>先制した試合</th><th>勝率</th><th>先制された試合</th><th>逆転勝ち</th><th>前半リード</th></tr>'+
     teams.map(t=>{const a=t.fs.reduce((x,y)=>x+y,0),b=t.cs.reduce((x,y)=>x+y,0),c=t.ht.reduce((x,y)=>x+y,0);
       return '<tr>'+tn(t)+'<td>'+(a?wdl(t.fs):'-')+'</td><td>'+pct(t.fs[0],a)+'</td><td>'+(b?wdl(t.cs):'-')+'</td><td>'+z(t.cs[0])+'</td><td>'+(c?wdl(t.ht):'-')+'</td></tr>';}).join('')+
@@ -848,7 +790,7 @@ function rMatch(){
   const evs=[].concat(lvGoals,
     (d.goals||[]).map(g=>({s:g.sort,side:g.side,min:g.minute,html:'<span class="goal">⚽ '+esc(g.scorer)+'</span>'+(g.type&&!/^(シュート|通常)$/.test(g.type)&&!g.og?' <small class="note">'+esc(g.type)+'</small>':'')+(g.assist?'<br><small style="color:var(--muted)">アシスト '+esc(g.assist)+'</small>':'')})),
     (d.cards||[]).map(c=>({s:c.sort,side:c.side,min:c.minute,html:'<span class="ico '+(c.kind==='C'?'c':'s')+'"></span>'+esc(c.name)+' <small style="color:var(--muted)">'+esc(c.mark)+'</small>'})),
-    (d.subs||[]).map(x=>({s:x.sort,side:x.side,min:x.minute,html:'<span style="color:#4caf50">▲ '+esc(x.in)+'</span><br><span style="color:var(--muted)">▼ '+esc(x.out)+'</span>'}))
+    (d.subs||[]).map(x=>({s:x.sort,side:x.side,min:x.minute,html:'<span style="color:var(--logo-g)">▲ '+esc(x.in)+'</span><br><span style="color:var(--muted)">▼ '+esc(x.out)+'</span>'}))
   ).sort((a,b)=>a.s-b.s);
   const tl=evs.length?'<div class="sh"><h2>試合経過</h2></div><div class="card"><ul class="tl">'+evs.map(e=>'<li><span class="h">'+(e.side==='home'?e.html:'')+'</span><span class="min">'+esc(e.min)+(e.min?"'":'')+'</span><span>'+(e.side==='away'?e.html:'')+'</span></li>').join('')+'</ul></div>':'';
   const STL=[['shots','シュート'],['gk','ゴールキック'],['ck','コーナーキック'],['dfk','直接FK'],['ifk','間接FK'],['off','オフサイド'],['pk','PK']];
@@ -863,7 +805,7 @@ function rMatch(){
   })():'';
   const lu=d.lineups?'<div class="sh"><h2>メンバー</h2></div><div class="lu">'+['home','away'].map(sdn=>{
     const L=d.lineups[sdn],T=sdn==='home'?H:A;
-    const row=p=>'<tr><td class="no">'+esc(p.no)+'</td><td class="ps">'+esc(p.pos)+'</td><td>'+playerLink(T,p.name)+(p.goals?' <span class="ev">⚽'+(p.goals>1?'×'+p.goals:'')+'</span>':'')+(p.cards||[]).map(c=>'<span class="ico '+(c==='C'?'c':'s')+'"></span>').join('')+(p.out?' <span class="ev">▼'+esc(p.out)+"'</span>":'')+(p.in?' <span class="ev" style="color:#4caf50">▲'+esc(p.in)+"'</span>":'')+'</td></tr>';
+    const row=p=>'<tr><td class="no">'+esc(p.no)+'</td><td class="ps">'+esc(p.pos)+'</td><td>'+playerLink(T,p.name)+(p.goals?' <span class="ev">⚽'+(p.goals>1?'×'+p.goals:'')+'</span>':'')+(p.cards||[]).map(c=>'<span class="ico '+(c==='C'?'c':'s')+'"></span>').join('')+(p.out?' <span class="ev">▼'+esc(p.out)+"'</span>":'')+(p.in?' <span class="ev" style="color:var(--logo-g)">▲'+esc(p.in)+"'</span>":'')+'</td></tr>';
     return '<div class="card"><h3>'+crest(T,'xs')+esc(T.short)+'</h3><h4>先発</h4><table>'+L.starters.map(row).join('')+'</table>'+(L.bench.length?'<h4>控え</h4><table>'+L.bench.map(row).join('')+'</table>':'')+'</div>';
   }).join('')+'</div>':'';
   const pk=d.pk&&d.pk.length?'<div class="sh"><h2>PK戦</h2></div><div class="lu">'+['home','away'].map(sdn=>'<div class="card"><h3>'+esc((sdn==='home'?H:A).short)+'</h3><table>'+d.pk.filter(k=>k.side===sdn).map(k=>'<tr><td class="no">'+k.order+'</td><td>'+esc(k.name)+'</td><td>'+(/成功|○/.test(k.result)?'○':'×')+'</td></tr>').join('')+'</table></div>').join('')+'</div>':'';
@@ -883,6 +825,8 @@ if(window.HSL_LIVE)HSL_LIVE.on(()=>{
   if(DETAIL&&S.match){if(liveOf(DETAIL.match))rMatch();return;}
   if(S.tab==='schedule'&&(DATA.matches||[]).some(m=>liveOf(m))){const y=window.scrollY;render();window.scrollTo(0,y);}
 });
+/* hdr.js は <body> のすぐあとでフッターも足すので、ページの中身より前に入る。いちばん下へ動かす */
+{const ft=document.querySelector('footer.ft');if(ft)document.body.appendChild(ft);}
 init();
 </script>
 </body>

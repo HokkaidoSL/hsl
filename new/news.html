@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#071b2e">
+<meta name="theme-color" content="#08121d">
 <link rel="icon" href="./img/hsl-logo.svg" type="image/svg+xml">
 <meta name="robots" content="noindex,nofollow">
 <title>お知らせ | 北海道サッカーリーグ</title>
@@ -21,139 +21,72 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./hsl.css?v=20261021">
 <style>
-:root{--navy:#071b2e;--navy2:#0e2c48;--lime:#c5f26d;--ink:#141e28;--muted:#6b7a89;--line:#e3e8ee;--bg:#f4f6f8;--blue:#145ec9;--red:#c0392b;--num:"Barlow Condensed","Noto Sans JP",sans-serif}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:80px}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-a{color:inherit;text-decoration:none}
-button{font:inherit;color:inherit;cursor:pointer}
-.wrap{width:min(1100px,100% - 40px);margin:auto}
-.demo{background:#fff4d6;color:#7a5a00;font-size:12px;text-align:center;padding:7px 16px}
-.header{background:var(--navy);color:#fff;position:sticky;top:0;z-index:30}
-.head{height:62px;display:flex;align-items:center;gap:18px}
-.brand{display:flex;align-items:center;gap:11px;min-width:0}
-.logo{height:46px;border-radius:8px;background:#fff;display:flex;align-items:center;flex:none;padding:4px 7px}
-.logo img{height:100%;width:auto;display:block}
-.brandname{font-size:15px;font-weight:900;line-height:1.25}
-.brandname small{display:block;font-family:var(--num);font-size:11px;color:#9fb8cc;letter-spacing:.04em;font-weight:600}
-.nav{display:flex;margin-left:auto;height:100%}
-.nav a{display:flex;align-items:center;padding:0 13px;font-size:13px;font-weight:700;color:#d2e0eb;border-bottom:3px solid transparent;transition:.15s}
-.nav a:hover,.nav a.on{color:#fff;border-bottom-color:var(--lime)}
-.menubtn{display:none;margin-left:auto;background:transparent;border:1px solid #ffffff33;color:#fff;border-radius:8px;padding:7px 11px;font-size:12px}
-.pagehead{background:var(--navy);color:#fff;border-top:1px solid #ffffff12}
-.pagehead .wrap{padding:30px 0 28px}
-.crumb{font-size:11px;color:#9fb8cc;margin-bottom:14px}
-.crumb a:hover{color:#fff;text-decoration:underline}
-.eyebrow{font-family:var(--num);font-size:13px;letter-spacing:.18em;color:var(--lime);font-weight:700}
-.pagehead h1{font-size:clamp(26px,4vw,40px);margin:4px 0 0;font-weight:900;letter-spacing:-.02em}
-.main{padding:32px 0 64px}
-.section{margin-top:44px}
-.section:first-child{margin-top:0}
-.sechead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px;border-bottom:2px solid var(--ink);padding-bottom:10px}
-.sechead h2{margin:0;font-size:22px;font-weight:900;line-height:1.3}
-.sechead h2 small{display:block;font-family:var(--num);font-size:12px;letter-spacing:.16em;color:var(--blue);font-weight:700}
-.card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.empty{padding:22px;color:var(--muted);font-size:13px;margin:0;line-height:1.8}
-.note{font-size:11px;color:var(--muted);margin:9px 2px 0;line-height:1.7}
-.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:12px}
-.chips::-webkit-scrollbar{display:none}
-.chips button,.chips a{flex:none;border:1px solid var(--line);background:#fff;padding:7px 14px;border-radius:30px;font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap}
-.chips [aria-selected=true]{background:var(--ink);border-color:var(--ink);color:#fff}
-.cat{display:inline-block;font-size:10.5px;font-weight:700;color:var(--blue);border:1px solid #c9daf2;padding:1px 7px;border-radius:3px;white-space:nowrap}
-.imp{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:var(--red);padding:2px 7px;border-radius:3px}
-.footer{background:var(--navy);color:#a5bccf;padding:36px 0 30px;font-size:12px}
-.footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.footer strong{color:#fff;font-size:14px}
-.footer p{margin:8px 0 0;line-height:1.8}
-.footer nav{display:flex;gap:18px;flex-wrap:wrap}
-.footer nav a:hover{color:var(--lime)}
-.sk{display:block;height:14px;margin:14px 18px;border-radius:6px;background:linear-gradient(90deg,#e9eef3 25%,#f5f8fa 50%,#e9eef3 75%);background-size:200% 100%;animation:sh 1.3s infinite}
-@keyframes sh{to{background-position:-200% 0}}
+/* お知らせのページだけの部品（色・影・角丸は hsl.css の変数だけ。DESIGN.md） */
+.demo{background:var(--card2);color:var(--logo-y);font-size:12px;font-weight:700;text-align:center;padding:8px 16px;margin-top:12px}
+.crumb{font-size:12px;color:var(--muted);margin-bottom:12px}
+.crumb a{color:var(--logo-b)}
+.crumb a:hover{text-decoration:underline}
+main.main{padding-top:24px}
+.card{overflow:hidden}
+.chips{margin-bottom:12px}
+.cat{display:inline-block;font-size:12px;font-weight:700;line-height:1.5;color:var(--logo-b);border:1px solid var(--line);padding:0 8px;border-radius:var(--r-pill);white-space:nowrap}
+a.cat{position:relative}
+a.cat:after{content:"";position:absolute;inset:-12px -4px}  /* 押せる範囲を 44px に広げる */
+a.cat:hover{border-color:var(--logo-b)}
+.imp{display:inline-block;font-size:12px;font-weight:700;line-height:1.5;color:#fff;background:var(--red-bg);padding:0 8px;border-radius:var(--r-pill);white-space:nowrap}
+.newb{display:inline-block;font-size:12px;font-weight:700;line-height:1.5;color:var(--navy);background:var(--logo-y);padding:0 8px;border-radius:var(--r-pill);white-space:nowrap}
 
-.list a{display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center;padding:16px 20px;border-top:1px solid var(--line);transition:background .15s}
+.list a{display:grid;grid-template-columns:120px 1fr auto;gap:16px;align-items:center;padding:16px;border-top:1px solid var(--line)}
 .list a:first-child{border-top:0}
-.list a:hover{background:#f6f9fc}
-.list time{font-family:var(--num);font-size:15px;font-weight:600;color:var(--muted)}
+.list a:hover{background:var(--card2)}
+.list a:hover .t b{color:var(--logo-b)}
+.list time{font:600 16px/1.3 var(--num);color:var(--muted)}
 .list .t{min-width:0}
-.list .t b{display:block;font-size:15px;line-height:1.55;margin-top:4px}
-.list .go{color:var(--muted)}
+.list .t .tags{display:flex;flex-wrap:wrap;gap:4px}
+.list .t b{display:block;font-size:16px;line-height:1.55;margin-top:4px}
+.list .go{color:var(--muted);font-size:20px}
 .list a.th{grid-template-columns:120px 1fr 128px auto}
-.list .thumb{width:128px;aspect-ratio:3/2;border-radius:8px;overflow:hidden;background:#eef2f6}
+.list .thumb{width:128px;aspect-ratio:3/2;border-radius:var(--r-sm);overflow:hidden;background:var(--card2)}
 .list .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.aphoto{margin:0 0 20px;border-radius:12px;overflow:hidden;background:#eef2f6}
-.aphoto img{display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;background:#eef2f6}
-.more{display:block;margin:14px auto 0;border:1px solid var(--line);background:#fff;border-radius:30px;padding:10px 26px;font-size:13px;font-weight:700}
-.article{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 32px}
-.article .meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
-.article .meta time{font-family:var(--num);font-size:16px;font-weight:600}
-.article h2{font-size:clamp(20px,3vw,28px);line-height:1.5;margin:12px 0 18px;font-weight:900}
-.article .body{font-size:15px;line-height:2;border-top:1px solid var(--line);padding-top:18px}
-.article .body a{color:var(--blue);text-decoration:underline;word-break:break-all}
-.btn{display:inline-flex;align-items:center;gap:8px;margin-top:22px;background:var(--navy);color:#fff;font-weight:700;font-size:14px;padding:12px 22px;border-radius:30px}
-.btn:hover{background:var(--blue)}
-.back{display:inline-block;margin-top:22px;font-size:13px;color:var(--blue);font-weight:700}
+.more{display:flex;margin:12px auto 0}
+.aphoto{margin:0 0 24px;border-radius:var(--r-sm);overflow:hidden;background:var(--card2)}
+.aphoto img{display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;background:var(--card2)}
+.article{padding:32px}
+.article .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.article .meta time{font:600 18px/1.3 var(--num);margin-right:4px}
+.article h2{font-size:24px;line-height:1.5;margin:12px 0 16px;font-weight:900}
+.article .body{font-size:16px;line-height:1.7;border-top:1px solid var(--line);padding-top:16px;overflow-wrap:anywhere}
+.article .body a{color:var(--logo-b);text-decoration:underline;word-break:break-all}
+.article .btn{margin-top:24px}
+.back{display:inline-flex;align-items:center;min-height:44px;margin-top:16px;font-size:14px;color:var(--logo-b);font-weight:700}
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-@media(max-width:820px){.nav a{padding:0 8px;font-size:12px}}
-@media(max-width:680px){
-  .wrap{width:calc(100% - 32px)}
-  .head{height:56px}
-  .logo{height:36px;padding:3px 5px}
-  .brand{gap:8px}
-  .brandname{font-size:13px}
-  .menubtn{font-size:0;padding:6px 11px;flex:none}
-  .menubtn:before{content:"☰";font-size:18px;line-height:1}
-  .brandname small{font-size:9.5px;letter-spacing:0;white-space:normal;line-height:1.25}
-  .brandname{font-size:13px}
-  .menubtn{display:block}
-  .nav{display:none;position:absolute;top:56px;left:0;right:0;flex-direction:column;background:var(--navy);padding:6px 16px 14px;height:auto;border-bottom:1px solid #ffffff1a}
-  .nav.open{display:flex}
-  .nav a{padding:13px 8px;border-bottom:1px solid #ffffff12}
-  .pagehead .wrap{padding:22px 0 22px}
-  .main{padding-top:22px}
-  .sechead h2{font-size:19px}
-  .list a{grid-template-columns:1fr;gap:4px;padding:14px 16px}
+@media(max-width:600px){
+  main.main{padding-top:16px}
+  .chips button{min-height:44px}
+  .list a{grid-template-columns:1fr;gap:4px;padding:12px 16px}
   .list .go{display:none}
   .list a.th{grid-template-columns:1fr 96px;column-gap:12px}
   .list a.th time{grid-column:1}
   .list a.th .t{grid-column:1}
   .list a.th .thumb{grid-column:2;grid-row:1/span 2;width:96px;align-self:center}
-  .article{padding:20px 18px}
-  .btn{width:100%;justify-content:center}
+  .article{padding:16px}
+  .article h2{font-size:20px}
+  .article .btn{width:100%}
 }
 </style>
-<link rel="stylesheet" href="./theme.css?v=20261020">
 </head>
 <body>
+<script src="./hdr.js?v=20261021"></script>
+<script>hslChrome('./news.html')</script>
 <div class="demo" id="demo" hidden>プレビュー用のサンプルデータを表示しています（公開環境では公式データに自動で切り替わります）</div>
-<header class="header">
-  <div class="wrap head">
-    <a href="./" class="brand"><span class="logo"><img src="./img/hsl-logo.svg" alt="北海道サッカーリーグ" width="34" height="38"></span><span class="brandname">北海道サッカーリーグ<small>Hokkaido Soccer League</small></span></a>
-    <button class="menubtn" id="menu" aria-controls="nav" aria-expanded="false">☰ メニュー</button>
-    <nav class="nav" id="nav">
-      <a href="./">トップ</a>
-      <a href="./#calendar">カレンダー</a>
-      <a href="./results.html">大会記録</a>
-      <a href="./news.html" class="on">お知らせ</a>
-      <a href="./about.html">連盟について</a>
-      <a href="./history.html">歴代成績</a>
-    </nav>
-  </div>
-</header>
-
-<section class="pagehead"><div class="wrap">
+<section class="phead"><div class="wrap">
   <div class="crumb"><a href="./">ホーム</a> ／ <span id="crumb">お知らせ</span></div>
   <div class="eyebrow">NEWS</div><h1 id="h1">お知らせ</h1>
 </div></section>
 <main class="wrap main" id="main"><span class="sk"></span><span class="sk"></span></main>
-
-<footer class="footer">
-  <div class="wrap">
-    <div><strong>北海道サッカーリーグ</strong><p>内容は連盟の大会運営システムから自動で反映しています。</p><p id="updated"></p></div>
-    <nav><a href="./">トップ</a><a href="./news.html">お知らせ</a><a href="./about.html">連盟について</a><a href="./history.html">歴代成績</a><a href="./results.html">大会記録</a></nav>
-  </div>
-</footer>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -192,30 +125,32 @@ async function boot(file,fn){
     else{fn(null,e);return}
   }
   $('demo').hidden=!DEMO;
-  if(d?.updatedAt)$('updated').textContent='最終更新 '+String(d.updatedAt).replace('T',' ').slice(0,16);
+  if(d?.updatedAt){/* フッター（hdr.js）はページを読み終えてから入るので、まだなければ待つ */
+    const put=()=>{const u=$('updated');if(u)u.textContent='最終更新 '+String(d.updatedAt).replace('T',' ').slice(0,16)};
+    if($('updated'))put();else document.addEventListener('DOMContentLoaded',put);}
   fn(d);
 }
-$('menu').addEventListener('click',()=>{const o=$('nav').classList.toggle('open');$('menu').setAttribute('aria-expanded',String(o))});
-$('nav').addEventListener('click',e=>{if(e.target.closest('a')){$('nav').classList.remove('open');$('menu').setAttribute('aria-expanded','false')}});
 
+/* 7日以内のお知らせに NEW を付ける（トップと同じ） */
+const fresh=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');if(!m)return false;const t=new Date();t.setHours(0,0,0,0);const age=(t-new Date(+m[1],+m[2]-1,+m[3]))/864e5;return age>=0&&age<=7};
 let ALL=[],CAT=PARAMS.get('cat')||'ALL',SHOW=20;
 function renderList(){
   const cats=[];for(const n of ALL)if(!cats.some(c=>c[0]===n.cat))cats.push([n.cat,n.catName]);
   cats.sort((a,b)=>(a[0]==='連盟'?-1:b[0]==='連盟'?1:0));
   if(CAT!=='ALL'&&!cats.some(c=>c[0]===CAT))CAT='ALL';
   const list=ALL.filter(n=>CAT==='ALL'||n.cat===CAT);
-  $('main').innerHTML='<div class="chips" role="tablist">'+[['ALL','すべて'],...cats].map(([k,l])=>'<button role="tab" data-cat="'+esc(k)+'" aria-selected="'+(k===CAT)+'">'+esc(k==='ALL'||k==='連盟'?l:shortComp(l))+'</button>').join('')+'</div>'+
-    '<div class="card list">'+(list.length?list.slice(0,SHOW).map(n=>{const ph=photoUrl(n.photo,400);return '<a href="?id='+encodeURIComponent(n.id)+'"'+(ph?' class="th"':'')+'><time>'+esc(fmtDate(n.date))+'</time><div class="t">'+(n.important?'<span class="imp">重要</span> ':'')+'<span class="cat">'+esc(n.cat==='連盟'?'連盟':shortComp(n.catName))+'</span><b>'+esc(n.title)+'</b></div>'+(ph?'<span class="thumb"><img src="'+esc(ph)+'" alt="" loading="lazy" decoding="async" onerror="'+noImg+'"></span>':'')+'<span class="go">›</span></a>'}).join(''):'<p class="empty">お知らせはまだありません。</p>')+'</div>'+
-    (list.length>SHOW?'<button class="more" id="more">もっと見る（残り'+(list.length-SHOW)+'件）</button>':'');
+  $('main').innerHTML='<div class="pills chips" role="tablist">'+[['ALL','すべて'],...cats].map(([k,l])=>'<button role="tab" data-cat="'+esc(k)+'" aria-selected="'+(k===CAT)+'">'+esc(k==='ALL'||k==='連盟'?l:shortComp(l))+'</button>').join('')+'</div>'+
+    '<div class="card list">'+(list.length?list.slice(0,SHOW).map(n=>{const ph=photoUrl(n.photo,400);return '<a href="?id='+encodeURIComponent(n.id)+'"'+(ph?' class="th"':'')+'><time>'+esc(fmtDate(n.date))+'</time><div class="t">'+'<span class="tags">'+(n.important?'<span class="imp">重要</span>':'')+(fresh(n.date)?'<span class="newb">NEW</span>':'')+'<span class="cat">'+esc(n.cat==='連盟'?'連盟':shortComp(n.catName))+'</span></span><b>'+esc(n.title)+'</b></div>'+(ph?'<span class="thumb"><img src="'+esc(ph)+'" alt="" loading="lazy" decoding="async" onerror="'+noImg+'"></span>':'')+'<span class="go">›</span></a>'}).join(''):'<p class="empty">お知らせはまだありません。</p>')+'</div>'+
+    (list.length>SHOW?'<button class="btn more" id="more">もっと見る（残り'+(list.length-SHOW)+'件）</button>':'');
 }
 function renderArticle(n){
   document.title=n.title+' | 北海道サッカーリーグ';
   $('crumb').innerHTML='<a href="./news.html">お知らせ</a> ／ 記事';
   $('h1').textContent='お知らせ';
   const u=safeUrl(n.url);
-  $('main').innerHTML='<article class="article"><div class="meta"><time>'+esc(fmtDate(n.date))+'</time>'+(n.important?'<span class="imp">重要</span>':'')+'<a class="cat" href="./news.html?cat='+encodeURIComponent(n.cat)+'">'+esc(n.cat==='連盟'?'連盟':shortComp(n.catName))+'</a></div>'+
+  $('main').innerHTML='<article class="card article"><div class="meta"><time>'+esc(fmtDate(n.date))+'</time>'+(n.important?'<span class="imp">重要</span>':'')+'<a class="cat" href="./news.html?cat='+encodeURIComponent(n.cat)+'">'+esc(n.cat==='連盟'?'連盟':shortComp(n.catName))+'</a></div>'+
     '<h2>'+esc(n.title)+'</h2>'+(photoUrl(n.photo,1200)?'<figure class="aphoto"><img src="'+esc(photoUrl(n.photo,1200))+'"'+(photoSet(n.photo,[800,1200,1600])?' srcset="'+esc(photoSet(n.photo,[800,1200,1600]))+'" sizes="(max-width:1100px) 100vw, 1036px"':'')+' alt="'+esc(n.title)+'" decoding="async" onerror="'+noImg+'"></figure>':'')+(has(n.body)?'<div class="body">'+richText(n.body)+'</div>':'')+
-    (u?'<a class="btn" href="'+esc(u)+'" target="_blank" rel="noopener">'+(/\.pdf(\?|$)/i.test(u)?'PDFを開く':'詳しく見る')+' ↗</a>':'')+
+    (u?'<a class="btn main" href="'+esc(u)+'" target="_blank" rel="noopener">'+(/\.pdf(\?|$)/i.test(u)?'PDFを開く':'詳しく見る')+' ↗</a>':'')+
     '</article><a class="back" href="./news.html">‹ お知らせ一覧へ</a>';
 }
 $('main').addEventListener('click',e=>{
@@ -233,7 +168,7 @@ boot('news.json',(d,err)=>{
 function demoData(file){
   const t=new Date();const d=n=>{const x=new Date(t);x.setDate(x.getDate()-n);return x.toISOString().slice(0,10)};
   return {ok:true,updatedAt:d(0)+'T18:00:00+09:00',news:[
-    {id:'a1',date:d(1),cat:'連盟',catName:'連盟',photo:'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="1200" height="800" fill="#1f5a8a"/><text x="600" y="420" font-size="60" font-family="sans-serif" fill="#fff" text-anchor="middle">サンプル写真</text></svg>'),title:'（サンプル）2027年度 チーム登録の受付について',body:'（サンプル）ここに本文が入ります。\n改行もそのまま表示されます。\n詳しくは https://example.com をご覧ください。',url:'https://example.com',important:true},
+    {id:'a1',date:d(1),cat:'連盟',catName:'連盟',photo:'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="1200" height="800" fill="#1d3350"/><text x="600" y="420" font-size="60" font-family="sans-serif" fill="#fff" text-anchor="middle">サンプル写真</text></svg>'),title:'（サンプル）2027年度 チーム登録の受付について',body:'（サンプル）ここに本文が入ります。\n改行もそのまま表示されます。\n詳しくは https://example.com をご覧ください。',url:'https://example.com',important:true},
     {id:'a2',date:d(3),cat:'demo-1',catName:'【サンプル】リーグ 1部',title:'（サンプル）第12節 会場変更のお知らせ',body:'（サンプル）第12節の会場を変更します。',url:'',important:true},
     {id:'a3',date:d(6),cat:'demo-cup',catName:'【サンプル】新人戦',title:'（サンプル）新人戦 組み合わせ決定',body:'',url:'https://example.com/a.pdf',important:false},
     {id:'a4',date:d(12),cat:'連盟',catName:'連盟',title:'（サンプル）審判講習会の開催',body:'（サンプル）本文',url:'',important:false}]};

@@ -19,11 +19,13 @@
         '<nav class="gnav" id="nav" aria-label="メニュー"><div class="bar">'+GNAV.map(([h,t])=>'<a href="'+h+'"'+(here===h?' aria-current="page"':'')+'>'+t+'</a>').join('')+'</div></nav>'+
         '<button class="menubtn" id="menu" aria-controls="nav" aria-expanded="false" aria-label="メニュー">☰</button></div>'+
       '</div><div class="tri"></div></header>');
-    // フッターは、ページの中身がそろってから最後に置く（<body> のすぐあとで呼ばれても下に来るように）
+    // フッター（<body> のすぐあとで呼ばれても、最後はいちばん下に来る）
     const addFooter=()=>document.body.insertAdjacentHTML('beforeend',
       '<footer class="ft"><div class="wrap in"><div><b>北海道サッカーリーグ</b><p>日程・結果・記録は、連盟の大会運営システムと公式記録から自動で反映しています。</p><p id="updated"></p></div>'+
       '<nav aria-label="サイトの中のリンク">'+GNAV.map(([h,t])=>'<a href="'+h+'">'+t+'</a>').join('')+'<a href="./referees.html">審判の担当</a></nav></div></footer>');
-    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{if(!document.querySelector('footer.ft'))addFooter()});else addFooter();
+    // すぐに入れておき（#updated などをページがすぐ書けるように）、読み終わったらいちばん下へ移す
+    addFooter();
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{const f=document.querySelector('footer.ft');if(f)document.body.appendChild(f)});
     const menu=document.getElementById('menu'),nav=document.getElementById('nav');
     menu.addEventListener('click',()=>{const o=nav.classList.toggle('open');menu.setAttribute('aria-expanded',String(o))});
     // 大会の切り替え：いちばん新しい年度（URL の comp があればその年度）の大会
