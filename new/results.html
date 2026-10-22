@@ -151,7 +151,14 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 .tbl td.z{color:var(--muted)}
 .grid td{font-size:13px;min-width:72px}
 .grid td.self{background:var(--card2)}
-.grid td div{text-align:center}
+.grid td div{display:grid;grid-template-columns:1.3em 2.8em;justify-content:center;align-items:center;font-variant-numeric:tabular-nums}
+.grid td div i{font-style:normal;text-align:center}
+.grid td div span{text-align:center}
+.grid td div.up{display:block;text-align:center}
+/* 横にずらしても、左のチーム名は見えたまま */
+.grid td.l,.grid th.l{position:sticky;left:0;z-index:1;background:var(--card);box-shadow:1px 0 0 var(--line)}
+.grid th.l{background:var(--card2)}
+@media(max-width:600px){.grid td.l .tn{max-width:7.5em}.grid td.l .tn a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 .grid .w{font-weight:800;color:var(--logo-g)}
 .grid div.l{color:var(--red);font-weight:700}
 .grid .d{color:var(--ink)}
@@ -594,9 +601,9 @@ function rStandings(){
   return (DATA.groups||[]).map(g=>{
     const fp=g.table.some(r=>r.fairPlay!=null),rate=g.table.some(r=>r.pointsRate!=null);
     return (g.group?'<div class="sh"><h2>'+esc(g.group)+'</h2></div>':'<div style="height:14px"></div>')+'<div class="card scroll"><table class="tbl">'+
-      '<tr><th>順位</th><th class="l">チーム</th><th>勝点</th><th>試合</th><th>勝</th><th>分</th><th>負</th><th class="hide-sp">得点</th><th class="hide-sp">失点</th><th>得失点</th>'+(rate?'<th>勝点率</th>':'')+(fp?'<th>FP</th>':'')+'<th class="l">直近5試合</th></tr>'+
+      '<tr><th>順位</th><th class="l">チーム</th><th>勝点</th><th>試合</th><th>勝</th><th>分</th><th>負</th><th>得点</th><th>失点</th><th>得失点</th>'+(rate?'<th>勝点率</th>':'')+(fp?'<th>FP</th>':'')+'<th class="l">直近5試合</th></tr>'+
       g.table.map(r=>{const z=(ZONES[zoneCode()]||(()=>''))(+r.rank,g.table.length,g.group||'');return '<tr'+(z?' data-z="'+z+'"':'')+'><td class="rk">'+r.rank+'</td><td class="l"><span class="tn">'+crest(r.team,'xs')+teamLink(r.team,r.team.short)+'</span></td><td class="pts">'+r.points+'</td><td>'+r.played+'</td><td>'+r.won+'</td><td>'+r.drawn+'</td><td>'+r.lost+'</td>'+
-        '<td class="hide-sp">'+r.goalsFor+'</td><td class="hide-sp">'+r.goalsAgainst+'</td><td>'+(r.goalDiff>0?'+':'')+r.goalDiff+'</td>'+(rate?'<td>'+(r.pointsRate??'')+'</td>':'')+(fp?'<td>'+(r.fairPlay??'')+'</td>':'')+'<td class="l"><span class="form">'+formOf(r.team.id)+'</span></td></tr>'}).join('')+
+        '<td>'+r.goalsFor+'</td><td>'+r.goalsAgainst+'</td><td>'+(r.goalDiff>0?'+':'')+r.goalDiff+'</td>'+(rate?'<td>'+(r.pointsRate??'')+'</td>':'')+(fp?'<td>'+(r.fairPlay??'')+'</td>':'')+'<td class="l"><span class="form">'+formOf(r.team.id)+'</span></td></tr>'}).join('')+
       '</table></div>'+(g.table.some(r=>r.note)?'<p class="note">'+g.table.filter(r=>r.note).map(r=>esc(r.team.short+'：'+r.note)).join('　')+'</p>':'');
   }).join('')+((ZLABEL[zoneCode()]||[]).length?'<div class="zl">'+ZLABEL[zoneCode()].map(([k,t])=>'<span style="--zc:'+ZCOL[k]+'"><i></i>'+esc(t)+'</span>').join('')+'</div>':'')+'<p class="note">順位は勝点・得失点差・総得点・当該チーム同士の勝敗の順で決めます（大会要項による）。</p>';
 }
@@ -607,7 +614,7 @@ function rGrid(){
     '<tr><th class="l"></th>'+g.teams.map(t=>'<th title="'+esc(t.short)+'">'+crest(t,'xs')+'<div>'+esc(t.short)+'</div></th>').join('')+'</tr>'+
     g.rows.map(r=>'<tr><td class="l"><span class="tn">'+crest(r.team,'xs')+teamLink(r.team,r.team.short)+'</span></td>'+r.cells.map(c=>{
       if(c===null)return '<td class="self"></td>';
-      return '<td>'+c.map(x=>x.result?'<div class="'+x.result.toLowerCase()+'">'+({W:'○',L:'●',D:'△'}[x.result])+' '+x.for+'-'+x.against+'</div>':'<div class="up">'+esc(sd(x.date))+'</div>').join('')+'</td>';
+      return '<td>'+c.map(x=>x.result?'<div class="'+x.result.toLowerCase()+'"><i>'+({W:'○',L:'●',D:'△'}[x.result])+'</i><span>'+x.for+'-'+x.against+'</span></div>':'<div class="up">'+esc(sd(x.date))+'</div>').join('')+'</td>';
     }).join('')+'</tr>').join('')+'</table></div>').join('')+'<p class="note">○勝ち　●負け　△引き分け（左のチームから見た結果）</p>';
 }
 
