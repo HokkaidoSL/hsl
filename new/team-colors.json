@@ -1,0 +1,155 @@
+{
+ "note": "チームカラー（2026-10-22 に調べた色）。トップの大きな写真の左右の色に使う。管理画面のチーム紹介「チームカラー」が入っていればそちらが先。ここにないクラブはエンブレムの色を使う",
+ "colors": {
+  "VANKEI": "#00843D",
+  "CANALE": "#0047AB",
+  "NACHARO": "#0047AB",
+  "KYOKUSHUKAI": "#7B1E2B",
+  "SKYEARTH": "#0047AB",
+  "ASC": "#C8102E",
+  "SAPPORO-UNIV": "#5B2C83",
+  "SATSUDAI-GP": "#5B2C83",
+  "FORTUNA": "#C8102E",
+  "TOYOTA": "#C8102E",
+  "HOKUSHUKAI": "#00843D",
+  "BTOP": "#111111",
+  "NORBRITZ": "#C8102E",
+  "COPAN": "#1B2A4A",
+  "SHINTOKU": "#C8102E",
+  "TOKAI-SAPPORO": "#0047AB",
+  "VAIN": "#C8102E",
+  "OTARU-YF": "#C8102E",
+  "SAPPORO-SHUKYU": "#00843D"
+ },
+ "detail": {
+  "VANKEI": {
+   "color": "#00843D",
+   "name": "緑",
+   "confidence": "high",
+   "source": "ja.wikipedia・シニア公式「チームカラーはグリーン」"
+  },
+  "CANALE": {
+   "color": "#0047AB",
+   "name": "青",
+   "confidence": "high",
+   "source": "公式 canale-otaru.com（チームカラー青）"
+  },
+  "NACHARO": {
+   "color": "#0047AB",
+   "name": "青",
+   "confidence": "high",
+   "source": "公式 hakodate-nacharo.com（ユニフォーム 青・白）"
+  },
+  "KYOKUSHUKAI": {
+   "color": "#7B1E2B",
+   "name": "えんじ",
+   "confidence": "high",
+   "source": "ja.wikipedia（クラブカラーえんじ）"
+  },
+  "SKYEARTH": {
+   "color": "#0047AB",
+   "name": "青",
+   "confidence": "high",
+   "source": "ja.wikipedia・公式ショップ（2026 HOME 青）"
+  },
+  "ASC": {
+   "color": "#C8102E",
+   "name": "赤",
+   "confidence": "high",
+   "source": "ja.wikipedia（クラブカラー赤）・公式ショップ「ASCレッド」"
+  },
+  "SAPPORO-UNIV": {
+   "color": "#5B2C83",
+   "name": "紫",
+   "confidence": "medium",
+   "source": "ja.wikipedia（クラブカラー紫・黄）"
+  },
+  "SATSUDAI-GP": {
+   "color": "#5B2C83",
+   "name": "紫",
+   "confidence": "medium",
+   "source": "札幌大学サッカー部の関連チーム（クラブカラー紫）"
+  },
+  "FORTUNA": {
+   "color": "#C8102E",
+   "name": "赤",
+   "confidence": "medium",
+   "source": "公式ストア（2024 ホーム 赤白）"
+  },
+  "TOYOTA": {
+   "color": "#C8102E",
+   "name": "赤",
+   "confidence": "medium",
+   "source": "ja.wikipedia（FP1st 赤）"
+  },
+  "HOKUSHUKAI": {
+   "color": "#00843D",
+   "name": "緑",
+   "confidence": "medium",
+   "source": "ja.wikipedia（クラブカラー緑）"
+  },
+  "BTOP": {
+   "color": "#111111",
+   "name": "白×黒（白は文字が読めないため黒）",
+   "confidence": "medium",
+   "source": "公式 btop.jp「FP1stはチームカラーのホワイト×ブラック」"
+  },
+  "NORBRITZ": {
+   "color": "#C8102E",
+   "name": "赤",
+   "confidence": "low",
+   "source": "ja.wikipedia（クラブカラー赤・黄）。1stの色は未確認"
+  },
+  "COPAN": {
+   "color": "#1B2A4A",
+   "name": "紺",
+   "confidence": "low",
+   "source": "観戦ブログ（2026 第10節で紺を着用）"
+  },
+  "SHINTOKU": {
+   "color": "#C8102E",
+   "name": "赤",
+   "confidence": "low",
+   "source": "観戦ブログ（2026 第10節で赤を着用）"
+  },
+  "TOKAI-SAPPORO": {
+   "color": "#0047AB",
+   "name": "青",
+   "confidence": "low",
+   "source": "応援グッズが青・黄。ユニフォームの色は未確認"
+  },
+  "VAIN": {
+   "color": "#C8102E",
+   "name": "赤",
+   "confidence": "low",
+   "source": "atwiki（クラブカラー赤・白）"
+  },
+  "OTARU-YF": {
+   "color": "#C8102E",
+   "name": "赤",
+   "confidence": "low",
+   "source": "ユニフォーム製作会社の作成事例（赤・黒）"
+  },
+  "SAPPORO-SHUKYU": {
+   "color": "#00843D",
+   "name": "緑",
+   "confidence": "low",
+   "source": "ja.wikipedia（FP1st 緑）。水色とする資料もあり食い違う"
+  }
+ },
+ "unknown": [
+  "SOCC10TH",
+  "HOKUDAI-CLUB",
+  "REUSSIR",
+  "TOMAKOMAI-CITY",
+  "ROF",
+  "ABASHIRI",
+  "OBIHIRO-SHUKYU",
+  "KEMARI",
+  "KAMUI",
+  "FCPOOL",
+  "YUTO",
+  "AMIGO",
+  "SABAS"
+ ]
+}
