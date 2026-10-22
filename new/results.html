@@ -687,7 +687,7 @@ function rCards(){
   const sus=list.filter(p=>p.suspendedFor&&p.suspendedFor.length)
     .sort((a,b)=>String(a.team&&a.team.univ||'').localeCompare(String(b.team&&b.team.univ||''),'ja')||(Number(a.no)||999)-(Number(b.no)||999));
   const rdShort=r=>{const x=String(r||'').match(/第\d+節/);return x?x[0]:String(r||'');};
-  const susTxt=p=>p.suspendedFor.map(id=>{const m=byId[id];return m&&m.home?sd(m.date)+'　'+rdShort(m.round)+'　'+m.home.short+' vs '+m.away.short:id;}).map(esc).join('<br>');
+  const susTxt=p=>p.suspendedFor.map(id=>{if(id==='NEXT')return '次の公式試合（次年度の最初の試合。ほかのクラブへ移籍した場合は、移籍先の最初の公式試合）';const m=byId[id];return m&&m.home?sd(m.date)+'　'+rdShort(m.round)+'　'+m.home.short+' vs '+m.away.short:id;}).map(esc).join('<br>');
   const top=sus.length?'<div class="sh"><h2>出場停止（これからの試合）</h2></div><div class="card scroll"><table class="tbl"><tr><th class="l">クラブ名</th><th>背番号</th><th class="l">名前</th><th class="l">対象試合</th></tr>'+
     sus.map(p=>'<tr><td class="l"><span class="tn">'+crest(p.team,'xs')+esc(p.team&&(p.team.univ||p.team.short)||'')+'</span></td><td>'+esc(p.no||'')+'</td><td class="l sus">'+playerLink(p.team,p.name)+'</td><td class="l">'+susTxt(p)+'</td></tr>').join('')+'</table></div>':'';
   const bar='<div class="bar"><select id="cteamSel" aria-label="チーム"><option value="">すべてのチーム</option>'+tables.map(t=>'<option value="'+esc(t.team.id)+'"'+(t.team.id===S.cteam?' selected':'')+'>'+esc(t.team.short)+'</option>').join('')+'</select></div>';
