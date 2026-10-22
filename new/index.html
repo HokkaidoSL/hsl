@@ -59,11 +59,6 @@
 .hs .cta{position:absolute;left:50%;bottom:56px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:8px;background:#fff;color:#111;
   font-weight:900;font-size:16px;padding:14px 28px;border-radius:var(--r-pill);box-shadow:var(--shadow-pop);text-decoration:none;white-space:nowrap}
 .hs .cta:after{content:"»";font-size:20px;line-height:1}
-.hs.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1}
-.hs.ph:before{content:"";position:absolute;inset:0 0 auto;height:200px;background:linear-gradient(rgba(8,18,29,.75),transparent);pointer-events:none}
-.hs.ph .cap{position:absolute;left:0;right:0;bottom:48px;text-align:center;padding:0 16px;font-weight:700;text-shadow:0 1px 6px rgba(0,0,0,.7)}
-.hs.ph .cap small{display:block;font-weight:500;font-size:12px;opacity:.85;margin-top:4px}
-.hs.ph a.cap{color:#fff;text-decoration:none}
 .hero .dots{position:absolute;left:0;right:0;bottom:16px;display:flex;justify-content:center;gap:8px;z-index:2}
 .hero .dots button{width:10px;height:10px;padding:0;border:0;border-radius:var(--r-pill);background:rgba(255,255,255,.45);cursor:pointer;transition:width .2s}
 .hero .dots button[aria-current=true]{width:48px;background:#fff}
@@ -225,7 +220,7 @@
 
 </main>
 <script src="./season.js?v=20261012c"></script>
-<script src="./site.js?v=20261022"></script>
+<script src="./site.js?v=20261022b"></script>
 <script src="./live.js?v=20261020"></script>
 <script>
 chrome('./');
@@ -247,12 +242,12 @@ function pickComp(code){
   try{history.replaceState(null,'','?'+(QS.get('y')?'y='+QS.get('y')+'&':'')+'c='+CUR.code)}catch(e){}
 }
 
-/* ---------- いちばん上の大きな写真：注目の試合（試合中 → いちばん近い次の試合 → いちばん新しい結果）と、同じ節の試合。最後にトップ写真 ---------- */
+/* ---------- いちばん上の大きな写真：注目の試合（試合中 → いちばん近い次の試合 → いちばん新しい結果）と、同じ節の試合 ---------- */
 function featured(c){
   const ms=order(c.data.matches).filter(m=>m.home&&m.away);
   return ms.find(m=>liveOf(m))||ms.find(m=>!done(m)&&(m.date||'')>=today)||[...ms].reverse().find(done)||ms[0];
 }
-let HPH=[],HI=0;
+let HI=0;
 /* 白い文字が読めるよう、明るすぎる色は暗くする */
 function deepen(c){
   if(!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c||''))return '';
@@ -262,7 +257,7 @@ function deepen(c){
   if(L>0.5)v=v.map(x=>x*0.5/L);
   return 'rgb('+v.map(Math.round).join(',')+')';
 }
-/* チームの色：チーム紹介の「チームカラー」。入っていなければ、エンブレムの中でいちばん多いあざやかな色（同じサイトに置いた画像だけ読める） */
+/* チームの色：チーム紹介の「チームカラー」→ 調べた色（team-colors.json）→ エンブレムの中でいちばん多いあざやかな色（同じサイトに置いた画像だけ読める） */
 const ECOL=new Map();
 function emblemColor(u){
   if(ECOL.has(u))return ECOL.get(u);
@@ -293,7 +288,7 @@ function heroMatches(c){
 function heroSlide(m0){
   const m=withLive(m0),f=done(m),lv=m._live,lose=lostSide(m0),dt=/^(\d{4})-(\d{2})-(\d{2})$/.exec(m.date||'');
   const side=(t,k)=>{
-    const e=emblemOf(t),own=deepen((profOf(t)||{}).color),nm=[...(t.short||t.name||'')].slice(0,2).join(''),lz=lose===(k==='l'?'home':'away')?' lose':'';
+    const e=emblemOf(t),own=deepen(teamColorOf(t)),nm=[...(t.short||t.name||'')].slice(0,2).join(''),lz=lose===(k==='l'?'home':'away')?' lose':'';
     return {
       half:'<div class="half '+k+lz+'" style="--c:'+(own||(k==='l'?'#1d3350':'#2a4262'))+'"'+(e&&!own?' data-emb="'+esc(e)+'"':'')+'>'+
         (e?'<img class="wm" src="'+esc(e)+'" alt="" loading="lazy" onerror="this.remove()">':'')+
@@ -311,18 +306,12 @@ function heroSlide(m0){
       '<div class="below">'+(m.venue?'<div class="vn">'+esc(m.venue)+'</div>':'')+(st?'<div class="st">'+st+'</div>':'')+'</div></div>'+
     '<a class="cta" href="'+matchUrl(CUR.id,m)+'">'+(f||lv?'試合の詳細はこちら':'試合情報はこちら')+'</a></article>';
 }
-function photoSlide(p){
-  const cap=(p.caption?esc(p.caption):'')+(p.credit?'<small>撮影：'+esc(p.credit)+'</small>':'');
-  return '<article class="hs ph" role="group" aria-roledescription="スライド" aria-label="'+esc(p.caption||'写真')+'"><img src="'+esc(p.src)+'" alt="'+esc(p.caption||'試合の写真')+'" loading="lazy" onerror="heroDrop(this)">'+
-    (cap?(p.link?'<a class="cap" href="'+esc(p.link)+'" target="_blank" rel="noopener">'+cap+'</a>':'<div class="cap">'+cap+'</div>'):'')+'</article>';
-}
 function renderFeat(){
   const ms=CUR?heroMatches(CUR):[];
-  const html=ms.map(heroSlide).concat(HPH.map(photoSlide));
+  const html=ms.map(heroSlide);
   $('htrack').innerHTML=html.length?html.join(''):'<article class="hs" style="background:var(--card)"><div class="in"><span></span><p class="mid">この大会の試合はまだありません。</p></div></article>';
   heroDotsBuild();heroGo(HI,false);paintHalves();
 }
-function heroDrop(img){img.closest('.hs').remove();heroDotsBuild();heroGo(HI,false)}
 function heroDotsBuild(){
   const n=$('htrack').children.length;
   $('hdots').innerHTML=n>1?Array.from({length:n},(_,i)=>'<button aria-label="'+(i+1)+'枚目"></button>').join(''):'';
@@ -444,12 +433,8 @@ function renderComps(){
 }
 
 /* ---------- 写真（管理画面のトップ写真など。自分でずらして見る） ---------- */
-/* トップ写真（管理画面のトップ写真・new/photos/index.json）は、いちばん上の大きな写真の後ろに足す */
-async function loadHeroPhotos(){HPH=(await topPhotos()).slice(0,6);if(CUR)renderFeat()}
-
 (async()=>{
   await embReady;
-  loadHeroPhotos().catch(()=>{});
   renderNews().catch(()=>{});
   C=await loadAll();
   if(!C.length)throw new Error('大会のデータがありません');

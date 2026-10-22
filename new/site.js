@@ -76,10 +76,12 @@ function winners(c){
  *    new/photos/（index.json に {"top":[{"file","caption","credit","link"}],"teams":{"クラブの正式名":"ファイル名"}}）
  */
 const PROF=new Map();
-let EMB={},PH={};
+let EMB={},PH={},TCOL={};
 const embReady=Promise.all([
   fetch('./emblems/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{EMB=j||{}}).catch(()=>{}),
-  fetch('./photos/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{PH=j||{}}).catch(()=>{})
+  fetch('./photos/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{PH=j||{}}).catch(()=>{}),
+  /* チームカラー（調べた色）：team-colors.json の colors に {"チームID":"#RRGGBB"}。管理画面のチームカラーがあればそちらが先 */
+  fetch('./team-colors.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{TCOL=(j&&j.colors)||{}}).catch(()=>{})
 ]);
 const FILE_RE=/^[^\/\\?#]+\.(png|jpe?g|webp|svg|gif)$/i;
 /* 画像のURL：https のURL・Googleドライブの共有リンク・dir に置いたファイル名 */
@@ -91,6 +93,7 @@ function imgUrl(v,dir,w){
   if(FILE_RE.test(v))return './'+dir+'/'+encodeURIComponent(v);
   return '';
 }
+function teamColorOf(t){const p=profOf(t);const c=(p&&p.color)||TCOL[t.id]||TCOL[t.name]||TCOL[t.univ]||'';return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c)?c:''}
 const profOf=t=>PROF.get(t.id)||PROF.get(t.name)||PROF.get(t.univ)||null;
 function emblemOf(t){const p=profOf(t);return imgUrl(p&&p.emblem,'emblems')||imgUrl(EMB[t.name]||EMB[t.univ]||EMB[t.short]||EMB[t.id],'emblems')}
 function teamPhotoOf(t,w){const p=profOf(t),m=PH.teams||{};return imgUrl(p&&p.teamPhoto,'photos',w)||imgUrl(m[t.name]||m[t.univ]||m[t.id],'photos',w)}
