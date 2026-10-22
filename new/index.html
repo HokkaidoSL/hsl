@@ -25,20 +25,71 @@
 <style>
 /* トップページだけの部品（色・影・角丸は hsl.css の変数だけ） */
 
-/* 注目の試合 */
-.feat{margin-top:24px;padding:24px;position:relative;overflow:hidden}
-.feat .ft-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;font-size:14px;font-weight:700;color:var(--muted)}
-.feat .ft-h b{color:var(--ink)}
-.feat .vs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;margin:20px 0 8px}
-.feat .tm{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;font-size:18px;font-weight:900;line-height:1.3}
-.feat .mid{text-align:center}
-.feat .day{font:800 56px/1 var(--num);letter-spacing:.02em}
-.feat .day small{font-size:24px;margin-left:4px}
-.feat .sc{font:800 64px/1 var(--num);letter-spacing:.04em;white-space:nowrap}
-.feat .sub{font-size:14px;color:var(--muted);margin-top:8px}
-.feat .ko{font:800 28px/1 var(--num);margin-top:8px}
-.feat .acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:20px}
-@media(max-width:600px){.feat{padding:16px}.feat .vs{gap:8px}.feat .tm{font-size:14px}.feat .day{font-size:40px}.feat .day small{font-size:18px}.feat .sc{font-size:44px}.feat .ko{font-size:22px}}
+/* いちばん上の大きな写真（試合ごとに1枚。左右をチームの色に分け、選手名鑑の写真を出す）。ヘッダーはこの上に重ねる */
+.home .hd{position:absolute;left:0;right:0;top:0}
+.home .hd .tri{display:none}
+.home .brand b,.home .brand small{text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.hero{position:relative;background:var(--navy);overflow:hidden}
+.hero .track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.hero .track::-webkit-scrollbar{display:none}
+.hs{position:relative;flex:0 0 100%;scroll-snap-align:start;height:clamp(600px,92svh,760px);overflow:hidden;color:#fff;isolation:isolate}
+.hs .half{position:absolute;top:0;bottom:0;width:50%;background:linear-gradient(rgba(8,18,29,.35),transparent 45%),var(--c);overflow:hidden;z-index:-2}
+.hs .half.l{left:0}.hs .half.r{right:0}
+.hs .half .wm{position:absolute;top:44%;width:120%;max-width:520px;aspect-ratio:1;opacity:.16;object-fit:contain}
+.hs .half.l .wm{right:-30%}.hs .half.r .wm{left:-30%}
+.hs .pl{position:absolute;bottom:0;width:50%;height:58%;object-fit:cover;object-position:50% 12%;z-index:-1;
+  /* 名鑑の写真は四角なので、まわりをぼかして色の上になじませる */
+  -webkit-mask-image:linear-gradient(transparent,#000 14%,#000 62%,transparent),linear-gradient(90deg,transparent,#000 16%,#000 84%,transparent);
+  -webkit-mask-composite:source-in;mask-image:linear-gradient(transparent,#000 14%,#000 62%,transparent),linear-gradient(90deg,transparent,#000 16%,#000 84%,transparent);mask-composite:intersect}
+.hs .pl.l{left:0}.hs .pl.r{right:0}
+.hs .pl.team{height:52%;opacity:.55}
+.hs:after{content:"";position:absolute;inset:auto 0 0;height:30%;background:linear-gradient(transparent,rgba(8,18,29,.85));z-index:-1}
+.hs .in{max-width:1200px;margin:0 auto;padding:148px 16px 0;display:grid;grid-template-columns:1fr minmax(0,auto) 1fr;align-items:start;gap:8px}
+.hs .tm{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;font-weight:900;font-size:16px;line-height:1.3;color:#fff;text-decoration:none;text-shadow:0 1px 6px rgba(0,0,0,.5);min-width:0}
+.hs .tm .ce{width:88px;height:88px;border-radius:50%;background:#fff;display:grid;place-items:center;padding:8px;box-shadow:var(--shadow-pop)}
+.hs .tm .ce img{width:100%;height:100%;object-fit:contain}
+.hs .tm .ce.txt{background:rgba(255,255,255,.18);font-size:22px}
+.hs .tm.lose{opacity:.6}
+.hs .mid{text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.45)}
+.hs .comp{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
+.hs .comp i{width:8px;height:8px;border-radius:50%;background:var(--k)}
+.hs .day{font:800 72px/1 var(--num);letter-spacing:.01em;margin-top:8px;white-space:nowrap}
+.hs .day small{font-size:28px;margin-left:4px}
+.hs .sc{font:800 72px/1 var(--num);letter-spacing:.04em;margin-top:8px;white-space:nowrap}
+.hs .ko{font:800 30px/1.1 var(--num);margin-top:6px}
+.hs .vn{font-size:13px;font-weight:700;margin-top:8px;max-width:22em;margin-inline:auto}
+.hs .st{margin-top:10px}
+.hs .below{grid-column:1/-1;text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.45)}
+.hs .rd{font-size:13px;font-weight:700;margin-top:2px}
+.hs .st .badge{background:rgba(8,18,29,.55);color:#fff}
+.hs .cta{position:absolute;left:50%;bottom:56px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:8px;background:#fff;color:#111;
+  font-weight:900;font-size:16px;padding:14px 28px;border-radius:var(--r-pill);box-shadow:var(--shadow-pop);text-decoration:none;white-space:nowrap}
+.hs .cta:after{content:"»";font-size:20px;line-height:1}
+.hs.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1}
+.hs.ph:before{content:"";position:absolute;inset:0 0 auto;height:200px;background:linear-gradient(rgba(8,18,29,.75),transparent);pointer-events:none}
+.hs.ph .cap{position:absolute;left:0;right:0;bottom:48px;text-align:center;padding:0 16px;font-weight:700;text-shadow:0 1px 6px rgba(0,0,0,.7)}
+.hs.ph .cap small{display:block;font-weight:500;font-size:12px;opacity:.85;margin-top:4px}
+.hs.ph a.cap{color:#fff;text-decoration:none}
+.hero .dots{position:absolute;left:0;right:0;bottom:16px;display:flex;justify-content:center;gap:8px;z-index:2}
+.hero .dots button{width:10px;height:10px;padding:0;border:0;border-radius:var(--r-pill);background:rgba(255,255,255,.45);cursor:pointer;transition:width .2s}
+.hero .dots button[aria-current=true]{width:48px;background:#fff}
+@media(min-width:901px){
+  .hs .in{padding-top:168px;gap:24px}
+  .hs .tm .ce{width:120px;height:120px;padding:10px}
+  .hs .tm{font-size:20px}
+  .hs .in{max-width:760px}
+  .hs .pl{width:min(30%,460px);height:78%}
+  .hs .pl.l{left:max(0px,calc(50% - 720px))}.hs .pl.r{right:max(0px,calc(50% - 720px))}
+  .hs .day,.hs .sc{font-size:104px}.hs .day small{font-size:36px}.hs .ko{font-size:40px}
+}
+@media(max-width:600px){
+  .hs .in{padding-top:136px;gap:4px;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+  .hs .tm{font-size:13px;gap:8px}
+  .hs .tm .ce{width:64px;height:64px;padding:6px}
+  .hs .day,.hs .sc{font-size:52px}.hs .day small{font-size:22px}.hs .ko{font-size:24px}
+  .hs .vn{font-size:12px}
+  .hs .cta{font-size:15px;padding:12px 24px;bottom:52px}
+}
 
 /* 試合カード（横に並べる） */
 .mhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
@@ -136,17 +187,12 @@
 .comps .st{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .comps .st strong{color:var(--ink)}
 
-/* 写真（自分で横にずらして見る。勝手には動かない） */
-.photos{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px}
-.photos figure{flex:0 0 min(560px,86%);margin:0;scroll-snap-align:start;border-radius:var(--r-card);overflow:hidden;background:var(--card);box-shadow:var(--shadow-card)}
-.photos img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover}
-.photos figcaption{padding:8px 12px;font-size:13px;color:var(--muted)}
 </style>
 </head>
-<body>
+<body class="home">
+<section class="hero" id="hero" aria-roledescription="カルーセル" aria-label="注目の試合と写真"><div class="track" id="htrack"><div class="hs" style="background:var(--card)"></div></div><div class="dots" id="hdots"></div></section>
 <main class="wrap">
   <h1 class="sr">北海道サッカーリーグ 公式サイト</h1>
-  <section class="card feat" id="feat" aria-label="注目の試合"><span class="sk"></span><span class="sk"></span></section>
 
   <section class="sec" id="matches" aria-labelledby="mTitle">
     <div class="mhead">
@@ -186,13 +232,9 @@
     <div class="comps" id="comps"></div>
   </section>
 
-  <section class="sec" id="photoSec" hidden aria-labelledby="phTitle">
-    <div class="sech"><h2 id="phTitle"><small>PHOTOS</small>写真</h2><span class="note">横にずらすと次の写真が見られます</span></div>
-    <div class="photos" id="photos"></div>
-  </section>
 </main>
 <script src="./season.js?v=20261012c"></script>
-<script src="./site.js?v=20261021"></script>
+<script src="./site.js?v=20261022"></script>
 <script src="./live.js?v=20261020"></script>
 <script>
 chrome('./');
@@ -214,25 +256,82 @@ function pickComp(code){
   try{history.replaceState(null,'','?'+(QS.get('y')?'y='+QS.get('y')+'&':'')+'c='+CUR.code)}catch(e){}
 }
 
-/* ---------- 注目の試合：試合中 → いちばん近い次の試合 → いちばん新しい結果 ---------- */
+/* ---------- いちばん上の大きな写真：注目の試合（試合中 → いちばん近い次の試合 → いちばん新しい結果）と、同じ節の試合。最後にトップ写真 ---------- */
 function featured(c){
   const ms=order(c.data.matches).filter(m=>m.home&&m.away);
   return ms.find(m=>liveOf(m))||ms.find(m=>!done(m)&&(m.date||'')>=today)||[...ms].reverse().find(done)||ms[0];
 }
-function renderFeat(){
-  const m0=featured(CUR);
-  if(!m0){$('feat').innerHTML='<p class="empty">この大会の試合はまだありません。</p>';return}
-  const m=withLive(m0),f=done(m),lv=m._live,lose=lostSide(m0);
-  const st=lv?'<span class="badge live">'+esc(HSL_LIVE.label(lv))+'</span>':f?'<span class="badge">試合終了</span>':m.date===today?'<span class="badge new">今日の試合</span>':'<span class="badge">次の試合</span>';
-  const dt=/^(\d{4})-(\d{2})-(\d{2})$/.exec(m.date||'');
-  const mid=f?'<div class="sc">'+esc(m.score.home)+' - '+esc(m.score.away)+'</div>'+(m.score.pk?'<div class="sub">PK '+esc(m.score.pk.home)+' - '+esc(m.score.pk.away)+'</div>':'')+'<div class="sub">'+esc(dt?(+dt[2])+'/'+(+dt[3])+'（'+wd(m.date)+'）':'')+'</div>':
-    '<div class="day">'+(dt?(+dt[2])+'.'+(+dt[3])+'<small>'+wd(m.date)+'</small>':'日程未定')+'</div>'+(m.kickoff?'<div class="ko">'+esc(m.kickoff)+' KO</div>':'');
-  const tm=(t,side)=>'<a class="tm'+(lose===side?'" style="color:var(--muted)':'')+'" href="'+teamUrl(t)+'">'+crest(t,'lg')+'<span>'+esc(t.name)+'</span></a>';
-  $('feat').innerHTML='<div class="ft-h"><span><b>'+esc(CUR.short)+'</b>　'+esc(m.round||'')+'</span>'+st+'</div>'+
-    '<div class="vs">'+tm(m.home,'home')+'<div class="mid">'+mid+'</div>'+tm(m.away,'away')+'</div>'+
-    (m.venue?'<div class="sub" style="text-align:center">'+esc(m.venue)+'</div>':'')+
-    '<div class="acts"><a class="btn main" href="'+matchUrl(CUR.id,m)+'">'+(f||lv?'試合の詳細 »':'試合の情報 »')+'</a><a class="btn" href="'+compUrl(CUR.id,'schedule')+'">日程・結果 »</a></div>';
+let HPH=[],HI=0;
+const hash=s=>{let h=0;for(const ch of String(s))h=(h*31+ch.charCodeAt(0))>>>0;return h};
+/* チームの色（チーム紹介の「チームカラー」）。白い文字が読めるよう、明るすぎる色は暗くする */
+function heroColor(t,fb){
+  const c=(profOf(t)||{}).color||'';
+  if(!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c))return fb;
+  let h=c.slice(1);if(h.length===3)h=h.replace(/./g,x=>x+x);
+  let v=[0,2,4].map(i=>parseInt(h.substr(i,2),16));
+  const L=(0.2126*v[0]+0.7152*v[1]+0.0722*v[2])/255;
+  if(L>0.5)v=v.map(x=>x*0.5/L);
+  return 'rgb('+v.map(Math.round).join(',')+')';
 }
+function heroMatches(c){
+  const m0=featured(c);if(!m0)return [];
+  const same=order(c.data.matches).filter(m=>m!==m0&&m.home&&m.away&&m.round===m0.round)
+    .sort((a,b)=>(!!liveOf(b)-!!liveOf(a))||(done(a)-done(b)));
+  return [m0].concat(same).slice(0,4);
+}
+function heroSlide(m0){
+  const m=withLive(m0),f=done(m),lv=m._live,lose=lostSide(m0),dt=/^(\d{4})-(\d{2})-(\d{2})$/.exec(m.date||'');
+  const side=(t,k)=>{
+    const e=emblemOf(t),pp=PPH.get(t.id)||[],ph=pp.length?pp[hash(m.matchId+t.id)%pp.length]:null,tp=ph?'':teamPhotoOf(t,1200);
+    const nm=[...(t.short||t.name||'')].slice(0,2).join('');
+    return {
+      half:'<div class="half '+k+'" style="--c:'+heroColor(t,k==='l'?'#1d3350':'#2a4262')+'">'+(e?'<img class="wm" src="'+esc(e)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'</div>',
+      pl:ph?'<img class="pl '+k+'" src="'+esc(ph.src)+'" alt="'+esc((t.short||t.name)+' '+ph.name)+'" loading="lazy" onerror="this.remove()">':
+        tp?'<img class="pl team '+k+'" src="'+esc(tp)+'" alt="" loading="lazy" onerror="this.remove()">':'',
+      tm:'<a class="tm'+(lose===(k==='l'?'home':'away')?' lose':'')+'" href="'+teamUrl(t)+'">'+
+        (e?'<span class="ce"><img src="'+esc(e)+'" alt="" onerror="this.parentNode.className=\'ce txt\';this.parentNode.textContent=\''+esc(nm)+'\'"></span>':'<span class="ce txt">'+esc(nm)+'</span>')+
+        '<span>'+esc(t.name)+'</span></a>'
+    };
+  };
+  const H=side(m.home,'l'),A=side(m.away,'r');
+  const st=lv?'<span class="badge live">'+esc(HSL_LIVE.label(lv))+'</span>':f?'<span class="badge done">試合終了</span>':m.date===today?'<span class="badge new">今日の試合</span>':'';
+  const mid=(f||lv?'<div class="sc">'+esc(m.score.home)+' - '+esc(m.score.away)+'</div>'+(m.score.pk?'<div class="ko">PK '+esc(m.score.pk.home)+' - '+esc(m.score.pk.away)+'</div>':'')+
+      '<div class="vn">'+esc(dt?(+dt[2])+'/'+(+dt[3])+'（'+wd(m.date)+'）':'')+'</div>':
+    '<div class="day">'+(dt?(+dt[2])+'.'+(+dt[3])+'<small>'+wd(m.date)+'</small>':'日程未定')+'</div>'+(m.kickoff?'<div class="ko">'+esc(m.kickoff)+' KO</div>':''));
+  return '<article class="hs" role="group" aria-roledescription="スライド" aria-label="'+esc(m.home.short+' 対 '+m.away.short)+'">'+H.half+A.half+H.pl+A.pl+
+    '<div class="in">'+H.tm+'<div class="mid"><span class="comp" style="--k:'+(KCOL[CUR.code]||'#fff')+'"><i></i>'+esc(CUR.short)+'</span><div class="rd">'+esc(m.round||'')+'</div>'+mid+'</div>'+A.tm+
+      '<div class="below">'+(m.venue?'<div class="vn">'+esc(m.venue)+'</div>':'')+(st?'<div class="st">'+st+'</div>':'')+'</div></div>'+
+    '<a class="cta" href="'+matchUrl(CUR.id,m)+'">'+(f||lv?'試合の詳細はこちら':'試合情報はこちら')+'</a></article>';
+}
+function photoSlide(p){
+  const cap=(p.caption?esc(p.caption):'')+(p.credit?'<small>撮影：'+esc(p.credit)+'</small>':'');
+  return '<article class="hs ph" role="group" aria-roledescription="スライド" aria-label="'+esc(p.caption||'写真')+'"><img src="'+esc(p.src)+'" alt="'+esc(p.caption||'試合の写真')+'" loading="lazy" onerror="heroDrop(this)">'+
+    (cap?(p.link?'<a class="cap" href="'+esc(p.link)+'" target="_blank" rel="noopener">'+cap+'</a>':'<div class="cap">'+cap+'</div>'):'')+'</article>';
+}
+function renderFeat(){
+  const ms=CUR?heroMatches(CUR):[];
+  const html=ms.map(heroSlide).concat(HPH.map(photoSlide));
+  $('htrack').innerHTML=html.length?html.join(''):'<article class="hs" style="background:var(--card)"><div class="in"><span></span><p class="mid">この大会の試合はまだありません。</p></div></article>';
+  heroDotsBuild();heroGo(HI,false);
+}
+function heroDrop(img){img.closest('.hs').remove();heroDotsBuild();heroGo(HI,false)}
+function heroDotsBuild(){
+  const n=$('htrack').children.length;
+  $('hdots').innerHTML=n>1?Array.from({length:n},(_,i)=>'<button aria-label="'+(i+1)+'枚目"></button>').join(''):'';
+  [...$('hdots').children].forEach((b,i)=>b.onclick=()=>{heroHold();heroGo(i)});
+}
+function heroGo(i,smooth){
+  const tr=$('htrack'),n=tr.children.length;if(!n)return;
+  HI=((i%n)+n)%n;tr.scrollTo({left:HI*tr.clientWidth,behavior:smooth===false?'auto':'smooth'});
+  [...$('hdots').children].forEach((b,j)=>b.setAttribute('aria-current',String(j===HI)));
+}
+/* 7秒ごとに次へ。さわったら少し止める。動きを減らす設定の人には動かさない */
+let HOLD=0;
+const heroHold=()=>{HOLD=Date.now()+15000};
+$('htrack').addEventListener('scroll',()=>{const tr=$('htrack'),i=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));if(i!==HI){HI=i;[...$('hdots').children].forEach((b,j)=>b.setAttribute('aria-current',String(j===HI)))}},{passive:true});
+['pointerdown','touchstart','wheel'].forEach(ev=>$('htrack').addEventListener(ev,heroHold,{passive:true}));
+addEventListener('resize',()=>heroGo(HI,false));
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches)setInterval(()=>{if(Date.now()>HOLD&&!document.hidden&&$('htrack').children.length>1)heroGo(HI+1)},7000);
 
 /* ---------- 試合カード（節ごと） ---------- */
 function buildRounds(c){
@@ -337,17 +436,12 @@ function renderComps(){
 }
 
 /* ---------- 写真（管理画面のトップ写真など。自分でずらして見る） ---------- */
-function phFail(img){img.closest('figure').remove();if(!$('photos').querySelector('figure'))$('photoSec').hidden=true}
-async function renderPhotos(){
-  const ps=(await topPhotos()).slice(0,10);if(!ps.length)return;
-  $('photos').innerHTML=ps.map(p=>'<figure>'+(p.link?'<a href="'+esc(p.link)+'" target="_blank" rel="noopener">':'')+'<img src="'+esc(p.src)+'" alt="'+esc(p.caption||'試合の写真')+'" loading="lazy" onerror="phFail(this)">'+(p.link?'</a>':'')+
-    (p.caption||p.credit?'<figcaption>'+esc(p.caption)+(p.credit?'　撮影：'+esc(p.credit):'')+'</figcaption>':'')+'</figure>').join('');
-  $('photoSec').hidden=false;
-}
+/* トップ写真（管理画面のトップ写真・new/photos/index.json）は、いちばん上の大きな写真の後ろに足す */
+async function loadHeroPhotos(){HPH=(await topPhotos()).slice(0,6);if(CUR)renderFeat()}
 
 (async()=>{
   await embReady;
-  renderPhotos().catch(()=>{});
+  loadHeroPhotos().catch(()=>{});
   renderNews().catch(()=>{});
   C=await loadAll();
   if(!C.length)throw new Error('大会のデータがありません');
@@ -360,7 +454,7 @@ async function renderPhotos(){
   renderPyramid();renderComps();
   /* 速報が届いたら描き直す */
   if(window.HSL_LIVE)HSL_LIVE.on(()=>{if(CUR){const x=$('mrow').scrollLeft;renderFeat();renderMatches();$('mrow').scrollLeft=x}if(SEL)renderDay()});
-})().catch(e=>{$('feat').innerHTML='<p class="empty">読み込めませんでした。時間をおいて開き直してください。（'+esc(e.message)+'）</p>'});
+})().catch(e=>{$('htrack').innerHTML='<article class="hs" style="background:var(--card)"><div class="in"><span></span><p class="mid">読み込めませんでした。時間をおいて開き直してください。（'+esc(e.message)+'）</p></div></article>'});
 </script>
 <script src="./alert.js?v=20261020"></script>
 <script src="./hit.js?v=20261020"></script>
