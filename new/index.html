@@ -111,15 +111,19 @@
 .news a:hover span{color:var(--logo-b)}
 
 /* リーグのつながり */
-.pyr{display:grid;gap:8px}
+.pyr{display:grid;gap:4px;max-width:720px;margin:0 auto}
 .pyr .lvl{display:grid;gap:8px}
-.pyr .l3{grid-template-columns:repeat(3,1fr)}
-@media(max-width:900px){.pyr .l3{grid-template-columns:1fr}}
-.pyr .lg-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 16px;font-weight:900}
-.pyr .lg-h small{display:block;font-size:12px;color:var(--muted);font-weight:500}
-.pyr .lg-h a{font-size:13px;color:var(--logo-b);font-weight:700;white-space:nowrap}
-.pyr .lg-h a:after{content:" »"}
-.pyr .arrow{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 24px;font-size:12px;font-weight:700;color:var(--muted);padding:4px 0}
+.pyr .l3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:600px){.pyr .l3{grid-template-columns:minmax(0,1fr)}}
+.pyr .box{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:12px 16px;border-left:4px solid var(--k);color:var(--ink);text-decoration:none}
+.pyr .box:hover{background:var(--card2)}
+.pyr .box .nm{flex:1;min-width:0}
+.pyr .box b{font-weight:900;margin-right:8px}
+.pyr .box small{font-size:12px;color:var(--muted)}
+.pyr .box .ld{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;min-width:0}
+.pyr .box .ld span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pyr .box .ld em{font-style:normal;font-size:12px;color:var(--muted);font-weight:500;white-space:nowrap}
+.pyr .arrow{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 24px;font-size:12px;font-weight:700;color:var(--muted);padding:4px 0}
 .pyr .arrow .u:before{content:"▲ ";color:var(--logo-g)}
 .pyr .arrow .d:before{content:"▼ ";color:var(--red)}
 
@@ -252,20 +256,16 @@ function renderMatches(){
 }
 $('prevR').onclick=()=>{RI--;renderMatches()};$('nextR').onclick=()=>{RI++;renderMatches()};
 
-/* ---------- 順位（直近5試合の勝敗つき） ---------- */
+/* ---------- 順位（直近5試合は大会記録のページに出す） ---------- */
 const ZONE={TOP:(r,n)=>r===1?'hi':r===n?'dn':r===n-1?'po':'',DN:r=>r===1?'up':'',DT:r=>r===1?'up':'',SD:r=>r===1?'up':'',BF:r=>r<=2?'up':''};
 const ZNOTE={TOP:[['hi','優勝'],['po','決勝大会へ（入替）'],['dn','ブロックリーグへ降格']],BF:[['up','北海道リーグへ昇格']],SD:[['up','決勝大会へ']],DN:[['up','決勝大会へ']],DT:[['up','決勝大会へ']]};
-function formOf(c,tid){
-  const ms=order(c.data.matches).filter(m=>done(m)&&(m.home.id===tid||m.away.id===tid)).slice(-5);
-  return ms.map(m=>{const w=m.winner;const k=!w||w==='DRAW'?'d':w===tid?'w':'l';return '<span class="res '+k+'" title="'+esc(m.round||'')+'">'+({w:'勝',d:'分',l:'負'})[k]+'</span>'}).join('');
-}
 function standTable(c,rows,full){
   const z=ZONE[c.code]||(()=>''),n=rows.length;
   return '<div class="card tbl-wrap"><table class="tbl"><thead><tr><th>順位</th><th class="l">クラブ</th><th>勝点</th><th>試合</th>'+
-    (full?'<th class="hide-sp">勝</th><th class="hide-sp">分</th><th class="hide-sp">負</th><th class="hide-sp">得点</th><th class="hide-sp">失点</th>':'')+'<th>得失</th>'+(full?'<th class="l">直近5試合</th>':'')+'</tr></thead><tbody>'+
+    (full?'<th class="hide-sp">勝</th><th class="hide-sp">分</th><th class="hide-sp">負</th><th class="hide-sp">得点</th><th class="hide-sp">失点</th>':'')+'<th>得失</th>'+'</tr></thead><tbody>'+
     rows.map(r=>{const k=z(r.rank,n);return '<tr'+(k?' data-z="'+k+'"':'')+'><td class="rk">'+r.rank+'</td><td class="l"><a class="tn" href="'+teamUrl(r.team)+'">'+crest(r.team,'xs')+'<span>'+esc(r.team.short)+'</span></a></td><td class="pt">'+r.points+'</td><td class="n">'+r.played+'</td>'+
       (full?'<td class="n hide-sp">'+r.won+'</td><td class="n hide-sp">'+r.drawn+'</td><td class="n hide-sp">'+r.lost+'</td><td class="n hide-sp">'+r.goalsFor+'</td><td class="n hide-sp">'+r.goalsAgainst+'</td>':'')+
-      '<td class="n">'+(r.goalDiff>0?'+':'')+r.goalDiff+'</td>'+(full?'<td class="l"><span class="form">'+formOf(c,r.team.id)+'</span></td>':'')+'</tr>'}).join('')+'</tbody></table></div>';
+      '<td class="n">'+(r.goalDiff>0?'+':'')+r.goalDiff+'</td>'+'</tr>'}).join('')+'</tbody></table></div>';
 }
 function renderStandings(){
   const c=CUR,g=(c.data.groups||[]).find(g=>/上位/.test(g.group||''))||(c.data.groups||[])[0];
@@ -314,18 +314,19 @@ async function renderNews(){
 
 /* ---------- リーグのつながり ---------- */
 function renderPyramid(){
+  // 順位表はほかの所にあるので、ここは「リーグの名前・クラブ数・いまの1位」と、昇格・降格の決まりだけ
   const by=Object.fromEntries(C.map(c=>[c.code,c]));
-  const top=g=>g&&g.table?g:null;
-  const lg=(c,body,extra)=>'<div class="card"><div class="lg-h"><span>'+esc(c.short)+(extra?'<small>'+esc(extra)+'</small>':'')+'</span><a href="'+compUrl(c.id,'standings')+'">順位表</a></div>'+body+'</div>';
-  const grp=c=>top((c.data.groups||[]).find(g=>/上位/.test(g.group||''))||(c.data.groups||[])[0]);
-  const blk=c=>{const g=grp(c);return g?lg(c,standTable(c,g.table.slice(0,4)).replace('class="card tbl-wrap"','class="tbl-wrap"'),/上位/.test(g.group||'')?'上位リーグ・4位まで':'4位まで'):''};
-  const tg=by.TOP&&grp(by.TOP),bg=by.BF&&grp(by.BF);
+  const grp=c=>(c.data.groups||[]).find(g=>/上位/.test(g.group||''))||(c.data.groups||[])[0];
+  const box=k=>{const c=by[k];if(!c)return '';const g=grp(c),t=g&&g.table||[],r=t.find(x=>x.rank===1);
+    const n=new Set((c.data.matches||[]).flatMap(m=>[m.home&&m.home.id,m.away&&m.away.id]).filter(Boolean)).size||t.length;
+    const ld=r&&r.played?'<em>1位</em>'+crest(r.team,'xs')+'<span>'+esc(r.team.short)+'</span>':'<em>まだ試合がありません</em>';
+    return '<a class="card box" href="'+compUrl(c.id,'standings')+'" style="--k:'+(KCOL[k]||'var(--ink)')+'"><span class="nm"><b>'+esc(c.short)+'</b><small>'+(n?n+'クラブ':'')+'</small></span><span class="ld">'+ld+'</span></a>'};
   $('pyr').innerHTML=
-    (tg?'<div class="lvl">'+lg(by.TOP,standTable(by.TOP,tg.table).replace('class="card tbl-wrap"','class="tbl-wrap"'),'1部・'+tg.table.length+'クラブ')+'</div>':'')+
-    '<div class="arrow"><span class="u">決勝大会の上位2クラブが昇格</span><span class="d">7位は決勝大会へ・8位はブロックリーグへ降格</span></div>'+
-    (bg?'<div class="lvl">'+lg(by.BF,standTable(by.BF,bg.table).replace('class="card tbl-wrap"','class="tbl-wrap"'),'各ブロック1位＋北海道リーグ7位')+'</div>':'')+
+    '<div class="lvl">'+box('TOP')+'</div>'+
+    '<div class="arrow"><span class="u">決勝大会の上位2クラブが昇格</span><span class="d">7位は決勝大会へ・8位はブロックリーグへ</span></div>'+
+    '<div class="lvl">'+box('BF')+'</div>'+
     '<div class="arrow"><span class="u">各ブロックの1位が決勝大会へ</span></div>'+
-    '<div class="lvl l3">'+['SD','DN','DT'].filter(k=>by[k]).map(k=>blk(by[k])).join('')+'</div>';
+    '<div class="lvl l3">'+['SD','DN','DT'].map(box).join('')+'</div>';
 }
 
 /* ---------- 大会の一覧 ---------- */

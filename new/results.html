@@ -43,9 +43,10 @@ button{cursor:pointer}
 .crest.img .ed{display:none}
 
 /* ---------- 大会ボードの形：左に大会の一覧、右に表紙と中身 ---------- */
-.lay{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start;margin-top:24px}
+.lay{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start;margin-top:24px}
 .lay-main{min-width:0}
-.cmenu{position:sticky;top:16px;display:grid;gap:12px}
+.cmenu{display:flex;justify-content:flex-end}
+.cmenu[hidden]{display:none}
 .cmenu .season{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
 .cmenu .season select{flex:1;min-width:0;appearance:none;border:0;border-radius:var(--r-pill);background:var(--card2);color:var(--ink);font-size:14px;font-weight:700;min-height:44px;padding:0 32px 0 16px;
   background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat}
@@ -467,11 +468,9 @@ const KIND={TOP:'リーグ',SD:'ブロック',DN:'ブロック',DT:'ブロック
 const MENU=[['LEAGUE',['TOP']],['BLOCK',['SD','DN','DT']],['FINAL',['BF']],['CUP',['HC','SC','CC']]];
 const STATUS={};
 function renderMenu(){
-  const by={};COMPS.forEach(c=>{(by[CODE(c.id)]=by[CODE(c.id)]||[]).push(c)});
-  const known=new Set(MENU.flatMap(m=>m[1])),other=COMPS.filter(c=>!known.has(CODE(c.id)));
-  const groups=MENU.map(([h,ks])=>[h,ks.flatMap(k=>by[k]||[])]).concat(other.length?[['OTHER',other]]:[]).filter(g=>g[1].length);
-  $('comptabs').innerHTML=seasonSelect(SEASON,'season')+groups.map(([h,cs])=>'<div><h3>'+h+'</h3>'+cs.map(c=>'<a href="'+pageUrl(c.id)+'"'+(c.id===S.comp?' aria-current="page"':'')+'><b>'+esc(shortComp(c.name))+'</b><small>'+esc(STATUS[c.id]||'')+'</small></a>').join('')+'</div>').join('');
-  const cur=$('comptabs').querySelector('[aria-current]');if(cur&&matchMedia('(max-width:900px)').matches)$('comptabs').scrollLeft=cur.offsetLeft-16;
+  // 大会の切り替えは、いちばん上のヘッダー（hdr.js）にある。ここは年度の切り替えだけ（年度が2つ以上のとき）
+  $('comptabs').innerHTML=seasonSelect(SEASON,'season');
+  $('comptabs').hidden=!$('comptabs').innerHTML;
 }
 /* それぞれの大会の進みぐあい（「終了」「8/14試合」）を一覧に出す */
 async function loadStatus(){
@@ -492,7 +491,6 @@ async function init(){
     renderMenu();
     applyCompColor();
     load();
-    loadStatus();
   }catch(e){showErr(e)}
 }
 async function load(){
@@ -585,13 +583,20 @@ const ZLABEL={
 };
 const ZCOL={up:'var(--logo-g)',hi:'var(--logo-b)',po:'var(--logo-y)',dn:'var(--red-bg)'};
 const zoneCode=()=>String(S.comp||'').split('-').pop();
+/* 直近5試合の勝敗（古い → 新しい。DESIGN.md 7-3） */
+function formOf(tid){
+  const ms=(DATA.matches||[]).filter(m=>m.score&&m.score.home!=null&&m.home&&m.away&&(m.home.id===tid||m.away.id===tid))
+    .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.kickoff||'').localeCompare(String(b.kickoff||''))).slice(-5);
+  return ms.map(m=>{const w=m.winner,k=!w||w==='DRAW'?'d':w===tid?'w':'l',op=m.home.id===tid?m.away:m.home;
+    return '<span class="res '+k+'" title="'+esc((m.round||'')+' '+(op.short||op.name)+' '+m.score.home+'-'+m.score.away)+'">'+({w:'勝',d:'分',l:'負'})[k]+'</span>'}).join('');
+}
 function rStandings(){
   return (DATA.groups||[]).map(g=>{
     const fp=g.table.some(r=>r.fairPlay!=null),rate=g.table.some(r=>r.pointsRate!=null);
     return (g.group?'<div class="sh"><h2>'+esc(g.group)+'</h2></div>':'<div style="height:14px"></div>')+'<div class="card scroll"><table class="tbl">'+
-      '<tr><th>順位</th><th class="l">チーム</th><th>勝点</th><th>試合</th><th>勝</th><th>分</th><th>負</th><th class="hide-sp">得点</th><th class="hide-sp">失点</th><th>得失点</th>'+(rate?'<th>勝点率</th>':'')+(fp?'<th>FP</th>':'')+'</tr>'+
+      '<tr><th>順位</th><th class="l">チーム</th><th>勝点</th><th>試合</th><th>勝</th><th>分</th><th>負</th><th class="hide-sp">得点</th><th class="hide-sp">失点</th><th>得失点</th>'+(rate?'<th>勝点率</th>':'')+(fp?'<th>FP</th>':'')+'<th class="l">直近5試合</th></tr>'+
       g.table.map(r=>{const z=(ZONES[zoneCode()]||(()=>''))(+r.rank,g.table.length,g.group||'');return '<tr'+(z?' data-z="'+z+'"':'')+'><td class="rk">'+r.rank+'</td><td class="l"><span class="tn">'+crest(r.team,'xs')+teamLink(r.team,r.team.short)+'</span></td><td class="pts">'+r.points+'</td><td>'+r.played+'</td><td>'+r.won+'</td><td>'+r.drawn+'</td><td>'+r.lost+'</td>'+
-        '<td class="hide-sp">'+r.goalsFor+'</td><td class="hide-sp">'+r.goalsAgainst+'</td><td>'+(r.goalDiff>0?'+':'')+r.goalDiff+'</td>'+(rate?'<td>'+(r.pointsRate??'')+'</td>':'')+(fp?'<td>'+(r.fairPlay??'')+'</td>':'')+'</tr>'}).join('')+
+        '<td class="hide-sp">'+r.goalsFor+'</td><td class="hide-sp">'+r.goalsAgainst+'</td><td>'+(r.goalDiff>0?'+':'')+r.goalDiff+'</td>'+(rate?'<td>'+(r.pointsRate??'')+'</td>':'')+(fp?'<td>'+(r.fairPlay??'')+'</td>':'')+'<td class="l"><span class="form">'+formOf(r.team.id)+'</span></td></tr>'}).join('')+
       '</table></div>'+(g.table.some(r=>r.note)?'<p class="note">'+g.table.filter(r=>r.note).map(r=>esc(r.team.short+'：'+r.note)).join('　')+'</p>':'');
   }).join('')+((ZLABEL[zoneCode()]||[]).length?'<div class="zl">'+ZLABEL[zoneCode()].map(([k,t])=>'<span style="--zc:'+ZCOL[k]+'"><i></i>'+esc(t)+'</span>').join('')+'</div>':'')+'<p class="note">順位は勝点・得失点差・総得点・当該チーム同士の勝敗の順で決めます（大会要項による）。</p>';
 }
