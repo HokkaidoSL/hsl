@@ -181,6 +181,7 @@ function showErr(e){$('main').innerHTML='<div class="card empty">読み込めま
 /* 同じ名前（空白・字体をそろえたもの）は同じ選手として、クラブ・年度をまたいで集める（移籍した選手もいるため）。
    書き方のちがい（髙/高 など）は ../results/data/player-aliases.json の aliases で1つの名前にまとめる */
 let ALIAS={};
+const SEP=new Set();  // 同じ名前でも別の人（player-aliases.json の separate）。見ているクラブの記録だけを数える
 const canon=n=>{const k=nrm(n);return ALIAS[k]||k};
 const CSHORT={TOP:'北海道リーグ',SD:'札幌・道央ブロック',DN:'道南ブロック',DT:'道東・道北ブロック',BF:'ブロックリーグ決勝大会',SC:'全国社会人 北海道予選',CC:'全国クラブ 北海道予選',HC:'北海道サッカー選手権'};
 const compLabel=c=>CSHORT[String(c.id).split('-').pop()]||shortComp(c.name);
@@ -189,7 +190,8 @@ async function init(){
   try{
     await embReady;
     if(!P.team||!P.name)throw new Error('選手が指定されていません');
-    try{const a=await getJSON('player-aliases.json');for(const [k,v] of Object.entries(a.aliases||{}))ALIAS[nrm(k)]=nrm(v);}catch(e){}
+    try{const a=await getJSON('player-aliases.json');for(const [k,v] of Object.entries(a.aliases||{}))ALIAS[nrm(k)]=nrm(v);
+      for(const n of (a.separate&&a.separate.names)||[])SEP.add(canon(n));}catch(e){}
     const cl=await getJSON('competitions.json');
     const comps=cl.competitions||[];
     const all=(await Promise.all(comps.map(c=>getJSON(encodeURIComponent(c.id)+'.json').then(d=>({c,d})).catch(()=>null)))).filter(Boolean);
@@ -217,9 +219,10 @@ async function init(){
         if(sc||as||ct)rows.push({comp:x.c,data:d,team:(sc||as||{}).team||ct.t.team,p:{name:P.name,goals:sc?sc.count:0,assists:as?as.count:0,yc:ct?ct.p.c||0:0,rc:ct?ct.p.s||0:0},games:[]});
       }
     }
+    const sameU=t=>t&&(t.univ||t.name)===(me.univ||me.name);
+    if(SEP.has(key))for(let i=rows.length-1;i>=0;i--)if(!sameU(rows[i].team))rows.splice(i,1);
     rows.sort((a,b)=>yearOf(b.comp)-yearOf(a.comp)||comps.indexOf(a.comp)-comps.indexOf(b.comp));
     // 名鑑（掲載してよい選手だけ。写真は本人の同意があるものだけが入っている）。いま見ているクラブの名鑑から
-    const sameU=t=>t&&(t.univ||t.name)===(me.univ||me.name);
     let prof=null;
     for(const r of rows.filter(r=>sameU(r.team)).concat(P.comp?[{comp:{id:P.comp}}]:[])){
       try{const ro=await getJSON(encodeURIComponent(r.comp.id)+'-roster.json');
