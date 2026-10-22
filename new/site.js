@@ -41,11 +41,6 @@ async function loadAll(){
   /* チーム紹介（管理画面）のエンブレム・チーム写真：各大会の名簿（{id}-roster.json）の profile から */
   const rs=await Promise.all(list.map(c=>json(encodeURIComponent(c.id)+'-roster.json').catch(()=>null)));
   for(const r of rs)for(const t of (r&&r.teams)||[])if(t.profile&&t.team)for(const k of [t.team.id,t.team.name,t.team.univ])if(k&&!PROF.has(k))PROF.set(k,t.profile);
-  /* 選手名鑑の写真（本人の同意があるものだけが名簿に入っている）：トップの大きな写真で使う */
-  for(const r of rs)for(const t of (r&&r.teams)||[])for(const p of (t&&t.players)||[]){
-    const u=imgUrl(p.photo,'players',800);if(!u||!t.team)continue;
-    const l=PPH.get(t.team.id)||[];if(!l.some(x=>x.src===u))l.push({src:u,name:p.name||'',no:p.no||''});PPH.set(t.team.id,l);
-  }
   return list.map((c,i)=>({...c,code:c.id.split('-').pop(),short:compShort(c),data:ds[i]})).filter(c=>c.data);
 }
 const SHORT={TOP:'北海道リーグ',SD:'札幌・道央ブロック',DN:'道南ブロック',DT:'道東・道北ブロック',BF:'ブロックリーグ決勝大会',SC:'全国社会人 北海道予選',CC:'全国クラブ 北海道予選',HC:'北海道選手権（天皇杯）'};
@@ -80,7 +75,7 @@ function winners(c){
  *  ・なければ、GitHub に置いたファイル：new/emblems/（index.json に {"クラブの正式名":"ファイル名"}）
  *    new/photos/（index.json に {"top":[{"file","caption","credit","link"}],"teams":{"クラブの正式名":"ファイル名"}}）
  */
-const PROF=new Map(),PPH=new Map();  // PPH：チームID → 選手の写真
+const PROF=new Map();
 let EMB={},PH={};
 const embReady=Promise.all([
   fetch('./emblems/index.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{EMB=j||{}}).catch(()=>{}),
