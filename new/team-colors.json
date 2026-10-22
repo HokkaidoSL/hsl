@@ -9,7 +9,7 @@
   "ASC": "#C8102E",
   "SAPPORO-UNIV": "#5B2C83",
   "SATSUDAI-GP": "#5B2C83",
-  "FORTUNA": "#C8102E",
+  "FORTUNA": "#A40000",
   "TOYOTA": "#C8102E",
   "HOKUSHUKAI": "#00843D",
   "BTOP": "#111111",
@@ -71,10 +71,10 @@
    "source": "札幌大学サッカー部の関連チーム（クラブカラー紫）"
   },
   "FORTUNA": {
-   "color": "#C8102E",
+   "color": "#A40000",
    "name": "赤",
-   "confidence": "medium",
-   "source": "公式ストア（2024 ホーム 赤白）"
+   "confidence": "high",
+   "source": "事務局の指定（2026-10-22）"
   },
   "TOYOTA": {
    "color": "#C8102E",
