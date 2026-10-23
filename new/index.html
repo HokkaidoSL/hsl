@@ -47,7 +47,6 @@
 .hs .mid{grid-column:1/-1;grid-row:1}
 .hs .in>.tm{grid-row:2;margin-top:4px}
 .hs .tm{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;font-weight:900;font-size:18px;align-self:center;line-height:1.3;color:#fff;text-decoration:none;text-shadow:0 1px 6px rgba(0,0,0,.5);min-width:0}
-.hs .tm.lose{opacity:.6}
 .hs .mid{text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.45)}
 .hs .comp{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
 .hs .comp i{width:8px;height:8px;border-radius:50%;background:var(--k)}
@@ -59,7 +58,7 @@
 .hs .st{margin-top:10px}
 .hs .below{grid-column:1/-1;grid-row:3;text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.45)}
 .hs .rd{font-size:13px;font-weight:700;margin-top:2px}
-.hs .st .badge{background:rgba(8,18,29,.55);color:#fff}
+.hs .st .badge{background:none;color:#fff;padding:0;font-size:13px;font-weight:700}
 .hs .cta{position:absolute;left:50%;bottom:56px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:8px;background:#fff;color:#111;
   font-weight:900;font-size:16px;padding:14px 28px;border-radius:var(--r-pill);box-shadow:var(--shadow-pop);text-decoration:none;white-space:nowrap}
 .hs .cta:after{content:"»";font-size:20px;line-height:1}
@@ -75,11 +74,16 @@
   .hs .day,.hs .sc{font-size:88px}.hs .day small{font-size:32px}.hs .ko{font-size:34px}
 }
 @media(max-width:600px){
-  .hs .in{padding-top:136px;gap:4px 12px}
+  .hs{height:460px}
+  .hero .dots{bottom:12px}
+  .hs .in{padding-top:128px;gap:2px 12px}
+  .hs .big{top:48%;width:min(80%,170px)}
+  .hs .st{margin-top:4px}
+  .hs .vn{margin-top:4px}
   .hs .tm{font-size:14px;gap:8px}
   .hs .day,.hs .sc{font-size:52px}.hs .day small{font-size:22px}.hs .ko{font-size:24px}
   .hs .vn{font-size:12px}
-  .hs .cta{font-size:15px;padding:12px 24px;bottom:52px}
+  .hs .cta{font-size:15px;padding:12px 24px;bottom:34px}
 }
 
 /* 試合カード（横に並べる） */
@@ -94,7 +98,6 @@
 .mc .row{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:15px;font-weight:700}
 .mc .row>span:not(.crest){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mc .row b{font:700 22px/1 var(--num)}
-.mc .row.lose{color:var(--muted)}
 .mc .venue{padding:2px 12px 10px;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mc .go{margin-top:auto;display:flex;align-items:center;justify-content:center;min-height:44px;background:var(--card2);border-radius:0 0 var(--r-card) var(--r-card);font-size:13px;font-weight:700}
 .mc .go:after{content:" »";margin-left:4px}
@@ -138,7 +141,6 @@
 .dl .m .t{display:flex;align-items:center;gap:8px;min-width:0;font-weight:700}
 .dl .m .t>span:not(.crest){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dl .m .t.h{justify-content:flex-end;text-align:right}
-.dl .m .t.lose{color:var(--muted)}
 .dl .m .s{font:700 18px/1 var(--num);min-width:64px;text-align:center;padding:6px 8px;border-radius:var(--r-sm);background:var(--card2)}
 .dl .m .s.vs{font-size:14px;color:var(--muted)}
 .dl .m .s.live{background:var(--red-bg);color:#fff}
