@@ -35,12 +35,16 @@
 .hs{position:relative;flex:0 0 100%;scroll-snap-align:start;height:clamp(600px,92svh,760px);overflow:hidden;color:#fff;isolation:isolate}
 .hs .half{position:absolute;top:0;bottom:0;width:50%;background:linear-gradient(rgba(8,18,29,.35),transparent 45%),var(--c);overflow:hidden;z-index:-2}
 .hs .half.l{left:0}.hs .half.r{right:0}
-.hs .big{position:absolute;left:50%;bottom:150px;transform:translateX(-50%);width:min(44vw,420px);aspect-ratio:1;display:grid;place-items:center;opacity:.5}
+.hs .big{position:absolute;left:50%;top:44%;transform:translateX(-50%);width:min(72vw,620px);aspect-ratio:1;display:grid;place-items:center;opacity:.45}
+/* 下を暗くして、ボタンと次の欄につなげる */
+.hs:after{content:"";position:absolute;inset:auto 0 0;height:34%;background:linear-gradient(transparent,rgba(8,18,29,.92));z-index:-1;pointer-events:none}
 .hs .big img{width:100%;height:100%;object-fit:contain}
 .hs .half.inv .big img{filter:brightness(0) invert(1)}
 .hs .half.ring .big img{filter:drop-shadow(0 0 1px rgba(255,255,255,.9)) drop-shadow(0 0 6px rgba(255,255,255,.25))}  /* 暗いエンブレムが暗い色の上で見えないときは白く */
 .hs .big.txt{color:#fff;font-size:min(14vw,120px);font-weight:900}
-.hs .in{max-width:1200px;margin:0 auto;padding:148px 16px 0;display:grid;grid-template-columns:1fr minmax(0,auto) 1fr;align-items:start;gap:8px}
+.hs .in{max-width:1200px;margin:0 auto;padding:148px 16px 0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:8px 16px}
+.hs .mid{grid-column:1/-1;grid-row:1}
+.hs .in>.tm{grid-row:2;margin-top:4px}
 .hs .tm{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;font-weight:900;font-size:18px;align-self:center;line-height:1.3;color:#fff;text-decoration:none;text-shadow:0 1px 6px rgba(0,0,0,.5);min-width:0}
 .hs .tm.lose{opacity:.6}
 .hs .mid{text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.45)}
@@ -52,7 +56,7 @@
 .hs .ko{font:800 30px/1.1 var(--num);margin-top:6px}
 .hs .vn{font-size:13px;font-weight:700;margin-top:8px;max-width:22em;margin-inline:auto}
 .hs .st{margin-top:10px}
-.hs .below{grid-column:1/-1;text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.45)}
+.hs .below{grid-column:1/-1;grid-row:3;text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.45)}
 .hs .rd{font-size:13px;font-weight:700;margin-top:2px}
 .hs .st .badge{background:rgba(8,18,29,.55);color:#fff}
 .hs .cta{position:absolute;left:50%;bottom:56px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:8px;background:#fff;color:#111;
@@ -64,12 +68,12 @@
 @media(min-width:901px){
   .hs .in{padding-top:168px;gap:24px}
   .hs .tm{font-size:24px}
-  .hs .in{max-width:900px}
-  .hs .big{width:min(22vw,320px);bottom:130px}
+  .hs .in{max-width:760px}
+  .hs .big{width:min(58vw,900px);top:8%}
   .hs .day,.hs .sc{font-size:104px}.hs .day small{font-size:36px}.hs .ko{font-size:40px}
 }
 @media(max-width:600px){
-  .hs .in{padding-top:136px;gap:4px;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+  .hs .in{padding-top:136px;gap:4px 12px}
   .hs .tm{font-size:14px;gap:8px}
   .hs .day,.hs .sc{font-size:52px}.hs .day small{font-size:22px}.hs .ko{font-size:24px}
   .hs .vn{font-size:12px}
